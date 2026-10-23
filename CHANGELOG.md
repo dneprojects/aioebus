@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Fix a poll-scheduler starvation: a poll the device never answered kept its timer at zero, so it stayed the most-overdue item and the engine re-issued the same dead read forever — stalling every other register and the passive decode in between. A failed poll now records the attempt and waits its interval.
+
 ## 0.2.0
 
 - Poll scheduler can poll plain `r` reads too (`default_priority`), not just `r1`..`r9`, so a consumer can refresh every readable register; `PollScheduler.for_registry` builds the set from a registry

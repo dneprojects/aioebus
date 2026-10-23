@@ -200,6 +200,13 @@ class EbusEngine:
         retryable = "arbitration lost" in drv.error or "collision" in drv.error
         if retryable and act.attempts < self.MAX_ATTEMPTS:
             self._queue.appendleft(act)  # make() runs again on the next idle
-        elif act.future is not None and not act.future.done():
+            return
+        if act.future is not None and not act.future.done():
             act.future.set_exception(ReadError(drv.error))
-        # a failed poll (no future) is simply left for its next due time
+        elif act.msg is not None and self.scheduler is not None:
+            # a poll the device did not answer (NAK/timeout): record the attempt
+            # so it waits its normal interval before retrying. Without this its
+            # timer stays at zero, so it is forever the most-overdue item and the
+            # scheduler keeps handing back the same unanswered register, starving
+            # every other register behind it.
+            self.scheduler.mark_passive(act.msg, time.monotonic())

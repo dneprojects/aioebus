@@ -3,10 +3,11 @@ interleaved at bus idle. Driven by a fake async link (no pytest-asyncio)."""
 import asyncio
 
 from aioebus.active import ACK, SEND, START, build_read_frame
-from aioebus.engine import EbusEngine, value_key
+from aioebus.engine import EbusEngine, _Active, value_key
 from aioebus.frame import crc8, escape
 from aioebus.messages import parse_csv
 from aioebus.passive import MessageRegistry
+from aioebus.poll import PollScheduler
 from aioebus.transport import (
     RECEIVED,
     STARTED,
@@ -84,6 +85,30 @@ def test_passive_decode_caches():
         eng.stop()
         link.inject(b"")
         await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_failed_poll_is_recorded_not_restuck():
+    """A poll the device does not answer must update its scheduler timer, so the
+    scheduler moves on instead of handing back the same dead register forever
+    (which would starve every other register and stall passive decode)."""
+    async def inner():
+        link = _Link()
+        msg = BY["Statenumber"]
+        sched = PollScheduler([msg], base_interval=10.0)
+        eng = EbusEngine(link.send, link.recv, REG, scheduler=sched)
+        key = (msg.zz, msg.name)
+        assert sched._items[key].last_update == 0.0  # due immediately
+
+        class _FailedDriver:
+            error = "timeout waiting for slave"
+
+        act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
+        act.driver = _FailedDriver()
+        eng._active = act
+        await eng._finish_active()
+        assert sched._items[key].last_update > 0.0  # attempt recorded -> not re-due now
 
     asyncio.run(inner())
 
