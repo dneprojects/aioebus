@@ -7,9 +7,9 @@ from aioebus.frame import SYN
 from aioebus.messages import parse_csv
 from aioebus.passive import MessageRegistry
 from aioebus.transport import (
+    RECEIVED,
     EnhDecoder,
     PassiveListener,
-    RECEIVED,
     encode_received_frame,
     encode_symbol,
 )

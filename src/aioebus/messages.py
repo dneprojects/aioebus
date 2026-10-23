@@ -13,14 +13,14 @@ Conditions/templates/chains are TODO.
 """
 from __future__ import annotations
 
+import contextlib
 import csv
 import io
 import re
 from dataclasses import dataclass
 
-from .codecs import _Bit
+from .codecs import _Bit, make_codec
 from .codecs import encode as _encode_field
-from .codecs import make_codec
 
 # Valid message directions (ebusd): read, polled read r1..r9, write, update(+write).
 # Anything else in column 0 -- the CSV header line, condition/template rows we do
@@ -172,10 +172,8 @@ def _split_divisor_values(text: str):
         for part in text.split(";"):
             key, sep, label = part.partition("=")
             if sep:
-                try:
+                with contextlib.suppress(ValueError):
                     vals[int(key)] = label
-                except ValueError:
-                    pass
         return None, (vals or None)
     try:  # divisor (positive divides, negative multiplies)
         return (float(text) if "." in text else int(text)), None
@@ -207,8 +205,8 @@ def parse_csv(text: str) -> list[MessageDef]:
 
         d = defaults.get(core[:1], [])
 
-        def g(i):  # fixed column with default fallback
-            return c(i) or (d[i].strip() if i < len(d) else "")
+        def g(i, _d=d):  # fixed column with default fallback
+            return c(i) or (_d[i].strip() if i < len(_d) else "")
 
         fields: list[FieldDef] = []
         i = 9

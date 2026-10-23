@@ -7,7 +7,7 @@ import sqlite3
 import sys
 
 sys.path.insert(0, "src")
-from aioebus.frame import FrameError, parse_telegram  # noqa: E402
+from aioebus.frame import FrameError, parse_telegram
 
 
 def main(db_path: str) -> int:

@@ -1,10 +1,10 @@
 """Phase 2: parse real 38.v32.csv rows into the structured model, decode real
 captured telegrams into {field: value}, and round-trip through the native JSON.
 """
+import json
+
 from aioebus.convert import csv_to_json, from_dicts
 from aioebus.messages import parse_csv
-
-import json
 
 # Real rows from our contrib/ebusd-config/38.v32.csv (eloBlock) + defaults.
 # The default rows carry the device address (zz=38), as our configs do once the

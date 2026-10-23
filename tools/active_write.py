@@ -16,8 +16,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, "src")
-from aioebus.active import ActiveReader, ActiveWriter, ReadError  # noqa: E402
-from aioebus.convert import from_dicts  # noqa: E402
+from aioebus.active import ActiveReader, ActiveWriter, ReadError
+from aioebus.convert import from_dicts
 
 CFG = Path(__file__).resolve().parent.parent / "configs" / "vaillant"
 
@@ -54,7 +54,7 @@ async def run(name: str, value: str | None, do_write: bool, host: str, port: int
             try:
                 current = (await ActiveReader(send, recv).read(rmsg, timeout=4.0)).get(name)
                 print(f"current {name} @{zz:#04x} = {current}")
-            except (ReadError, asyncio.TimeoutError) as exc:
+            except (TimeoutError, ReadError) as exc:
                 print(f"could not read current value: {exc}")
 
         target = value if value is not None else current

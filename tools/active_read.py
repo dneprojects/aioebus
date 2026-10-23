@@ -17,9 +17,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, "src")
-from aioebus.active import ActiveReader, ReadError  # noqa: E402
-from aioebus.convert import from_dicts  # noqa: E402
-from aioebus.messages import MessageDef  # noqa: E402
+from aioebus.active import ActiveReader, ReadError
+from aioebus.convert import from_dicts
+from aioebus.messages import MessageDef
 
 CFG = Path(__file__).resolve().parent.parent / "configs" / "vaillant"
 
@@ -60,7 +60,7 @@ async def run(host: str, port: int) -> None:
                 slave = await ar.read_raw(zz, msg.pbsb, msg.msgid, timeout=4.0)
                 values = msg.decode_labeled(slave=slave)
                 print(f"  {name} @{zz:#04x}: {values}  (slave={slave.hex()})")
-            except (ReadError, asyncio.TimeoutError) as exc:
+            except (TimeoutError, ReadError) as exc:
                 print(f"  {name} @{zz:#04x}: FAILED ({exc})")
             await asyncio.sleep(0.3)  # pace the bus
     finally:

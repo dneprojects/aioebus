@@ -20,9 +20,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, "src")
-from aioebus.convert import from_dicts, to_dicts  # noqa: E402
-from aioebus.messages import parse_csv  # noqa: E402
-from aioebus.translations import ha_strings  # noqa: E402
+from aioebus.convert import from_dicts, to_dicts
+from aioebus.messages import parse_csv
+from aioebus.translations import ha_strings
 
 ROOT = Path(__file__).resolve().parent.parent
 CFG = ROOT / "configs" / "vaillant"

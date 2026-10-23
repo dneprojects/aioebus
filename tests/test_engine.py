@@ -7,7 +7,14 @@ from aioebus.engine import EbusEngine, value_key
 from aioebus.frame import crc8, escape
 from aioebus.messages import parse_csv
 from aioebus.passive import MessageRegistry
-from aioebus.transport import RECEIVED, STARTED, SYN, EnhDecoder, encode_received_frame, encode_symbol
+from aioebus.transport import (
+    RECEIVED,
+    STARTED,
+    SYN,
+    EnhDecoder,
+    encode_received_frame,
+    encode_symbol,
+)
 
 CSV = """\
 type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment

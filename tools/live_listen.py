@@ -14,10 +14,10 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, "src")
-from aioebus.convert import from_dicts  # noqa: E402
-from aioebus.messages import MessageDef  # noqa: E402
-from aioebus.passive import MessageRegistry  # noqa: E402
-from aioebus.transport import listen  # noqa: E402
+from aioebus.convert import from_dicts
+from aioebus.messages import MessageDef
+from aioebus.passive import MessageRegistry
+from aioebus.transport import listen
 
 CFG = Path(__file__).resolve().parent.parent / "configs" / "vaillant"
 

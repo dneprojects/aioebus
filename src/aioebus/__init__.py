@@ -5,8 +5,8 @@ Pure, offline eBUS decoding validated against real captured telegrams:
   - messages: structured definitions + ebusd-CSV ingest + decode
   - frame: on-the-wire telegram parsing, escaping, eBUS CRC-8
   - passive: raw wire bytes -> matched message -> named values (read-only)
-
-No bus I/O yet (the enhanced-adapter transport is next) -- see README.
+  - transport/active/engine: enhanced-adapter I/O, active read/write, and a
+    passive-first engine that caches decoded values and interleaves reads.
 """
 from .active import (
     ActiveReader,
@@ -29,15 +29,39 @@ from .scan import ScanResult, decode_scan
 from .transport import EnhDecoder, PassiveListener, listen
 
 __all__ = [
-    "Codec", "decode", "encode", "make_codec",
-    "FieldDef", "MessageDef", "parse_csv",
-    "Telegram", "crc8", "escape", "unescape", "parse_telegram",
-    "MessageRegistry", "decode_raw",
-    "EnhDecoder", "PassiveListener", "listen",
-    "build_read", "build_read_frame", "build_write_frame", "PollScheduler",
-    "ActiveReader", "ActiveWriter", "ReadDriver", "WriteDriver", "ReadError",
-    "ScanResult", "decode_scan",
-    "ConditionContext", "context_from_scan", "evaluate", "evaluate_all",
-    "EbusEngine", "value_key",
+    "ActiveReader",
+    "ActiveWriter",
+    "Codec",
+    "ConditionContext",
+    "EbusEngine",
+    "EnhDecoder",
+    "FieldDef",
+    "MessageDef",
+    "MessageRegistry",
+    "PassiveListener",
+    "PollScheduler",
+    "ReadDriver",
+    "ReadError",
+    "ScanResult",
+    "Telegram",
+    "WriteDriver",
+    "build_read",
+    "build_read_frame",
+    "build_write_frame",
+    "context_from_scan",
+    "crc8",
+    "decode",
+    "decode_raw",
+    "decode_scan",
+    "encode",
+    "escape",
+    "evaluate",
+    "evaluate_all",
+    "listen",
+    "make_codec",
+    "parse_csv",
+    "parse_telegram",
+    "unescape",
+    "value_key",
 ]
-__version__ = "0.0.1"
+__version__ = "0.1.0"

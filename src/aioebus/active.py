@@ -221,7 +221,7 @@ async def _run_with_retry(send, recv, make_driver, timeout: float, tries: int):
                 chunk = await asyncio.wait_for(recv(), timeout)
                 for sym in drv.feed(chunk):
                     await send(sym)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             last = "timeout"
             continue
         if drv.error is None:

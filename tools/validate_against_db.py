@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from aioebus import decode  # noqa: E402
+from aioebus import decode
 
 # (label, zz hex, sb hex, master id dd, type, slice[start:end] of slave hex, divisor)
 CHECKS = [

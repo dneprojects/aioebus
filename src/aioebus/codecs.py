@@ -88,7 +88,7 @@ class _Numeric(Codec):
             v = v * self.extra_div if self.extra_div > 0 else v / -self.extra_div
         if self.base_div != 1:
             v = v * self.base_div
-        raw = int(round(v))
+        raw = round(v)
         if self.signed and raw < 0:
             raw += 1 << (8 * self.length)
         if not 0 <= raw < (1 << (8 * self.length)):
