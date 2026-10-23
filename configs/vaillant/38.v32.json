@@ -1,0 +1,668 @@
+[
+  {
+    "direction": "r1",
+    "circuit": "elo",
+    "name": "FlowTemp",
+    "pbsb": "b509",
+    "id": "0d1800",
+    "zz": "38",
+    "comment": "d.40 flow temperature",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r1",
+    "circuit": "elo",
+    "name": "PumpState",
+    "pbsb": "b511",
+    "id": "01",
+    "zz": "38",
+    "comment": "pump status",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:6"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on",
+          "2": "overrun",
+          "4": "hwc"
+        },
+        "comment": "pump status"
+      }
+    ]
+  },
+  {
+    "direction": "r1",
+    "circuit": "elo",
+    "name": "Statenumber",
+    "pbsb": "b509",
+    "id": "0dab00",
+    "zz": "38",
+    "comment": "status number",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "kein_bedarf",
+          "4": "heizen",
+          "7": "pumpennachlauf",
+          "20": "anlauf",
+          "24": "warmwasser",
+          "31": "sommer",
+          "34": "frostschutz"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r1",
+    "circuit": "elo",
+    "name": "FlowTempDemand",
+    "pbsb": "b509",
+    "id": "0d3900",
+    "zz": "38",
+    "comment": "d.05 flow setpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HeatingDemand",
+    "pbsb": "b509",
+    "id": "0d4000",
+    "zz": "38",
+    "comment": "d.23 heating demand",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HwcDemand",
+    "pbsb": "b509",
+    "id": "0d5800",
+    "zz": "38",
+    "comment": "d.22 DHW demand",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "PositionValveSet",
+    "pbsb": "b509",
+    "id": "0d5400",
+    "zz": "38",
+    "comment": "d.35 diverter valve",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "heating",
+          "40": "middle",
+          "100": "dhw"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "ModulationDesired",
+    "pbsb": "b509",
+    "id": "0d2e00",
+    "zz": "38",
+    "comment": "modulation setpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 10,
+        "unit": "%",
+        "comment": "modulation set point"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "WP",
+    "pbsb": "b509",
+    "id": "0d4400",
+    "zz": "38",
+    "comment": "d.10 internal pump",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "PumpPower",
+    "pbsb": "b509",
+    "id": "0d7300",
+    "zz": "38",
+    "comment": "d.15 current pump power",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "Storageloadpump",
+    "pbsb": "b509",
+    "id": "0d9e00",
+    "zz": "38",
+    "comment": "d.12 storage load pump",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HeatingSwitch",
+    "pbsb": "b509",
+    "id": "0df203",
+    "zz": "38",
+    "comment": "d.23 wintermode active",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HwcSwitch",
+    "pbsb": "b509",
+    "id": "0df303",
+    "zz": "38",
+    "comment": "DHW on/off",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "ProbeReg4003",
+    "pbsb": "b509",
+    "id": "0d4003",
+    "zz": "38",
+    "comment": "d.155? current power (UNVERIFIZIERT)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "addr unconfirmed"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "ProbeReg3703",
+    "pbsb": "b509",
+    "id": "0d3703",
+    "zz": "38",
+    "comment": "d.152? power limiter phase (UNVERIFIZIERT)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "addr unconfirmed"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "ProbeReg3803",
+    "pbsb": "b509",
+    "id": "0d3803",
+    "zz": "38",
+    "comment": "d.153? power limiter value (UNVERIFIZIERT)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "addr unconfirmed"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "WaterPressure",
+    "pbsb": "b509",
+    "id": "0d0200",
+    "zz": "38",
+    "comment": "water pressure",
+    "fields": [
+      {
+        "name": "value",
+        "type": "FLT",
+        "unit": "bar",
+        "comment": "pressure"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "Templimiter",
+    "pbsb": "b509",
+    "id": "0d7700",
+    "zz": "38",
+    "comment": "temperature limiter",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "240": "off",
+          "15": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "Currenterror",
+    "pbsb": "b503",
+    "id": "0001",
+    "zz": "38",
+    "comment": "current errors",
+    "fields": [
+      {
+        "name": "error",
+        "type": "UIN",
+        "comment": "error number"
+      },
+      {
+        "name": "error_1",
+        "type": "UIN",
+        "comment": "error number"
+      },
+      {
+        "name": "error_2",
+        "type": "UIN",
+        "comment": "error number"
+      },
+      {
+        "name": "error_3",
+        "type": "UIN",
+        "comment": "error number"
+      },
+      {
+        "name": "error_4",
+        "type": "UIN",
+        "comment": "error number"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "ProbeReg2800",
+    "pbsb": "b509",
+    "id": "0d2800",
+    "zz": "38",
+    "comment": "d.80? heating hours (Gfermoto addr - reads 0)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "addr per source; value 0"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "ProbeReg3a03",
+    "pbsb": "b509",
+    "id": "0d3a03",
+    "zz": "38",
+    "comment": "unidentified - reads 45 - not proven as D.80",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "addr unconfirmed"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "TemplimiterCutoffs",
+    "pbsb": "b509",
+    "id": "0d2000",
+    "zz": "38",
+    "comment": "d.60 safety limiter cut offs",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "PartloadHcKW",
+    "pbsb": "b509",
+    "id": "0d6c00",
+    "zz": "38",
+    "comment": "d.00 heating partload",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "kW",
+        "comment": "heating part load"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "PartloadHwcKW",
+    "pbsb": "b509",
+    "id": "0da900",
+    "zz": "38",
+    "comment": "d.77 hot water partload",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "kW",
+        "comment": "storage charging power"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "PowerValue",
+    "pbsb": "b509",
+    "id": "0daa00",
+    "zz": "38",
+    "comment": "power values min/max (statisch)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HEX:6"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HwcTemp",
+    "pbsb": "b509",
+    "id": "0d0100",
+    "zz": "38",
+    "comment": "DHW setpoint mirror",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HwcTempMax",
+    "pbsb": "b509",
+    "id": "0dd900",
+    "zz": "38",
+    "comment": "d.20 max tank setpoint (unverifiziert)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "AntiCondensValue",
+    "pbsb": "b509",
+    "id": "0dec00",
+    "zz": "38",
+    "comment": "d.85 minimal power (unverifiziert)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "kW"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "HcPumpMode",
+    "pbsb": "b509",
+    "id": "0db700",
+    "zz": "38",
+    "comment": "d.18 pump mode (unverifiziert)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "post_run",
+          "1": "permanent",
+          "2": "winter",
+          "3": "eco"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "BlockTimeHcMax",
+    "pbsb": "b509",
+    "id": "0d2100",
+    "zz": "38",
+    "comment": "d.02 max blocking time (unverifiziert)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "min",
+        "comment": "minutes"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "EBusHeatcontrol",
+    "pbsb": "b509",
+    "id": "0d7400",
+    "zz": "38",
+    "comment": "d.90 digital control recognized (unverifiziert)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "WarmstartEnable",
+    "pbsb": "b509",
+    "id": "0d5b00",
+    "zz": "38",
+    "comment": "d.66 warmstart (unverifiziert)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "CirPump",
+    "pbsb": "b509",
+    "id": "0d7b00",
+    "zz": "38",
+    "comment": "d.13 circulation pump",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "BoilerType",
+    "pbsb": "b509",
+    "id": "0d5e00",
+    "zz": "38",
+    "comment": "boiler type",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "DSN",
+    "pbsb": "b509",
+    "id": "0d9a00",
+    "zz": "38",
+    "comment": "device specific number",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "elo",
+    "name": "EbusVoltage",
+    "pbsb": "b509",
+    "id": "0d7f00",
+    "zz": "38",
+    "comment": "eBUS source feedback",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  }
+]

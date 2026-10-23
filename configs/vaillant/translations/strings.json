@@ -1,0 +1,195 @@
+{
+  "entity": {
+    "sensor": {
+      "flowtemp": {
+        "name": "FlowTemp"
+      },
+      "pumpstate": {
+        "name": "PumpState",
+        "state": {
+          "off": "off",
+          "on": "on",
+          "overrun": "overrun",
+          "hwc": "hwc"
+        }
+      },
+      "statenumber": {
+        "name": "Statenumber",
+        "state": {
+          "kein_bedarf": "kein_bedarf",
+          "heizen": "heizen",
+          "pumpennachlauf": "pumpennachlauf",
+          "anlauf": "anlauf",
+          "warmwasser": "warmwasser",
+          "sommer": "sommer",
+          "frostschutz": "frostschutz"
+        }
+      },
+      "flowtempdemand": {
+        "name": "FlowTempDemand"
+      },
+      "heatingdemand": {
+        "name": "HeatingDemand",
+        "state": {
+          "no": "no",
+          "yes": "yes"
+        }
+      },
+      "hwcdemand": {
+        "name": "HwcDemand",
+        "state": {
+          "no": "no",
+          "yes": "yes"
+        }
+      },
+      "positionvalveset": {
+        "name": "PositionValveSet",
+        "state": {
+          "heating": "heating",
+          "middle": "middle",
+          "dhw": "dhw"
+        }
+      },
+      "modulationdesired": {
+        "name": "ModulationDesired"
+      },
+      "wp": {
+        "name": "WP",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "pumppower": {
+        "name": "PumpPower"
+      },
+      "storageloadpump": {
+        "name": "Storageloadpump"
+      },
+      "heatingswitch": {
+        "name": "HeatingSwitch",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "hwcswitch": {
+        "name": "HwcSwitch",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "probereg4003": {
+        "name": "ProbeReg4003"
+      },
+      "probereg3703": {
+        "name": "ProbeReg3703"
+      },
+      "probereg3803": {
+        "name": "ProbeReg3803"
+      },
+      "waterpressure": {
+        "name": "WaterPressure"
+      },
+      "templimiter": {
+        "name": "Templimiter",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "currenterror_error": {
+        "name": "Currenterror error"
+      },
+      "currenterror_error_1": {
+        "name": "Currenterror error_1"
+      },
+      "currenterror_error_2": {
+        "name": "Currenterror error_2"
+      },
+      "currenterror_error_3": {
+        "name": "Currenterror error_3"
+      },
+      "currenterror_error_4": {
+        "name": "Currenterror error_4"
+      },
+      "probereg2800": {
+        "name": "ProbeReg2800"
+      },
+      "probereg3a03": {
+        "name": "ProbeReg3a03"
+      },
+      "templimitercutoffs": {
+        "name": "TemplimiterCutoffs"
+      },
+      "partloadhckw": {
+        "name": "PartloadHcKW"
+      },
+      "partloadhwckw": {
+        "name": "PartloadHwcKW"
+      },
+      "powervalue": {
+        "name": "PowerValue"
+      },
+      "hwctemp": {
+        "name": "HwcTemp"
+      },
+      "hwctempmax": {
+        "name": "HwcTempMax"
+      },
+      "anticondensvalue": {
+        "name": "AntiCondensValue"
+      },
+      "hcpumpmode": {
+        "name": "HcPumpMode",
+        "state": {
+          "post_run": "post_run",
+          "permanent": "permanent",
+          "winter": "winter",
+          "eco": "eco"
+        }
+      },
+      "blocktimehcmax": {
+        "name": "BlockTimeHcMax"
+      },
+      "ebusheatcontrol": {
+        "name": "EBusHeatcontrol",
+        "state": {
+          "no": "no",
+          "yes": "yes"
+        }
+      },
+      "warmstartenable": {
+        "name": "WarmstartEnable",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "cirpump": {
+        "name": "CirPump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "boilertype": {
+        "name": "BoilerType"
+      },
+      "dsn": {
+        "name": "DSN"
+      },
+      "ebusvoltage": {
+        "name": "EbusVoltage",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "electricpower": {
+        "name": "ElectricPower"
+      }
+    }
+  }
+}

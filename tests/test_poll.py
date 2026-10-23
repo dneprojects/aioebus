@@ -1,0 +1,45 @@
+"""Poll scheduler: priority weighting, passive-first suppression, one at a time."""
+from aioebus.messages import parse_csv
+from aioebus.poll import PollScheduler
+
+CSV = """\
+type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
+r1,elo,,Fast,,,38,b509,0d1800,value,,UCH,,,
+r5,elo,,Slow,,,38,b509,0d1900,value,,UCH,,,
+r,elo,,OnDemand,,,38,b509,0d2000,value,,UCH,,,
+w,elo,,Write,,,38,b509,0e2000,value,,UCH,,,
+"""
+MSGS = parse_csv(CSV)
+
+
+def test_only_polled_priorities_scheduled():
+    sch = PollScheduler(MSGS, base_interval=10.0)
+    # plain r (OnDemand) and w (Write) are not auto-polled
+    assert set(k[1] for k in sch._items) == {"Fast", "Slow"}
+
+
+def test_priority_sets_interval():
+    sch = PollScheduler(MSGS, base_interval=10.0)
+    # at t=12: Fast (interval 10) is due, Slow (interval 50) is not
+    due = sch.next_due(12.0)
+    assert due is not None and due.msg.name == "Fast"
+    # at t=60: both due -> most overdue wins (Slow: 60/50=1.2 > Fast 60/10=6? no)
+    # Fast score 6.0 >> Slow 1.2, so Fast is picked
+    assert sch.next_due(60.0).msg.name == "Fast"
+
+
+def test_passive_update_suppresses_poll():
+    sch = PollScheduler(MSGS, base_interval=10.0)
+    assert sch.next_due(12.0).msg.name == "Fast"   # Fast would be polled at t=12
+    fast = next(m for m in MSGS if m.name == "Fast")
+    sch.mark_passive(fast, now=12.0)               # but it was seen on the bus
+    assert sch.next_due(13.0) is None              # so no poll is due anymore
+
+
+def test_one_at_a_time_and_due_count():
+    sch = PollScheduler(MSGS, base_interval=10.0)
+    assert sch.due_count(60.0) == 2       # both overdue
+    picked = sch.next_due(60.0)           # but only one handed back
+    assert picked is not None
+    sch.mark(picked.msg.circuit, picked.msg.name, 60.0)
+    assert sch.due_count(60.0) == 1
