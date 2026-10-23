@@ -162,7 +162,7 @@ class EbusEngine:
         for field, value in values.items():
             self.cache[value_key(msg, field)] = value
         if self.scheduler is not None:
-            self.scheduler.mark(msg.circuit, msg.name, time.monotonic())
+            self.scheduler.mark_passive(msg, time.monotonic())
         if self._on_value is not None:
             self._on_value(msg, values)
 

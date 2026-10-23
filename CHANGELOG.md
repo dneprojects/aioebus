@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- Poll scheduler can poll plain `r` reads too (`default_priority`), not just `r1`..`r9`, so a consumer can refresh every readable register; `PollScheduler.for_registry` builds the set from a registry
+- Registers are keyed per device by `(zz, name)`, so the same name on two devices schedules and suppresses independently
+- Re-engineered own Vaillant device definitions (ctlv3/pmw/vr_71/hmu) plus a broadcast circuit, from an observed bus capture (see `configs/vaillant/PROVENANCE.md`); `tools/reengineer.py`
+
 ## 0.1.0 — first release
 
 - eBUS datatype codecs (ints, fixed-point, floats, BCD/PIN, hex/string, bit fields, date/time), validated against real captures

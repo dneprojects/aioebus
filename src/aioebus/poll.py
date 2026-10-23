@@ -1,17 +1,24 @@
 """Poll scheduling under limited bus bandwidth (Phase 4).
 
 eBUS runs at 2400 baud -- a read transaction is ~25 bytes, so only a handful fit
-per second. With hundreds of registers you cannot poll everything, so the
-scheduler follows three rules, the same shape ebusd uses:
+per second. The scheduler follows three rules, the same shape ebusd uses:
 
-1. Only ``r1``..``r9`` messages are polled at all; plain ``r`` is read on demand
-   and ``w``/``u`` never. The priority digit sets how often: the effective
-   interval is ``priority * base_interval`` (``r1`` most frequent).
-2. Passive-first: a value seen on the bus (a controller broadcast) refreshes the
-   same register's timer via :meth:`mark`, so it is not polled redundantly. On a
-   real system this removes most active traffic (see the live listen test).
+1. Which reads are polled, and how often, follows the priority. An ``r1``..``r9``
+   message carries its own digit (``r1`` most frequent); a plain ``r`` has no
+   digit and is polled only if a ``default_priority`` is given (otherwise it is
+   read on demand, as in ebusd). ``w``/``u`` are never polled. The effective
+   interval is ``priority * base_interval``, so a larger digit means rarer -- a
+   plain read given a high default priority is the rarest, which suits the mostly
+   static registers it covers.
+2. Passive-first: a value seen on the bus (any master reading it, a controller
+   broadcast) refreshes that register's timer via :meth:`mark`, so it is not
+   polled redundantly. On a real system this removes most active traffic -- only
+   the otherwise-silent registers (e.g. a controller's own) are actually read.
 3. One request at a time: the bus is a single shared line, so the scheduler only
    ever hands back the single most-overdue message; the caller paces the reads.
+
+Registers are keyed per device by ``(zz, name)``, so the same register name on
+two devices is scheduled -- and suppressed passively -- independently.
 
 The scheduler is pure and clock-injected (``now`` is passed in), so it is fully
 unit-testable without a bus or wall-clock.
@@ -19,8 +26,12 @@ unit-testable without a bus or wall-clock.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from .messages import MessageDef
+
+if TYPE_CHECKING:
+    from .passive import MessageRegistry
 
 
 @dataclass
@@ -31,24 +42,42 @@ class PollItem:
 
 
 class PollScheduler:
-    def __init__(self, messages: list[MessageDef], base_interval: float = 60.0):
+    def __init__(self, messages: list[MessageDef], base_interval: float = 60.0,
+                 default_priority: int = 0):
+        """``default_priority`` is the priority given to plain ``r`` reads (0 =
+        do not poll them, ebusd's read-on-demand default; a positive value polls
+        every ``default_priority * base_interval``). ``r1``..``r9`` keep their
+        own digit regardless."""
         self.base_interval = base_interval
+        self.default_priority = default_priority
         self._items: dict[tuple[str, str], PollItem] = {}
         for m in messages:
-            if m.poll_priority > 0:  # only r1..r9 are auto-polled
-                self._items[(m.circuit, m.name)] = PollItem(m, m.poll_priority)
+            if m.direction[:1] != "r":  # only true reads are polled (not w/u)
+                continue
+            priority = m.poll_priority or default_priority
+            if priority > 0:
+                self._items[(m.zz, m.name)] = PollItem(m, priority)
+
+    @classmethod
+    def for_registry(cls, registry: MessageRegistry, base_interval: float = 60.0,
+                     default_priority: int = 0) -> PollScheduler:
+        """Build a scheduler over every readable message a registry knows -- the
+        library's own 'poll what is readable' policy, so a consumer need not
+        assemble the list itself."""
+        return cls(registry.messages, base_interval=base_interval,
+                   default_priority=default_priority)
 
     def interval(self, item: PollItem) -> float:
         return self.base_interval * item.priority
 
-    def mark(self, circuit: str, name: str, now: float) -> None:
+    def mark(self, zz: str, name: str, now: float) -> None:
         """Record that a fresh value arrived (from a poll or passively)."""
-        item = self._items.get((circuit, name))
+        item = self._items.get((zz, name))
         if item is not None:
             item.last_update = now
 
     def mark_passive(self, msg: MessageDef, now: float) -> None:
-        self.mark(msg.circuit, msg.name, now)
+        self.mark(msg.zz, msg.name, now)
 
     def next_due(self, now: float) -> PollItem | None:
         """The single most-overdue message to read now, or None if none is due.

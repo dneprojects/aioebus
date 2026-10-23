@@ -14,8 +14,18 @@ MSGS = parse_csv(CSV)
 
 def test_only_polled_priorities_scheduled():
     sch = PollScheduler(MSGS, base_interval=10.0)
-    # plain r (OnDemand) and w (Write) are not auto-polled
+    # plain r (OnDemand) and w (Write) are not auto-polled by default
     assert set(k[1] for k in sch._items) == {"Fast", "Slow"}
+
+
+def test_default_priority_polls_plain_reads():
+    sch = PollScheduler(MSGS, base_interval=10.0, default_priority=7)
+    # plain r (OnDemand) is now scheduled at the default priority; w stays out
+    assert set(k[1] for k in sch._items) == {"Fast", "Slow", "OnDemand"}
+    item = sch._items[("38", "OnDemand")]
+    assert item.priority == 7 and sch.interval(item) == 70.0
+    # an r1 keeps its own digit, not the default
+    assert sch._items[("38", "Fast")].priority == 1
 
 
 def test_priority_sets_interval():
@@ -41,5 +51,5 @@ def test_one_at_a_time_and_due_count():
     assert sch.due_count(60.0) == 2       # both overdue
     picked = sch.next_due(60.0)           # but only one handed back
     assert picked is not None
-    sch.mark(picked.msg.circuit, picked.msg.name, 60.0)
+    sch.mark(picked.msg.zz, picked.msg.name, 60.0)
     assert sch.due_count(60.0) == 1

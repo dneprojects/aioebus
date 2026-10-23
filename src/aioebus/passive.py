@@ -30,6 +30,11 @@ class MessageRegistry:
         for d in defs:
             self._by_pbsb.setdefault(d.pbsb.lower(), []).append(d)
 
+    @property
+    def messages(self) -> list[MessageDef]:
+        """Every definition the registry holds (flattened), in insertion order."""
+        return [d for defs in self._by_pbsb.values() for d in defs]
+
     def _condition_score(self, d: MessageDef) -> int | None:
         """2 = active/unconditional, 1 = unknown, None = excluded (False)."""
         if not d.conditions:
