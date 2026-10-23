@@ -1,0 +1,57 @@
+[
+  {
+    "direction": "u",
+    "circuit": "Broadcast",
+    "name": "Vdatetime",
+    "pbsb": "b516",
+    "id": "00",
+    "zz": "fe",
+    "comment": "date/time",
+    "fields": [
+      {
+        "name": "time",
+        "type": "BTI"
+      },
+      {
+        "name": "date",
+        "type": "BDA"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "Broadcast",
+    "name": "Vdatetime",
+    "pbsb": "b516",
+    "id": "00",
+    "zz": "fe",
+    "comment": "date/time",
+    "fields": [
+      {
+        "name": "time",
+        "type": "BTI"
+      },
+      {
+        "name": "date",
+        "type": "BDA"
+      }
+    ]
+  },
+  {
+    "direction": "u",
+    "circuit": "Broadcast",
+    "name": "Outsidetemp",
+    "pbsb": "b516",
+    "id": "01",
+    "zz": "fe",
+    "comment": "outside temperature",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2B",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  }
+]

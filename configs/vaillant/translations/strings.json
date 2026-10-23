@@ -187,8 +187,1883 @@
           "on": "on"
         }
       },
-      "electricpower": {
-        "name": "ElectricPower"
+      "vdatetime_time": {
+        "name": "Vdatetime time"
+      },
+      "vdatetime_date": {
+        "name": "Vdatetime date"
+      },
+      "outsidetemp": {
+        "name": "Outsidetemp"
+      },
+      "continuousheating": {
+        "name": "ContinuousHeating"
+      },
+      "frostoverridetime": {
+        "name": "FrostOverRideTime"
+      },
+      "hwcparallelloading": {
+        "name": "HwcParallelLoading",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "maxroomhumidity": {
+        "name": "MaxRoomHumidity"
+      },
+      "adaptheatcurve": {
+        "name": "AdaptHeatCurve",
+        "state": {
+          "no": "no",
+          "yes": "yes"
+        }
+      },
+      "maxcylinderchargetime": {
+        "name": "MaxCylinderChargeTime"
+      },
+      "hwclocktime": {
+        "name": "HwcLockTime"
+      },
+      "pumpadditionaltime": {
+        "name": "PumpAdditionalTime"
+      },
+      "cylinderchargehyst": {
+        "name": "CylinderChargeHyst"
+      },
+      "cylinderchargeoffset": {
+        "name": "CylinderChargeOffset"
+      },
+      "maintenancedate": {
+        "name": "MaintenanceDate"
+      },
+      "date": {
+        "name": "Date"
+      },
+      "time": {
+        "name": "Time"
+      },
+      "hydraulicscheme": {
+        "name": "HydraulicScheme"
+      },
+      "solaryieldtotal": {
+        "name": "SolarYieldTotal"
+      },
+      "yieldtotal": {
+        "name": "YieldTotal"
+      },
+      "hwcmaxflowtempdesired": {
+        "name": "HwcMaxFlowTempDesired"
+      },
+      "systemflowtemp": {
+        "name": "SystemFlowTemp"
+      },
+      "multirelaysetting": {
+        "name": "MultiRelaySetting",
+        "state": {
+          "circulation": "circulation",
+          "dryer": "dryer",
+          "zone": "zone",
+          "legiopump": "legiopump"
+        }
+      },
+      "prfuelsumhcthismonth": {
+        "name": "PrFuelSumHcThisMonth"
+      },
+      "prenergysumhcthismonth": {
+        "name": "PrEnergySumHcThisMonth"
+      },
+      "prenergysumhwcthismonth": {
+        "name": "PrEnergySumHwcThisMonth"
+      },
+      "prfuelsumhwcthismonth": {
+        "name": "PrFuelSumHwcThisMonth"
+      },
+      "prfuelsumhclastmonth": {
+        "name": "PrFuelSumHcLastMonth"
+      },
+      "prenergysumhclastmonth": {
+        "name": "PrEnergySumHcLastMonth"
+      },
+      "prenergysumhwclastmonth": {
+        "name": "PrEnergySumHwcLastMonth"
+      },
+      "prfuelsumhwclastmonth": {
+        "name": "PrFuelSumHwcLastMonth"
+      },
+      "prfuelsumhc": {
+        "name": "PrFuelSumHc"
+      },
+      "prenergysumhc": {
+        "name": "PrEnergySumHc"
+      },
+      "prenergysumhwc": {
+        "name": "PrEnergySumHwc"
+      },
+      "prfuelsumhwc": {
+        "name": "PrFuelSumHwc"
+      },
+      "displayedoutsidetemp": {
+        "name": "DisplayedOutsideTemp"
+      },
+      "keycodeforconfigmenu": {
+        "name": "KeyCodeforConfigMenu"
+      },
+      "outsidetempavg": {
+        "name": "OutsideTempAvg"
+      },
+      "maintenancedue": {
+        "name": "MaintenanceDue",
+        "state": {
+          "no": "no",
+          "yes": "yes"
+        }
+      },
+      "hwcopmode": {
+        "name": "HwcOpMode",
+        "state": {
+          "off": "off",
+          "auto": "auto",
+          "day": "day",
+          "night": "night"
+        }
+      },
+      "hwctempdesired": {
+        "name": "HwcTempDesired"
+      },
+      "hwcstoragetemp": {
+        "name": "HwcStorageTemp"
+      },
+      "hwcflowtemp": {
+        "name": "HwcFlowTemp"
+      },
+      "hwcholidaystartperiod": {
+        "name": "HwcHolidayStartPeriod"
+      },
+      "hwcholidayendperiod": {
+        "name": "HwcHolidayEndPeriod"
+      },
+      "hwcsfmode": {
+        "name": "HwcSFMode",
+        "state": {
+          "auto": "auto",
+          "ventilation": "ventilation",
+          "party": "party",
+          "veto": "veto",
+          "onedayaway": "onedayaway",
+          "onedayathome": "onedayathome",
+          "load": "load"
+        }
+      },
+      "hc1circuittype_mctype": {
+        "name": "Hc1CircuitType mctype",
+        "state": {
+          "inactive": "inactive",
+          "mixer": "mixer",
+          "fixed": "fixed",
+          "hwc": "hwc",
+          "returnincr": "returnincr",
+          "pool": "pool"
+        }
+      },
+      "hc1actualflowtempdesired": {
+        "name": "Hc1ActualFlowTempDesired"
+      },
+      "hc1flowtemp": {
+        "name": "Hc1FlowTemp"
+      },
+      "hc1excesstemp": {
+        "name": "Hc1ExcessTemp"
+      },
+      "hc1autooffmode": {
+        "name": "Hc1AutoOffMode",
+        "state": {
+          "eco": "eco",
+          "night": "night"
+        }
+      },
+      "hc1heatcurve": {
+        "name": "Hc1HeatCurve"
+      },
+      "hc1maxflowtempdesired": {
+        "name": "Hc1MaxFlowTempDesired"
+      },
+      "hc1mincoolingtempdesired": {
+        "name": "Hc1MinCoolingTempDesired"
+      },
+      "hc1minflowtempdesired": {
+        "name": "Hc1MinFlowTempDesired"
+      },
+      "hc1summertemplimit": {
+        "name": "Hc1SummerTempLimit"
+      },
+      "hc1roomtempswitchon": {
+        "name": "Hc1RoomTempSwitchOn",
+        "state": {
+          "off": "off",
+          "modulating": "modulating",
+          "thermostat": "thermostat"
+        }
+      },
+      "hc1mixermovement": {
+        "name": "Hc1MixerMovement"
+      },
+      "hc1heatcurveadaption": {
+        "name": "Hc1HeatCurveAdaption"
+      },
+      "hc1status": {
+        "name": "Hc1Status"
+      },
+      "hc1pumpstatus": {
+        "name": "Hc1PumpStatus"
+      },
+      "hc2circuittype_mctype": {
+        "name": "Hc2CircuitType mctype",
+        "state": {
+          "inactive": "inactive",
+          "mixer": "mixer",
+          "fixed": "fixed",
+          "hwc": "hwc",
+          "returnincr": "returnincr",
+          "pool": "pool"
+        }
+      },
+      "hc2actualflowtempdesired": {
+        "name": "Hc2ActualFlowTempDesired"
+      },
+      "hc2flowtemp": {
+        "name": "Hc2FlowTemp"
+      },
+      "hc2excesstemp": {
+        "name": "Hc2ExcessTemp"
+      },
+      "hc2autooffmode": {
+        "name": "Hc2AutoOffMode",
+        "state": {
+          "eco": "eco",
+          "night": "night"
+        }
+      },
+      "hc2heatcurve": {
+        "name": "Hc2HeatCurve"
+      },
+      "hc2maxflowtempdesired": {
+        "name": "Hc2MaxFlowTempDesired"
+      },
+      "hc2mincoolingtempdesired": {
+        "name": "Hc2MinCoolingTempDesired"
+      },
+      "hc2minflowtempdesired": {
+        "name": "Hc2MinFlowTempDesired"
+      },
+      "hc2summertemplimit": {
+        "name": "Hc2SummerTempLimit"
+      },
+      "hc2roomtempswitchon": {
+        "name": "Hc2RoomTempSwitchOn",
+        "state": {
+          "off": "off",
+          "modulating": "modulating",
+          "thermostat": "thermostat"
+        }
+      },
+      "hc2mixermovement": {
+        "name": "Hc2MixerMovement"
+      },
+      "hc2heatcurveadaption": {
+        "name": "Hc2HeatCurveAdaption"
+      },
+      "hc2status": {
+        "name": "Hc2Status"
+      },
+      "hc2pumpstatus": {
+        "name": "Hc2PumpStatus"
+      },
+      "hc3circuittype_mctype": {
+        "name": "Hc3CircuitType mctype",
+        "state": {
+          "inactive": "inactive",
+          "mixer": "mixer",
+          "fixed": "fixed",
+          "hwc": "hwc",
+          "returnincr": "returnincr",
+          "pool": "pool"
+        }
+      },
+      "hc3actualflowtempdesired": {
+        "name": "Hc3ActualFlowTempDesired"
+      },
+      "hc3excesstemp": {
+        "name": "Hc3ExcessTemp"
+      },
+      "hc3autooffmode": {
+        "name": "Hc3AutoOffMode",
+        "state": {
+          "eco": "eco",
+          "night": "night"
+        }
+      },
+      "hc3heatcurve": {
+        "name": "Hc3HeatCurve"
+      },
+      "hc3maxflowtempdesired": {
+        "name": "Hc3MaxFlowTempDesired"
+      },
+      "hc3mincoolingtempdesired": {
+        "name": "Hc3MinCoolingTempDesired"
+      },
+      "hc3minflowtempdesired": {
+        "name": "Hc3MinFlowTempDesired"
+      },
+      "hc3summertemplimit": {
+        "name": "Hc3SummerTempLimit"
+      },
+      "hc3roomtempswitchon": {
+        "name": "Hc3RoomTempSwitchOn",
+        "state": {
+          "off": "off",
+          "modulating": "modulating",
+          "thermostat": "thermostat"
+        }
+      },
+      "hc3mixermovement": {
+        "name": "Hc3MixerMovement"
+      },
+      "hc3heatcurveadaption": {
+        "name": "Hc3HeatCurveAdaption"
+      },
+      "hc3status": {
+        "name": "Hc3Status"
+      },
+      "hc3pumpstatus": {
+        "name": "Hc3PumpStatus"
+      },
+      "z1coolingtemp": {
+        "name": "Z1CoolingTemp"
+      },
+      "z1holidaystartperiod": {
+        "name": "Z1HolidayStartPeriod"
+      },
+      "z1holidayendperiod": {
+        "name": "Z1HolidayEndPeriod"
+      },
+      "z1holidaytemp": {
+        "name": "Z1HolidayTemp"
+      },
+      "z1opmode": {
+        "name": "Z1OpMode",
+        "state": {
+          "off": "off",
+          "auto": "auto",
+          "day": "day",
+          "night": "night"
+        }
+      },
+      "z1quickvetotemp": {
+        "name": "Z1QuickVetoTemp"
+      },
+      "z1quickvetoduration": {
+        "name": "Z1QuickVetoDuration"
+      },
+      "z1quickvetoendtime": {
+        "name": "Z1QuickVetoEndTime"
+      },
+      "z1quickvetoenddate": {
+        "name": "Z1QuickVetoEndDate"
+      },
+      "z1nighttemp": {
+        "name": "Z1NightTemp"
+      },
+      "z1sfmode": {
+        "name": "Z1SFMode",
+        "state": {
+          "auto": "auto",
+          "ventilation": "ventilation",
+          "party": "party",
+          "veto": "veto",
+          "onedayaway": "onedayaway",
+          "onedayathome": "onedayathome",
+          "load": "load"
+        }
+      },
+      "z1roomtemp": {
+        "name": "Z1RoomTemp"
+      },
+      "z1valvestatus": {
+        "name": "Z1ValveStatus"
+      },
+      "z1roomzonemapping": {
+        "name": "Z1RoomZoneMapping",
+        "state": {
+          "none": "none",
+          "vrc700": "VRC700",
+          "vr91_1": "VR91_1",
+          "vr91_2": "VR91_2",
+          "vr91_3": "VR91_3"
+        }
+      },
+      "z1actualroomtempdesired": {
+        "name": "Z1ActualRoomTempDesired"
+      },
+      "z1shortname": {
+        "name": "Z1Shortname"
+      },
+      "z1name1": {
+        "name": "Z1Name1"
+      },
+      "z1name2": {
+        "name": "Z1Name2"
+      },
+      "z1daytemp": {
+        "name": "Z1DayTemp"
+      },
+      "z2coolingtemp": {
+        "name": "Z2CoolingTemp"
+      },
+      "z2holidaystartperiod": {
+        "name": "Z2HolidayStartPeriod"
+      },
+      "z2holidayendperiod": {
+        "name": "Z2HolidayEndPeriod"
+      },
+      "z2holidaytemp": {
+        "name": "Z2HolidayTemp"
+      },
+      "z2opmode": {
+        "name": "Z2OpMode",
+        "state": {
+          "off": "off",
+          "auto": "auto",
+          "day": "day",
+          "night": "night"
+        }
+      },
+      "z2quickvetotemp": {
+        "name": "Z2QuickVetoTemp"
+      },
+      "z2quickvetoduration": {
+        "name": "Z2QuickVetoDuration"
+      },
+      "z2quickvetoendtime": {
+        "name": "Z2QuickVetoEndTime"
+      },
+      "z2quickvetoenddate": {
+        "name": "Z2QuickVetoEndDate"
+      },
+      "z2nighttemp": {
+        "name": "Z2NightTemp"
+      },
+      "z2sfmode": {
+        "name": "Z2SFMode",
+        "state": {
+          "auto": "auto",
+          "ventilation": "ventilation",
+          "party": "party",
+          "veto": "veto",
+          "onedayaway": "onedayaway",
+          "onedayathome": "onedayathome",
+          "load": "load"
+        }
+      },
+      "z2roomtemp": {
+        "name": "Z2RoomTemp"
+      },
+      "z2valvestatus": {
+        "name": "Z2ValveStatus"
+      },
+      "z2roomzonemapping": {
+        "name": "Z2RoomZoneMapping",
+        "state": {
+          "none": "none",
+          "vrc700": "VRC700",
+          "vr91_1": "VR91_1",
+          "vr91_2": "VR91_2",
+          "vr91_3": "VR91_3"
+        }
+      },
+      "z2actualroomtempdesired": {
+        "name": "Z2ActualRoomTempDesired"
+      },
+      "z2shortname": {
+        "name": "Z2Shortname"
+      },
+      "z2name1": {
+        "name": "Z2Name1"
+      },
+      "z2name2": {
+        "name": "Z2Name2"
+      },
+      "z2daytemp": {
+        "name": "Z2DayTemp"
+      },
+      "z3holidaystartperiod": {
+        "name": "Z3HolidayStartPeriod"
+      },
+      "z3holidayendperiod": {
+        "name": "Z3HolidayEndPeriod"
+      },
+      "z3holidaytemp": {
+        "name": "Z3HolidayTemp"
+      },
+      "z3opmode": {
+        "name": "Z3OpMode",
+        "state": {
+          "off": "off",
+          "auto": "auto",
+          "day": "day",
+          "night": "night"
+        }
+      },
+      "z3quickvetotemp": {
+        "name": "Z3QuickVetoTemp"
+      },
+      "z3quickvetoduration": {
+        "name": "Z3QuickVetoDuration"
+      },
+      "z3quickvetoendtime": {
+        "name": "Z3QuickVetoEndTime"
+      },
+      "z3quickvetoenddate": {
+        "name": "Z3QuickVetoEndDate"
+      },
+      "z3nighttemp": {
+        "name": "Z3NightTemp"
+      },
+      "z3sfmode": {
+        "name": "Z3SFMode",
+        "state": {
+          "auto": "auto",
+          "ventilation": "ventilation",
+          "party": "party",
+          "veto": "veto",
+          "onedayaway": "onedayaway",
+          "onedayathome": "onedayathome",
+          "load": "load"
+        }
+      },
+      "z3valvestatus": {
+        "name": "Z3ValveStatus"
+      },
+      "z3roomzonemapping": {
+        "name": "Z3RoomZoneMapping",
+        "state": {
+          "none": "none",
+          "vrc700": "VRC700",
+          "vr91_1": "VR91_1",
+          "vr91_2": "VR91_2",
+          "vr91_3": "VR91_3"
+        }
+      },
+      "z3actualroomtempdesired": {
+        "name": "Z3ActualRoomTempDesired"
+      },
+      "z3shortname": {
+        "name": "Z3Shortname"
+      },
+      "z3name1": {
+        "name": "Z3Name1"
+      },
+      "z3name2": {
+        "name": "Z3Name2"
+      },
+      "z3daytemp": {
+        "name": "Z3DayTemp"
+      },
+      "hwctimer_timeframes_slotcount": {
+        "name": "HwcTimer_Timeframes slotcount"
+      },
+      "hwctimer_timeframes_slotcount_1": {
+        "name": "HwcTimer_Timeframes slotcount_1"
+      },
+      "hwctimer_timeframes_slotcount_2": {
+        "name": "HwcTimer_Timeframes slotcount_2"
+      },
+      "hwctimer_timeframes_slotcount_3": {
+        "name": "HwcTimer_Timeframes slotcount_3"
+      },
+      "hwctimer_timeframes_slotcount_4": {
+        "name": "HwcTimer_Timeframes slotcount_4"
+      },
+      "hwctimer_timeframes_slotcount_5": {
+        "name": "HwcTimer_Timeframes slotcount_5"
+      },
+      "hwctimer_timeframes_slotcount_6": {
+        "name": "HwcTimer_Timeframes slotcount_6"
+      },
+      "hwctimer_monday0_htm": {
+        "name": "HwcTimer_Monday0 htm"
+      },
+      "hwctimer_monday0_htm_1": {
+        "name": "HwcTimer_Monday0 htm_1"
+      },
+      "hwctimer_monday0_slottemp": {
+        "name": "HwcTimer_Monday0 slottemp"
+      },
+      "hwctimer_tuesday0_htm": {
+        "name": "HwcTimer_Tuesday0 htm"
+      },
+      "hwctimer_tuesday0_htm_1": {
+        "name": "HwcTimer_Tuesday0 htm_1"
+      },
+      "hwctimer_tuesday0_slottemp": {
+        "name": "HwcTimer_Tuesday0 slottemp"
+      },
+      "hwctimer_wednesday0_htm": {
+        "name": "HwcTimer_Wednesday0 htm"
+      },
+      "hwctimer_wednesday0_htm_1": {
+        "name": "HwcTimer_Wednesday0 htm_1"
+      },
+      "hwctimer_wednesday0_slottemp": {
+        "name": "HwcTimer_Wednesday0 slottemp"
+      },
+      "hwctimer_thursday0_htm": {
+        "name": "HwcTimer_Thursday0 htm"
+      },
+      "hwctimer_thursday0_htm_1": {
+        "name": "HwcTimer_Thursday0 htm_1"
+      },
+      "hwctimer_thursday0_slottemp": {
+        "name": "HwcTimer_Thursday0 slottemp"
+      },
+      "hwctimer_friday0_htm": {
+        "name": "HwcTimer_Friday0 htm"
+      },
+      "hwctimer_friday0_htm_1": {
+        "name": "HwcTimer_Friday0 htm_1"
+      },
+      "hwctimer_friday0_slottemp": {
+        "name": "HwcTimer_Friday0 slottemp"
+      },
+      "hwctimer_saturday0_htm": {
+        "name": "HwcTimer_Saturday0 htm"
+      },
+      "hwctimer_saturday0_htm_1": {
+        "name": "HwcTimer_Saturday0 htm_1"
+      },
+      "hwctimer_saturday0_slottemp": {
+        "name": "HwcTimer_Saturday0 slottemp"
+      },
+      "hwctimer_sunday0_htm": {
+        "name": "HwcTimer_Sunday0 htm"
+      },
+      "hwctimer_sunday0_htm_1": {
+        "name": "HwcTimer_Sunday0 htm_1"
+      },
+      "hwctimer_sunday0_slottemp": {
+        "name": "HwcTimer_Sunday0 slottemp"
+      },
+      "cctimer_timeframes_slotcount": {
+        "name": "CcTimer_Timeframes slotcount"
+      },
+      "cctimer_timeframes_slotcount_1": {
+        "name": "CcTimer_Timeframes slotcount_1"
+      },
+      "cctimer_timeframes_slotcount_2": {
+        "name": "CcTimer_Timeframes slotcount_2"
+      },
+      "cctimer_timeframes_slotcount_3": {
+        "name": "CcTimer_Timeframes slotcount_3"
+      },
+      "cctimer_timeframes_slotcount_4": {
+        "name": "CcTimer_Timeframes slotcount_4"
+      },
+      "cctimer_timeframes_slotcount_5": {
+        "name": "CcTimer_Timeframes slotcount_5"
+      },
+      "cctimer_timeframes_slotcount_6": {
+        "name": "CcTimer_Timeframes slotcount_6"
+      },
+      "cctimer_monday0_htm": {
+        "name": "CcTimer_Monday0 htm"
+      },
+      "cctimer_monday0_htm_1": {
+        "name": "CcTimer_Monday0 htm_1"
+      },
+      "cctimer_tuesday0_htm": {
+        "name": "CcTimer_Tuesday0 htm"
+      },
+      "cctimer_tuesday0_htm_1": {
+        "name": "CcTimer_Tuesday0 htm_1"
+      },
+      "cctimer_wednesday0_htm": {
+        "name": "CcTimer_Wednesday0 htm"
+      },
+      "cctimer_wednesday0_htm_1": {
+        "name": "CcTimer_Wednesday0 htm_1"
+      },
+      "cctimer_thursday0_htm": {
+        "name": "CcTimer_Thursday0 htm"
+      },
+      "cctimer_thursday0_htm_1": {
+        "name": "CcTimer_Thursday0 htm_1"
+      },
+      "cctimer_friday0_htm": {
+        "name": "CcTimer_Friday0 htm"
+      },
+      "cctimer_friday0_htm_1": {
+        "name": "CcTimer_Friday0 htm_1"
+      },
+      "cctimer_saturday0_htm": {
+        "name": "CcTimer_Saturday0 htm"
+      },
+      "cctimer_saturday0_htm_1": {
+        "name": "CcTimer_Saturday0 htm_1"
+      },
+      "cctimer_sunday0_htm": {
+        "name": "CcTimer_Sunday0 htm"
+      },
+      "cctimer_sunday0_htm_1": {
+        "name": "CcTimer_Sunday0 htm_1"
+      },
+      "z1timer_timeframes_slotcount": {
+        "name": "Z1Timer_Timeframes slotcount"
+      },
+      "z1timer_timeframes_slotcount_1": {
+        "name": "Z1Timer_Timeframes slotcount_1"
+      },
+      "z1timer_timeframes_slotcount_2": {
+        "name": "Z1Timer_Timeframes slotcount_2"
+      },
+      "z1timer_timeframes_slotcount_3": {
+        "name": "Z1Timer_Timeframes slotcount_3"
+      },
+      "z1timer_timeframes_slotcount_4": {
+        "name": "Z1Timer_Timeframes slotcount_4"
+      },
+      "z1timer_timeframes_slotcount_5": {
+        "name": "Z1Timer_Timeframes slotcount_5"
+      },
+      "z1timer_timeframes_slotcount_6": {
+        "name": "Z1Timer_Timeframes slotcount_6"
+      },
+      "z1timer_monday0_htm": {
+        "name": "Z1Timer_Monday0 htm"
+      },
+      "z1timer_monday0_htm_1": {
+        "name": "Z1Timer_Monday0 htm_1"
+      },
+      "z1timer_monday0_slottemp": {
+        "name": "Z1Timer_Monday0 slottemp"
+      },
+      "z1timer_tuesday0_htm": {
+        "name": "Z1Timer_Tuesday0 htm"
+      },
+      "z1timer_tuesday0_htm_1": {
+        "name": "Z1Timer_Tuesday0 htm_1"
+      },
+      "z1timer_tuesday0_slottemp": {
+        "name": "Z1Timer_Tuesday0 slottemp"
+      },
+      "z1timer_wednesday0_htm": {
+        "name": "Z1Timer_Wednesday0 htm"
+      },
+      "z1timer_wednesday0_htm_1": {
+        "name": "Z1Timer_Wednesday0 htm_1"
+      },
+      "z1timer_wednesday0_slottemp": {
+        "name": "Z1Timer_Wednesday0 slottemp"
+      },
+      "z1timer_thursday0_htm": {
+        "name": "Z1Timer_Thursday0 htm"
+      },
+      "z1timer_thursday0_htm_1": {
+        "name": "Z1Timer_Thursday0 htm_1"
+      },
+      "z1timer_thursday0_slottemp": {
+        "name": "Z1Timer_Thursday0 slottemp"
+      },
+      "z1timer_friday0_htm": {
+        "name": "Z1Timer_Friday0 htm"
+      },
+      "z1timer_friday0_htm_1": {
+        "name": "Z1Timer_Friday0 htm_1"
+      },
+      "z1timer_friday0_slottemp": {
+        "name": "Z1Timer_Friday0 slottemp"
+      },
+      "z1timer_saturday0_htm": {
+        "name": "Z1Timer_Saturday0 htm"
+      },
+      "z1timer_saturday0_htm_1": {
+        "name": "Z1Timer_Saturday0 htm_1"
+      },
+      "z1timer_saturday0_slottemp": {
+        "name": "Z1Timer_Saturday0 slottemp"
+      },
+      "z1timer_sunday0_htm": {
+        "name": "Z1Timer_Sunday0 htm"
+      },
+      "z1timer_sunday0_htm_1": {
+        "name": "Z1Timer_Sunday0 htm_1"
+      },
+      "z1timer_sunday0_slottemp": {
+        "name": "Z1Timer_Sunday0 slottemp"
+      },
+      "z2timer_timeframes_slotcount": {
+        "name": "Z2Timer_Timeframes slotcount"
+      },
+      "z2timer_timeframes_slotcount_1": {
+        "name": "Z2Timer_Timeframes slotcount_1"
+      },
+      "z2timer_timeframes_slotcount_2": {
+        "name": "Z2Timer_Timeframes slotcount_2"
+      },
+      "z2timer_timeframes_slotcount_3": {
+        "name": "Z2Timer_Timeframes slotcount_3"
+      },
+      "z2timer_timeframes_slotcount_4": {
+        "name": "Z2Timer_Timeframes slotcount_4"
+      },
+      "z2timer_timeframes_slotcount_5": {
+        "name": "Z2Timer_Timeframes slotcount_5"
+      },
+      "z2timer_timeframes_slotcount_6": {
+        "name": "Z2Timer_Timeframes slotcount_6"
+      },
+      "z2timer_monday0_htm": {
+        "name": "Z2Timer_Monday0 htm"
+      },
+      "z2timer_monday0_htm_1": {
+        "name": "Z2Timer_Monday0 htm_1"
+      },
+      "z2timer_monday0_slottemp": {
+        "name": "Z2Timer_Monday0 slottemp"
+      },
+      "z2timer_tuesday0_htm": {
+        "name": "Z2Timer_Tuesday0 htm"
+      },
+      "z2timer_tuesday0_htm_1": {
+        "name": "Z2Timer_Tuesday0 htm_1"
+      },
+      "z2timer_tuesday0_slottemp": {
+        "name": "Z2Timer_Tuesday0 slottemp"
+      },
+      "z2timer_wednesday0_htm": {
+        "name": "Z2Timer_Wednesday0 htm"
+      },
+      "z2timer_wednesday0_htm_1": {
+        "name": "Z2Timer_Wednesday0 htm_1"
+      },
+      "z2timer_wednesday0_slottemp": {
+        "name": "Z2Timer_Wednesday0 slottemp"
+      },
+      "z2timer_thursday0_htm": {
+        "name": "Z2Timer_Thursday0 htm"
+      },
+      "z2timer_thursday0_htm_1": {
+        "name": "Z2Timer_Thursday0 htm_1"
+      },
+      "z2timer_thursday0_slottemp": {
+        "name": "Z2Timer_Thursday0 slottemp"
+      },
+      "z2timer_friday0_htm": {
+        "name": "Z2Timer_Friday0 htm"
+      },
+      "z2timer_friday0_htm_1": {
+        "name": "Z2Timer_Friday0 htm_1"
+      },
+      "z2timer_friday0_slottemp": {
+        "name": "Z2Timer_Friday0 slottemp"
+      },
+      "z2timer_saturday0_htm": {
+        "name": "Z2Timer_Saturday0 htm"
+      },
+      "z2timer_saturday0_htm_1": {
+        "name": "Z2Timer_Saturday0 htm_1"
+      },
+      "z2timer_saturday0_slottemp": {
+        "name": "Z2Timer_Saturday0 slottemp"
+      },
+      "z2timer_sunday0_htm": {
+        "name": "Z2Timer_Sunday0 htm"
+      },
+      "z2timer_sunday0_htm_1": {
+        "name": "Z2Timer_Sunday0 htm_1"
+      },
+      "z2timer_sunday0_slottemp": {
+        "name": "Z2Timer_Sunday0 slottemp"
+      },
+      "hwclegionellatime": {
+        "name": "HwcLegionellaTime"
+      },
+      "hwclegionelladay": {
+        "name": "HwcLegionellaDay",
+        "state": {
+          "off": "off",
+          "mo": "Mo",
+          "di": "Di",
+          "mi": "Mi",
+          "do": "Do",
+          "fr": "Fr",
+          "sa": "Sa",
+          "so": "So",
+          "taeglich": "taeglich"
+        }
+      },
+      "state_energy": {
+        "name": "State energy"
+      },
+      "state_energy_1": {
+        "name": "State energy_1"
+      },
+      "state_onoff": {
+        "name": "State onoff",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "state_state": {
+        "name": "State state",
+        "state": {
+          "ready": "ready",
+          "error": "error",
+          "heating": "heating",
+          "cooling": "cooling",
+          "heating_water": "heating_water"
+        }
+      },
+      "yieldhcday": {
+        "name": "YieldHcDay"
+      },
+      "yieldcoolday": {
+        "name": "YieldCoolDay"
+      },
+      "yieldhwcday": {
+        "name": "YieldHwcDay"
+      },
+      "yieldhcmonth": {
+        "name": "YieldHcMonth"
+      },
+      "cophcmonth": {
+        "name": "CopHcMonth"
+      },
+      "yieldhc": {
+        "name": "YieldHc"
+      },
+      "cophc": {
+        "name": "CopHc"
+      },
+      "yieldhwcmonth": {
+        "name": "YieldHwcMonth"
+      },
+      "cophwcmonth": {
+        "name": "CopHwcMonth"
+      },
+      "yieldhwc": {
+        "name": "YieldHwc"
+      },
+      "cophwc": {
+        "name": "CopHwc"
+      },
+      "hours": {
+        "name": "Hours"
+      },
+      "hourshc": {
+        "name": "HoursHc"
+      },
+      "hourscool": {
+        "name": "HoursCool"
+      },
+      "hourshwc": {
+        "name": "HoursHwc"
+      },
+      "targetflowtemp": {
+        "name": "TargetFlowTemp"
+      },
+      "energyintegral": {
+        "name": "EnergyIntegral"
+      },
+      "currentyieldpower": {
+        "name": "CurrentYieldPower"
+      },
+      "currentconsumedpower": {
+        "name": "CurrentConsumedPower"
+      },
+      "currentcompressorutil": {
+        "name": "CurrentCompressorUtil"
+      },
+      "buildingcircuitflow": {
+        "name": "BuildingCircuitFlow"
+      },
+      "flowpressure": {
+        "name": "FlowPressure"
+      },
+      "totalenergyusage": {
+        "name": "TotalEnergyUsage"
+      },
+      "compressorhours": {
+        "name": "CompressorHours"
+      },
+      "compressorstarts": {
+        "name": "CompressorStarts"
+      },
+      "buildingpumphours": {
+        "name": "BuildingPumpHours"
+      },
+      "buildingpumpstarts": {
+        "name": "BuildingPumpStarts"
+      },
+      "fourwayvalvehours": {
+        "name": "FourWayValveHours"
+      },
+      "fourwayvalveswitches": {
+        "name": "FourWayValveSwitches"
+      },
+      "fan1hours": {
+        "name": "Fan1Hours"
+      },
+      "fan1starts": {
+        "name": "Fan1Starts"
+      },
+      "fan2hours": {
+        "name": "Fan2Hours"
+      },
+      "fan2starts": {
+        "name": "Fan2Starts"
+      },
+      "rundatacompressorspeed": {
+        "name": "RunDataCompressorSpeed"
+      },
+      "rundataeevpositionabs": {
+        "name": "RunDataEEVPositionAbs"
+      },
+      "rundatafan1speed": {
+        "name": "RunDataFan1Speed"
+      },
+      "rundatafan2speed": {
+        "name": "RunDataFan2Speed"
+      },
+      "rundatastatuscode": {
+        "name": "RunDataStatuscode",
+        "state": {
+          "frost_protect": "frost_protect",
+          "standby": "standby",
+          "heat_compressor_shutdown": "heat_compressor_shutdown",
+          "heat_compressor_blocked": "heat_compressor_blocked",
+          "heat_prerun": "heat_prerun",
+          "heat_compressor_active": "heat_compressor_active",
+          "heat_overrun": "heat_overrun",
+          "cool_compressor_shutdown": "cool_compressor_shutdown",
+          "cool_compressor_blocked": "cool_compressor_blocked",
+          "cool_prerun": "cool_prerun",
+          "cool_compressor_active": "cool_compressor_active",
+          "cool_overrun": "cool_overrun",
+          "heat_immersion_heater_active": "heat_immersion_heater_active",
+          "hwc_compressor_blocked": "hwc_compressor_blocked",
+          "hwc_prerun": "hwc_prerun",
+          "hwc_compressor_active": "hwc_compressor_active",
+          "hwc_immersion_heater_active": "hwc_immersion_heater_active",
+          "hwc_overrun": "hwc_overrun",
+          "heat_immersion_heater_shutdown": "heat_immersion_heater_shutdown",
+          "heat_immersion_heater_blocked": "heat_immersion_heater_blocked",
+          "hwc_immersion_heater_shutdown": "hwc_immersion_heater_shutdown",
+          "hwc_immersion_heater_blocked": "hwc_immersion_heater_blocked",
+          "air_purging_program_active": "air_purging_program_active",
+          "compressor_oil_heating_active": "compressor_oil_heating_active",
+          "fan1_blocked": "fan1_blocked",
+          "fan1_airinlet_too_high": "fan1_airinlet_too_high",
+          "fan1_airinlet_too_low": "fan1_airinlet_too_low",
+          "fan2_blocked": "fan2_blocked",
+          "building_circuit_flow_too_low": "building_circuit_flow_too_low",
+          "building_circuit_pump_fault": "building_circuit_pump_fault",
+          "frequency_converter_fault_compressor": "frequency_converter_fault_compressor",
+          "frequency_converter_fault_mains_voltage": "frequency_converter_fault_mains_voltage",
+          "frequency_converter_fault_overheating": "frequency_converter_fault_overheating",
+          "deicing_time_too_long": "deicing_time_too_long",
+          "deicing_flow_temp_too_low": "deicing_flow_temp_too_low",
+          "compressor_outlet_temp_too_high": "compressor_outlet_temp_too_high",
+          "hot_gas_temp_switch_open": "hot_gas_temp_switch_open",
+          "fan1_wind": "fan1_wind",
+          "fan2_wind": "fan2_wind",
+          "current_limt_active": "current_limt_active",
+          "high_pressure_switch_open": "high_pressure_switch_open",
+          "compressor_outlet_temp_too_high_1": "compressor_outlet_temp_too_high_1",
+          "evaporation_temp_too_low": "evaporation_temp_too_low",
+          "condensation_temp_too_low": "condensation_temp_too_low",
+          "evaporation_temp_too_high": "evaporation_temp_too_high",
+          "condensation_temp_too_high": "condensation_temp_too_high",
+          "building_circuit_return_temp_too_low": "building_circuit_return_temp_too_low",
+          "building_circuit_return_temp_too_high": "building_circuit_return_temp_too_high",
+          "immersion_heater_flow_temp_too_high": "immersion_heater_flow_temp_too_high",
+          "deicing_active": "deicing_active",
+          "frequency_converter_fault": "frequency_converter_fault",
+          "connection_fault_frequency_converter": "connection_fault_frequency_converter",
+          "four_port_valve_position_fault": "four_port_valve_position_fault"
+        }
+      },
+      "rundataelectricpowerconsumption": {
+        "name": "RunDataElectricPowerConsumption"
+      },
+      "rundatahighpressure": {
+        "name": "RunDataHighPressure"
+      },
+      "rundatacompressorinlettemp": {
+        "name": "RunDataCompressorInletTemp"
+      },
+      "rundatacompressoroutlettemp": {
+        "name": "RunDataCompressorOutletTemp"
+      },
+      "rundataeevoutlettemp": {
+        "name": "RunDataEEVOutletTemp"
+      },
+      "rundataflowtemp": {
+        "name": "RunDataFlowTemp"
+      },
+      "rundatareturntemp": {
+        "name": "RunDataReturnTemp"
+      },
+      "runstatshmuhours": {
+        "name": "RunStatsHMUHours"
+      },
+      "runstatshchours": {
+        "name": "RunStatsHcHours"
+      },
+      "runstatshwchours": {
+        "name": "RunStatsHwcHours"
+      },
+      "runstatscompressorhours": {
+        "name": "RunStatsCompressorHours"
+      },
+      "runstatscompressorstarts": {
+        "name": "RunStatsCompressorStarts"
+      },
+      "runstatsbuildingpumphours": {
+        "name": "RunStatsBuildingPumpHours"
+      },
+      "rundatabuildingcpumppower": {
+        "name": "RunDataBuildingCPumpPower"
+      },
+      "runstatsbuildingcpumpstarts": {
+        "name": "RunStatsBuildingCPumpStarts"
+      },
+      "runstats4portvalvehours": {
+        "name": "RunStats4PortValveHours"
+      },
+      "runstats4portvalveswitches": {
+        "name": "RunStats4PortValveSwitches"
+      },
+      "runstatsfan1hours": {
+        "name": "RunStatsFan1Hours"
+      },
+      "runstatsfan1starts": {
+        "name": "RunStatsFan1Starts"
+      },
+      "runstatsfan2hours": {
+        "name": "RunStatsFan2Hours"
+      },
+      "runstatsfan2starts": {
+        "name": "RunStatsFan2Starts"
+      },
+      "rundataairinlettemp": {
+        "name": "RunDataAirInletTemp"
+      },
+      "runstatscompressorhc_runtime": {
+        "name": "RunStatsCompressorHc runtime"
+      },
+      "runstatscompressorhc_cycles": {
+        "name": "RunStatsCompressorHc cycles"
+      },
+      "runstatscompressorhwc_runtime": {
+        "name": "RunStatsCompressorHwc runtime"
+      },
+      "runstatscompressorhwc_cycles": {
+        "name": "RunStatsCompressorHwc cycles"
+      },
+      "datetime_dcfstate": {
+        "name": "DateTime dcfstate",
+        "state": {
+          "nosignal": "nosignal",
+          "ok": "ok",
+          "sync": "sync",
+          "valid": "valid"
+        }
+      },
+      "datetime_btime": {
+        "name": "DateTime btime"
+      },
+      "datetime_bdate": {
+        "name": "DateTime bdate"
+      },
+      "datetime_temp": {
+        "name": "DateTime temp"
+      },
+      "setmode_hcmode": {
+        "name": "SetMode hcmode",
+        "state": {
+          "auto": "auto",
+          "off": "off",
+          "heat": "heat",
+          "water": "water"
+        }
+      },
+      "setmode_flowtempdesired": {
+        "name": "SetMode flowtempdesired"
+      },
+      "setmode_hwctempdesired": {
+        "name": "SetMode hwctempdesired"
+      },
+      "setmode_hwcflowtempdesired": {
+        "name": "SetMode hwcflowtempdesired"
+      },
+      "setmode_disablehc": {
+        "name": "SetMode disablehc"
+      },
+      "setmode_disablehwctapping": {
+        "name": "SetMode disablehwctapping"
+      },
+      "setmode_disablehwcload": {
+        "name": "SetMode disablehwcload"
+      },
+      "setmode_remotecontrolhcpump": {
+        "name": "SetMode remotecontrolhcpump"
+      },
+      "setmode_releasebackup": {
+        "name": "SetMode releasebackup"
+      },
+      "setmode_releasecooling": {
+        "name": "SetMode releasecooling"
+      },
+      "status01_temp": {
+        "name": "Status01 temp"
+      },
+      "status01_temp_1": {
+        "name": "Status01 temp_1"
+      },
+      "status01_temp_2": {
+        "name": "Status01 temp_2"
+      },
+      "status01_temp_3": {
+        "name": "Status01 temp_3"
+      },
+      "status01_temp_4": {
+        "name": "Status01 temp_4"
+      },
+      "status01_pumpstate": {
+        "name": "Status01 pumpstate",
+        "state": {
+          "off": "off",
+          "on": "on",
+          "overrun": "overrun",
+          "hwc": "hwc"
+        }
+      },
+      "statuscirpump": {
+        "name": "StatusCirPump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "compressorhc_runtime": {
+        "name": "CompressorHc runtime"
+      },
+      "compressorhc_cycles": {
+        "name": "CompressorHc cycles"
+      },
+      "compressorhwc_runtime": {
+        "name": "CompressorHwc runtime"
+      },
+      "compressorhwc_cycles": {
+        "name": "CompressorHwc cycles"
+      },
+      "compressorblocktime": {
+        "name": "CompressorBlocktime"
+      },
+      "supplytempweighted": {
+        "name": "SupplyTempWeighted"
+      },
+      "yieldcoolingmonth": {
+        "name": "YieldCoolingMonth"
+      },
+      "copcoolingmonth": {
+        "name": "CopCoolingMonth"
+      },
+      "yieldcooling": {
+        "name": "YieldCooling"
+      },
+      "copcooling": {
+        "name": "CopCooling"
+      },
+      "powerconsumptionhmu": {
+        "name": "PowerConsumptionHmu"
+      },
+      "singlestoragecharge": {
+        "name": "SingleStorageCharge",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "operatinghours": {
+        "name": "OperatingHours"
+      },
+      "vpmwmode": {
+        "name": "VPMWMode"
+      },
+      "hexmonitoringcounter": {
+        "name": "HexMonitoringCounter"
+      },
+      "hexthreshold": {
+        "name": "HExThreshold"
+      },
+      "hexindex": {
+        "name": "HExIndex"
+      },
+      "krmfaktorsmall": {
+        "name": "KrmFaktorSmall"
+      },
+      "krmfaktormiddl": {
+        "name": "KrmFaktorMiddl"
+      },
+      "tnmfaktorsmall": {
+        "name": "TnmFaktorSmall"
+      },
+      "tnmfaktormiddl": {
+        "name": "TnmFaktorMiddl"
+      },
+      "ntc1sensor_temp": {
+        "name": "Ntc1Sensor temp"
+      },
+      "ntc1sensor_sensor": {
+        "name": "Ntc1Sensor sensor",
+        "state": {
+          "ok": "ok",
+          "circuit": "circuit",
+          "cutoff": "cutoff"
+        }
+      },
+      "ntc2sensor_temp": {
+        "name": "Ntc2Sensor temp"
+      },
+      "ntc2sensor_sensor": {
+        "name": "Ntc2Sensor sensor",
+        "state": {
+          "ok": "ok",
+          "circuit": "circuit",
+          "cutoff": "cutoff"
+        }
+      },
+      "ntc3sensor_temp": {
+        "name": "Ntc3Sensor temp"
+      },
+      "ntc3sensor_sensor": {
+        "name": "Ntc3Sensor sensor",
+        "state": {
+          "ok": "ok",
+          "circuit": "circuit",
+          "cutoff": "cutoff"
+        }
+      },
+      "circopump": {
+        "name": "CircoPump"
+      },
+      "pumped": {
+        "name": "PumpED"
+      },
+      "calculatedmixerposition": {
+        "name": "CalculatedMixerPosition"
+      },
+      "electricalheater": {
+        "name": "ElectricalHeater",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "heatdemand": {
+        "name": "HeatDemand"
+      },
+      "operatingmode": {
+        "name": "OperatingMode",
+        "state": {
+          "off": "off",
+          "on": "on",
+          "auto": "auto",
+          "manual": "manual"
+        }
+      },
+      "manualtappingtempdesired": {
+        "name": "ManualTappingTempDesired"
+      },
+      "autotappingtempdesired": {
+        "name": "AutoTappingTempDesired"
+      },
+      "quickvetotempdesired": {
+        "name": "QuickVetoTempDesired"
+      },
+      "actualtappingtempdesired": {
+        "name": "ActualTappingTempDesired"
+      },
+      "quickvetostart": {
+        "name": "QuickVetoStart",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "legiostartday": {
+        "name": "LegioStartDay"
+      },
+      "legiostarttime": {
+        "name": "LegioStartTime"
+      },
+      "partystart": {
+        "name": "PartyStart",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "holidaystart": {
+        "name": "HolidayStart",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "actorfernsteuerung": {
+        "name": "ActorFernsteuerung",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "weekday": {
+        "name": "Weekday"
+      },
+      "teleswitch": {
+        "name": "TeleSwitch",
+        "state": {
+          "disabled": "disabled",
+          "on": "on",
+          "off": "off",
+          "auto": "auto"
+        }
+      },
+      "teleswitchstate": {
+        "name": "TeleSwitchState",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "enablehwcoperation": {
+        "name": "EnableHwcOperation",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "krm": {
+        "name": "Krm"
+      },
+      "tm": {
+        "name": "Tm"
+      },
+      "tnm": {
+        "name": "Tnm"
+      },
+      "tvm": {
+        "name": "Tvm"
+      },
+      "krp": {
+        "name": "Krp"
+      },
+      "tvp": {
+        "name": "Tvp"
+      },
+      "tp": {
+        "name": "Tp"
+      },
+      "statemaincontrol": {
+        "name": "StateMainControl"
+      },
+      "statemixerpumpcontrol": {
+        "name": "StateMixerPumpControl"
+      },
+      "statecircokick": {
+        "name": "StateCircoKick"
+      },
+      "statehexmonitoring": {
+        "name": "StateHExMonitoring"
+      },
+      "timeticker": {
+        "name": "TimeTicker"
+      },
+      "stlegiostoptimecounter": {
+        "name": "StLegioStopTimeCounter"
+      },
+      "stlegioaborttimecounter": {
+        "name": "StLegioAbortTimeCounter"
+      },
+      "stfrostprotcounter": {
+        "name": "StFrostProtCounter"
+      },
+      "mode_temp": {
+        "name": "Mode temp"
+      },
+      "mode_hwcmode": {
+        "name": "Mode hwcmode",
+        "state": {
+          "disabled": "disabled",
+          "on": "on",
+          "off": "off",
+          "auto": "auto"
+        }
+      },
+      "mode_hwcmode_1": {
+        "name": "Mode hwcmode_1",
+        "state": {
+          "disabled": "disabled",
+          "on": "on",
+          "off": "off",
+          "auto": "auto"
+        }
+      },
+      "mode_mctype": {
+        "name": "Mode mctype",
+        "state": {
+          "inactive": "inactive",
+          "mixer": "mixer",
+          "fixed": "fixed",
+          "hwc": "hwc",
+          "returnincr": "returnincr",
+          "pool": "pool",
+          "circulation": "circulation"
+        }
+      },
+      "mode_hex": {
+        "name": "Mode hex"
+      },
+      "mode_daynight": {
+        "name": "Mode daynight",
+        "state": {
+          "night": "night",
+          "day": "day",
+          "load": "load",
+          "floorpaving": "floorpaving"
+        }
+      },
+      "settempdesired": {
+        "name": "SetTempDesired"
+      },
+      "setmode": {
+        "name": "SetMode",
+        "state": {
+          "disabled": "disabled",
+          "on": "on",
+          "off": "off",
+          "auto": "auto"
+        }
+      },
+      "status_temp": {
+        "name": "Status temp"
+      },
+      "status_onoff": {
+        "name": "Status onoff",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "status_temp_1": {
+        "name": "Status temp_1"
+      },
+      "status_temp_2": {
+        "name": "Status temp_2"
+      },
+      "timer_monday_from": {
+        "name": "Timer_Monday from"
+      },
+      "timer_monday_to": {
+        "name": "Timer_Monday to"
+      },
+      "timer_monday_daysel": {
+        "name": "Timer_Monday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "timer_tuesday_from": {
+        "name": "Timer_Tuesday from"
+      },
+      "timer_tuesday_to": {
+        "name": "Timer_Tuesday to"
+      },
+      "timer_tuesday_daysel": {
+        "name": "Timer_Tuesday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "timer_wednesday_from": {
+        "name": "Timer_Wednesday from"
+      },
+      "timer_wednesday_to": {
+        "name": "Timer_Wednesday to"
+      },
+      "timer_wednesday_daysel": {
+        "name": "Timer_Wednesday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "timer_thursday_from": {
+        "name": "Timer_Thursday from"
+      },
+      "timer_thursday_to": {
+        "name": "Timer_Thursday to"
+      },
+      "timer_thursday_daysel": {
+        "name": "Timer_Thursday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "timer_friday_from": {
+        "name": "Timer_Friday from"
+      },
+      "timer_friday_to": {
+        "name": "Timer_Friday to"
+      },
+      "timer_friday_daysel": {
+        "name": "Timer_Friday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "timer_saturday_from": {
+        "name": "Timer_Saturday from"
+      },
+      "timer_saturday_to": {
+        "name": "Timer_Saturday to"
+      },
+      "timer_saturday_daysel": {
+        "name": "Timer_Saturday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "timer_sunday_from": {
+        "name": "Timer_Sunday from"
+      },
+      "timer_sunday_to": {
+        "name": "Timer_Sunday to"
+      },
+      "timer_sunday_daysel": {
+        "name": "Timer_Sunday daysel",
+        "state": {
+          "selected": "selected",
+          "mo_fr": "Mo_Fr",
+          "sa_su": "Sa_Su",
+          "mo_su": "Mo_Su"
+        }
+      },
+      "party": {
+        "name": "Party",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "load": {
+        "name": "Load",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r1": {
+        "name": "SetActorState r1",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r2": {
+        "name": "SetActorState r2",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r3": {
+        "name": "SetActorState r3",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r4": {
+        "name": "SetActorState r4",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r5": {
+        "name": "SetActorState r5",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r6": {
+        "name": "SetActorState r6",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r7": {
+        "name": "SetActorState r7",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r8": {
+        "name": "SetActorState r8",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r9": {
+        "name": "SetActorState r9",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r10": {
+        "name": "SetActorState r10",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r11": {
+        "name": "SetActorState r11",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_r12": {
+        "name": "SetActorState r12",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "setactorstate_rx": {
+        "name": "SetActorState rx"
+      },
+      "mc1operation_status": {
+        "name": "Mc1Operation status",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc1operation_flowtempdesired": {
+        "name": "Mc1Operation flowtempdesired"
+      },
+      "mc1operation_pump": {
+        "name": "Mc1Operation pump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc1operation_mixer": {
+        "name": "Mc1Operation mixer"
+      },
+      "mc2operation_status": {
+        "name": "Mc2Operation status",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc2operation_flowtempdesired": {
+        "name": "Mc2Operation flowtempdesired"
+      },
+      "mc2operation_pump": {
+        "name": "Mc2Operation pump",
+        "state": {
+          "off": "off",
+          "on": "on"
+        }
+      },
+      "mc2operation_mixer": {
+        "name": "Mc2Operation mixer"
+      },
+      "sensordata1_s1": {
+        "name": "SensorData1 s1"
+      },
+      "sensordata1_s2": {
+        "name": "SensorData1 s2"
+      },
+      "sensordata1_s3": {
+        "name": "SensorData1 s3"
+      },
+      "sensordata1_s4": {
+        "name": "SensorData1 s4"
+      },
+      "sensordata1_s5": {
+        "name": "SensorData1 s5"
+      },
+      "sensordata1_s6": {
+        "name": "SensorData1 s6"
+      },
+      "sensordata1_s7": {
+        "name": "SensorData1 s7"
+      },
+      "sensordata1_ignore": {
+        "name": "SensorData1 ignore"
+      },
+      "sensordata2_s8": {
+        "name": "SensorData2 s8"
+      },
+      "sensordata2_s9": {
+        "name": "SensorData2 s9"
+      },
+      "sensordata2_s10": {
+        "name": "SensorData2 s10"
+      },
+      "sensordata2_s11": {
+        "name": "SensorData2 s11"
+      },
+      "sensordata2_s12": {
+        "name": "SensorData2 s12"
+      },
+      "sensordata2_sx": {
+        "name": "SensorData2 sx"
+      },
+      "sensordata2_ignore": {
+        "name": "SensorData2 ignore"
       }
     }
   }

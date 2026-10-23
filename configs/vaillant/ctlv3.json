@@ -1,0 +1,6155 @@
+[
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ContinuousHeating",
+    "pbsb": "b524",
+    "id": "020000000200",
+    "zz": "15",
+    "comment": "continous heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "ContinuousHeating",
+    "pbsb": "b524",
+    "id": "020100000200",
+    "zz": "15",
+    "comment": "continous heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "-26=off, when the outside temperature falls below this threshold temperature the continuous heating function is started (off <=> function is disabled)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FrostOverRideTime",
+    "pbsb": "b524",
+    "id": "020000000300",
+    "zz": "15",
+    "comment": "frost delay time",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "delay before frost protection is activated"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "FrostOverRideTime",
+    "pbsb": "b524",
+    "id": "020100000300",
+    "zz": "15",
+    "comment": "frost delay time",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "delay before frost protection is activated"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcParallelLoading",
+    "pbsb": "b524",
+    "id": "020000000a00",
+    "zz": "15",
+    "comment": "hwc parallel loading",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        },
+        "comment": "heating and hot water parallel"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcParallelLoading",
+    "pbsb": "b524",
+    "id": "020100000a00",
+    "zz": "15",
+    "comment": "hwc parallel loading",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        },
+        "comment": "heating and hot water parallel"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "MaxRoomHumidity",
+    "pbsb": "b524",
+    "id": "020000000e00",
+    "zz": "15",
+    "comment": "max room humidity",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "maximum room humidity"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "MaxRoomHumidity",
+    "pbsb": "b524",
+    "id": "020100000e00",
+    "zz": "15",
+    "comment": "max room humidity",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "maximum room humidity"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "AdaptHeatCurve",
+    "pbsb": "b524",
+    "id": "020000001400",
+    "zz": "15",
+    "comment": "adaptive heat curve",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        },
+        "comment": "automatic correction of configured heat curve"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "AdaptHeatCurve",
+    "pbsb": "b524",
+    "id": "020100001400",
+    "zz": "15",
+    "comment": "adaptive heat curve",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        },
+        "comment": "automatic correction of configured heat curve"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "MaxCylinderChargeTime",
+    "pbsb": "b524",
+    "id": "020000001700",
+    "zz": "15",
+    "comment": "maximale Speicherladezeit",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min",
+        "comment": "maximum cylinder charging time"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "MaxCylinderChargeTime",
+    "pbsb": "b524",
+    "id": "020100001700",
+    "zz": "15",
+    "comment": "maximale Speicherladezeit",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min",
+        "comment": "maximum cylinder charging time"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcLockTime",
+    "pbsb": "b524",
+    "id": "020000001800",
+    "zz": "15",
+    "comment": "hwc lock time",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min",
+        "comment": "Lock time hot water current"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcLockTime",
+    "pbsb": "b524",
+    "id": "020100001800",
+    "zz": "15",
+    "comment": "hwc lock time",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min",
+        "comment": "Lock time hot water current"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PumpAdditionalTime",
+    "pbsb": "b524",
+    "id": "020000001b00",
+    "zz": "15",
+    "comment": "pump additional time",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min",
+        "comment": "chargepump additional operationtime"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PumpAdditionalTime",
+    "pbsb": "b524",
+    "id": "020100001b00",
+    "zz": "15",
+    "comment": "pump additional time",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min",
+        "comment": "chargepump additional operationtime"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CylinderChargeHyst",
+    "pbsb": "b524",
+    "id": "020000002700",
+    "zz": "15",
+    "comment": "hysteresis cylinder charge",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "hysteris storage tank loading"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "CylinderChargeHyst",
+    "pbsb": "b524",
+    "id": "020100002700",
+    "zz": "15",
+    "comment": "hysteresis cylinder charge",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "hysteris storage tank loading"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CylinderChargeOffset",
+    "pbsb": "b524",
+    "id": "020000002900",
+    "zz": "15",
+    "comment": "offset cylinder charge",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "storage tank loading. Offset"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "CylinderChargeOffset",
+    "pbsb": "b524",
+    "id": "020100002900",
+    "zz": "15",
+    "comment": "offset cylinder charge",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "storage tank loading. Offset"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "MaintenanceDate",
+    "pbsb": "b524",
+    "id": "020000002c00",
+    "zz": "15",
+    "comment": "next maintenance",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "date next maintenance"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "MaintenanceDate",
+    "pbsb": "b524",
+    "id": "020100002c00",
+    "zz": "15",
+    "comment": "next maintenance",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "date next maintenance"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Date",
+    "pbsb": "b524",
+    "id": "020000003400",
+    "zz": "15",
+    "comment": "date",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "current date"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Date",
+    "pbsb": "b524",
+    "id": "020100003400",
+    "zz": "15",
+    "comment": "date",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "current date"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Time",
+    "pbsb": "b524",
+    "id": "020000003500",
+    "zz": "15",
+    "comment": "time",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HTI",
+        "comment": "current time"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Time",
+    "pbsb": "b524",
+    "id": "020100003500",
+    "zz": "15",
+    "comment": "time",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HTI",
+        "comment": "current time"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HydraulicScheme",
+    "pbsb": "b524",
+    "id": "020000003600",
+    "zz": "15",
+    "comment": "Systemschema",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "system scheme"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HydraulicScheme",
+    "pbsb": "b524",
+    "id": "020100003600",
+    "zz": "15",
+    "comment": "Systemschema",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "system scheme"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "WaterPressure",
+    "pbsb": "b524",
+    "id": "020000003900",
+    "zz": "15",
+    "comment": "water pressure",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "bar",
+        "comment": "water pressure"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SolarYieldTotal",
+    "pbsb": "b524",
+    "id": "020000003d00",
+    "zz": "15",
+    "comment": "total solar yield",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "solar yield total"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SolarYieldTotal",
+    "pbsb": "b524",
+    "id": "020100003d00",
+    "zz": "15",
+    "comment": "total solar yield",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "solar yield total"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldTotal",
+    "pbsb": "b524",
+    "id": "020000003e00",
+    "zz": "15",
+    "comment": "total environmental yield",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "envrionment yield total"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "YieldTotal",
+    "pbsb": "b524",
+    "id": "020100003e00",
+    "zz": "15",
+    "comment": "total environmental yield",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "envrionment yield total"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcMaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020000004600",
+    "zz": "15",
+    "comment": "hwc max flow temp desired",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint of Hwc"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcMaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020100004600",
+    "zz": "15",
+    "comment": "hwc max flow temp desired",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint of Hwc"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SystemFlowTemp",
+    "pbsb": "b524",
+    "id": "020000004b00",
+    "zz": "15",
+    "comment": "system flow temp",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "system flow temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "MultiRelaySetting",
+    "pbsb": "b524",
+    "id": "020000004d00",
+    "zz": "15",
+    "comment": "multifunction relay setting",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "circulation",
+          "1": "dryer",
+          "2": "zone",
+          "3": "legiopump"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "MultiRelaySetting",
+    "pbsb": "b524",
+    "id": "020100004d00",
+    "zz": "15",
+    "comment": "multifunction relay setting",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "circulation",
+          "1": "dryer",
+          "2": "zone",
+          "3": "legiopump"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrFuelSumHcThisMonth",
+    "pbsb": "b524",
+    "id": "020000004e00",
+    "zz": "15",
+    "comment": "this months fuel consumption heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "current month fuel consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrFuelSumHcThisMonth",
+    "pbsb": "b524",
+    "id": "020100004e00",
+    "zz": "15",
+    "comment": "this months fuel consumption heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "current month fuel consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrEnergySumHcThisMonth",
+    "pbsb": "b524",
+    "id": "020000004f00",
+    "zz": "15",
+    "comment": "this months energy consumption heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "current month electricity consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrEnergySumHcThisMonth",
+    "pbsb": "b524",
+    "id": "020100004f00",
+    "zz": "15",
+    "comment": "this months energy consumption heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "current month electricity consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrEnergySumHwcThisMonth",
+    "pbsb": "b524",
+    "id": "020000005000",
+    "zz": "15",
+    "comment": "this months energy consumption hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "current month electricity consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrEnergySumHwcThisMonth",
+    "pbsb": "b524",
+    "id": "020100005000",
+    "zz": "15",
+    "comment": "this months energy consumption hot water",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "current month electricity consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrFuelSumHwcThisMonth",
+    "pbsb": "b524",
+    "id": "020000005100",
+    "zz": "15",
+    "comment": "this months fuel consumption hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "Current Month fuel consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrFuelSumHwcThisMonth",
+    "pbsb": "b524",
+    "id": "020100005100",
+    "zz": "15",
+    "comment": "this months fuel consumption hot water",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "Current Month fuel consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrFuelSumHcLastMonth",
+    "pbsb": "b524",
+    "id": "020000005200",
+    "zz": "15",
+    "comment": "last months fuel consumption heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month fuel consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrFuelSumHcLastMonth",
+    "pbsb": "b524",
+    "id": "020100005200",
+    "zz": "15",
+    "comment": "last months fuel consumption heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month fuel consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrEnergySumHcLastMonth",
+    "pbsb": "b524",
+    "id": "020000005300",
+    "zz": "15",
+    "comment": "last months energy consumption heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month electricity consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrEnergySumHcLastMonth",
+    "pbsb": "b524",
+    "id": "020100005300",
+    "zz": "15",
+    "comment": "last months energy consumption heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month electricity consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrEnergySumHwcLastMonth",
+    "pbsb": "b524",
+    "id": "020000005400",
+    "zz": "15",
+    "comment": "last months energy consumption hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month electricity consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrEnergySumHwcLastMonth",
+    "pbsb": "b524",
+    "id": "020100005400",
+    "zz": "15",
+    "comment": "last months energy consumption hot water",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month electricity consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrFuelSumHwcLastMonth",
+    "pbsb": "b524",
+    "id": "020000005500",
+    "zz": "15",
+    "comment": "last months fuel consumption hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month fuel consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrFuelSumHwcLastMonth",
+    "pbsb": "b524",
+    "id": "020100005500",
+    "zz": "15",
+    "comment": "last months fuel consumption hot water",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "last month fuel consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrFuelSumHc",
+    "pbsb": "b524",
+    "id": "020000005600",
+    "zz": "15",
+    "comment": "total fuel consumption heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year fuel consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrFuelSumHc",
+    "pbsb": "b524",
+    "id": "020100005600",
+    "zz": "15",
+    "comment": "total fuel consumption heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year fuel consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrEnergySumHc",
+    "pbsb": "b524",
+    "id": "020000005700",
+    "zz": "15",
+    "comment": "total energy consumption heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year electricity consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrEnergySumHc",
+    "pbsb": "b524",
+    "id": "020100005700",
+    "zz": "15",
+    "comment": "total energy consumption heating",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year electricity consumption heating"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrEnergySumHwc",
+    "pbsb": "b524",
+    "id": "020000005800",
+    "zz": "15",
+    "comment": "total energy consumption hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year electricity consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrEnergySumHwc",
+    "pbsb": "b524",
+    "id": "020100005800",
+    "zz": "15",
+    "comment": "total energy consumption hot water",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year electricity consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PrFuelSumHwc",
+    "pbsb": "b524",
+    "id": "020000005900",
+    "zz": "15",
+    "comment": "total fuel consumption hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year fuel consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "PrFuelSumHwc",
+    "pbsb": "b524",
+    "id": "020100005900",
+    "zz": "15",
+    "comment": "total fuel consumption hot water",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh",
+        "comment": "total year fuel consumption hot water"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "DisplayedOutsideTemp",
+    "pbsb": "b524",
+    "id": "020000007300",
+    "zz": "15",
+    "comment": "outside temperature",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "outside temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "KeyCodeforConfigMenu",
+    "pbsb": "b524",
+    "id": "020000007600",
+    "zz": "15",
+    "comment": "code for installer menu",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "000-999; code for the installer's menues"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "KeyCodeforConfigMenu",
+    "pbsb": "b524",
+    "id": "020100007600",
+    "zz": "15",
+    "comment": "code for installer menu",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "000-999; code for the installer's menues"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "OutsideTempAvg",
+    "pbsb": "b524",
+    "id": "020000009500",
+    "zz": "15",
+    "comment": "average outside temperature",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "rounded average outsidetemperature (updated every 3h)"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "OutsideTempAvg",
+    "pbsb": "b524",
+    "id": "020100009500",
+    "zz": "15",
+    "comment": "average outside temperature",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "rounded average outsidetemperature (updated every 3h)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "MaintenanceDue",
+    "pbsb": "b524",
+    "id": "020000009600",
+    "zz": "15",
+    "comment": "maintenance due",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        },
+        "comment": "shows whether maintenance is due"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcOpMode",
+    "pbsb": "b524",
+    "id": "020001000300",
+    "zz": "15",
+    "comment": "HwcOpMode",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of Hwc"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcOpMode",
+    "pbsb": "b524",
+    "id": "020101000300",
+    "zz": "15",
+    "comment": "HwcOpMode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of Hwc"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTempDesired",
+    "pbsb": "b524",
+    "id": "020001000400",
+    "zz": "15",
+    "comment": "gewünschte Temperatur Warmwasserkreis",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "setpoint of domestic hot water circuit"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcTempDesired",
+    "pbsb": "b524",
+    "id": "020101000400",
+    "zz": "15",
+    "comment": "gewünschte Temperatur Warmwasserkreis",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "setpoint of domestic hot water circuit"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcStorageTemp",
+    "pbsb": "b524",
+    "id": "020001000500",
+    "zz": "15",
+    "comment": "HwcStorageTemp",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current hot water storage temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcFlowTemp",
+    "pbsb": "b524",
+    "id": "020001000800",
+    "zz": "15",
+    "comment": "HwcFlowTemp",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "desired flow temp for Hwc"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcHolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020001000900",
+    "zz": "15",
+    "comment": "hwc holiday start period",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcHolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020101000900",
+    "zz": "15",
+    "comment": "hwc holiday start period",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcHolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020001000a00",
+    "zz": "15",
+    "comment": "hwc holiday end period",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcHolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020101000a00",
+    "zz": "15",
+    "comment": "hwc holiday end period",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcSFMode",
+    "pbsb": "b524",
+    "id": "020001000d00",
+    "zz": "15",
+    "comment": "hwc SF mode",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "HwcSFMode",
+    "pbsb": "b524",
+    "id": "020101000d00",
+    "zz": "15",
+    "comment": "hwc SF mode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1CircuitType",
+    "pbsb": "b524",
+    "id": "020002000200",
+    "zz": "15",
+    "comment": "CircuitType Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "mctype",
+        "type": "UCH",
+        "values": {
+          "0": "inactive",
+          "1": "mixer",
+          "2": "fixed",
+          "3": "hwc",
+          "4": "returnincr",
+          "5": "pool"
+        },
+        "comment": "mixer type"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1ActualFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002000700",
+    "zz": "15",
+    "comment": "ActualFlowTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current flow temperature setpoint of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1FlowTemp",
+    "pbsb": "b524",
+    "id": "020002000800",
+    "zz": "15",
+    "comment": "FlowTemp Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current flow temperature of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1ExcessTemp",
+    "pbsb": "b524",
+    "id": "020002000b00",
+    "zz": "15",
+    "comment": "ExcessTemp Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1ExcessTemp",
+    "pbsb": "b524",
+    "id": "020102000b00",
+    "zz": "15",
+    "comment": "ExcessTemp Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "excess temperature of Hc1 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1AutoOffMode",
+    "pbsb": "b524",
+    "id": "020002000e00",
+    "zz": "15",
+    "comment": "AutoOffMode Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "eco",
+          "1": "night"
+        },
+        "comment": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1AutoOffMode",
+    "pbsb": "b524",
+    "id": "020102000e00",
+    "zz": "15",
+    "comment": "AutoOffMode Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "eco",
+          "1": "night"
+        },
+        "comment": "operation of Hc1 during the lowering time; no influence if room temperature modulation is set to thermostat"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1HeatCurve",
+    "pbsb": "b524",
+    "id": "020002000f00",
+    "zz": "15",
+    "comment": "Heizkurve Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "heating curve of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1HeatCurve",
+    "pbsb": "b524",
+    "id": "020102000f00",
+    "zz": "15",
+    "comment": "Heizkurve Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "heating curve of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1MaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002001000",
+    "zz": "15",
+    "comment": "MaxFlowTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1MaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020102001000",
+    "zz": "15",
+    "comment": "MaxFlowTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1MinCoolingTempDesired",
+    "pbsb": "b524",
+    "id": "020002001100",
+    "zz": "15",
+    "comment": "MinCoolingTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum cooling temperature setpoint Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1MinCoolingTempDesired",
+    "pbsb": "b524",
+    "id": "020102001100",
+    "zz": "15",
+    "comment": "MinCoolingTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum cooling temperature setpoint Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1MinFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002001200",
+    "zz": "15",
+    "comment": "MinFlowTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1MinFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020102001200",
+    "zz": "15",
+    "comment": "MinFlowTempDesired Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1SummerTempLimit",
+    "pbsb": "b524",
+    "id": "020002001400",
+    "zz": "15",
+    "comment": "AT-Abschaltgrenze Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1SummerTempLimit",
+    "pbsb": "b524",
+    "id": "020102001400",
+    "zz": "15",
+    "comment": "AT-Abschaltgrenze Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1RoomTempSwitchOn",
+    "pbsb": "b524",
+    "id": "020002001500",
+    "zz": "15",
+    "comment": "RoomTempSwitchOn Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "modulating",
+          "2": "thermostat"
+        },
+        "comment": "room temperature modulation of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1RoomTempSwitchOn",
+    "pbsb": "b524",
+    "id": "020102001500",
+    "zz": "15",
+    "comment": "RoomTempSwitchOn Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "modulating",
+          "2": "thermostat"
+        },
+        "comment": "room temperature modulation of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1MixerMovement",
+    "pbsb": "b524",
+    "id": "020002001a00",
+    "zz": "15",
+    "comment": "MixerMovement Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "status of mixer (<0 closing, >0 opening)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1HeatCurveAdaption",
+    "pbsb": "b524",
+    "id": "020002001c00",
+    "zz": "15",
+    "comment": "Anpassung Heizkurve Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "adaption applied to heating curve of Hc1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1Status",
+    "pbsb": "b524",
+    "id": "020002001b00",
+    "zz": "15",
+    "comment": "Status Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "status of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1Status",
+    "pbsb": "b524",
+    "id": "020102001b00",
+    "zz": "15",
+    "comment": "Status Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "status of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc1PumpStatus",
+    "pbsb": "b524",
+    "id": "020002001e00",
+    "zz": "15",
+    "comment": "PumpStatus Heizkreis 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "pump status of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc1PumpStatus",
+    "pbsb": "b524",
+    "id": "020102001e00",
+    "zz": "15",
+    "comment": "PumpStatus Heizkreis 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "pump status of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2CircuitType",
+    "pbsb": "b524",
+    "id": "020002010200",
+    "zz": "15",
+    "comment": "CircuitType Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "mctype",
+        "type": "UCH",
+        "values": {
+          "0": "inactive",
+          "1": "mixer",
+          "2": "fixed",
+          "3": "hwc",
+          "4": "returnincr",
+          "5": "pool"
+        },
+        "comment": "mixer type"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2ActualFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002010700",
+    "zz": "15",
+    "comment": "ActualFlowTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current flow temperature setpoint of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2FlowTemp",
+    "pbsb": "b524",
+    "id": "020002010800",
+    "zz": "15",
+    "comment": "FlowTemp Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current flow temperature of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2ExcessTemp",
+    "pbsb": "b524",
+    "id": "020002010b00",
+    "zz": "15",
+    "comment": "ExcessTemp Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2ExcessTemp",
+    "pbsb": "b524",
+    "id": "020102010b00",
+    "zz": "15",
+    "comment": "ExcessTemp Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "excess temperature of Hc2 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2AutoOffMode",
+    "pbsb": "b524",
+    "id": "020002010e00",
+    "zz": "15",
+    "comment": "AutoOffMode Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "eco",
+          "1": "night"
+        },
+        "comment": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2AutoOffMode",
+    "pbsb": "b524",
+    "id": "020102010e00",
+    "zz": "15",
+    "comment": "AutoOffMode Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "eco",
+          "1": "night"
+        },
+        "comment": "operation of Hc2 during the lowering time; no influence if room temperature modulation is set to thermostat"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2HeatCurve",
+    "pbsb": "b524",
+    "id": "020002010f00",
+    "zz": "15",
+    "comment": "Heizkurve Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "heating curve of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2HeatCurve",
+    "pbsb": "b524",
+    "id": "020102010f00",
+    "zz": "15",
+    "comment": "Heizkurve Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "heating curve of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2MaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002011000",
+    "zz": "15",
+    "comment": "MaxFlowTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2MaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020102011000",
+    "zz": "15",
+    "comment": "MaxFlowTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2MinCoolingTempDesired",
+    "pbsb": "b524",
+    "id": "020002011100",
+    "zz": "15",
+    "comment": "MinCoolingTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum cooling temperature setpoint Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2MinCoolingTempDesired",
+    "pbsb": "b524",
+    "id": "020102011100",
+    "zz": "15",
+    "comment": "MinCoolingTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum cooling temperature setpoint Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2MinFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002011200",
+    "zz": "15",
+    "comment": "MinFlowTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2MinFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020102011200",
+    "zz": "15",
+    "comment": "MinFlowTempDesired Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2SummerTempLimit",
+    "pbsb": "b524",
+    "id": "020002011400",
+    "zz": "15",
+    "comment": "AT-Abschaltgrenze Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2SummerTempLimit",
+    "pbsb": "b524",
+    "id": "020102011400",
+    "zz": "15",
+    "comment": "AT-Abschaltgrenze Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2RoomTempSwitchOn",
+    "pbsb": "b524",
+    "id": "020002011500",
+    "zz": "15",
+    "comment": "RoomTempSwitchOn Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "modulating",
+          "2": "thermostat"
+        },
+        "comment": "room temperature modulation of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2RoomTempSwitchOn",
+    "pbsb": "b524",
+    "id": "020102011500",
+    "zz": "15",
+    "comment": "RoomTempSwitchOn Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "modulating",
+          "2": "thermostat"
+        },
+        "comment": "room temperature modulation of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2MixerMovement",
+    "pbsb": "b524",
+    "id": "020002011a00",
+    "zz": "15",
+    "comment": "MixerMovement Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "status of mixer (<0 closing, >0 opening)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2HeatCurveAdaption",
+    "pbsb": "b524",
+    "id": "020002011c00",
+    "zz": "15",
+    "comment": "Anpassung Heizkurve Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "adaption applied to heating curve of Hc2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2Status",
+    "pbsb": "b524",
+    "id": "020002011b00",
+    "zz": "15",
+    "comment": "Status Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2Status",
+    "pbsb": "b524",
+    "id": "020102011b00",
+    "zz": "15",
+    "comment": "Status Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc2PumpStatus",
+    "pbsb": "b524",
+    "id": "020002011e00",
+    "zz": "15",
+    "comment": "PumpStatus Heizkreis 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "pump status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc2PumpStatus",
+    "pbsb": "b524",
+    "id": "020102011e00",
+    "zz": "15",
+    "comment": "PumpStatus Heizkreis 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "pump status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3CircuitType",
+    "pbsb": "b524",
+    "id": "020002020200",
+    "zz": "15",
+    "comment": "CircuitType Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "mctype",
+        "type": "UCH",
+        "values": {
+          "0": "inactive",
+          "1": "mixer",
+          "2": "fixed",
+          "3": "hwc",
+          "4": "returnincr",
+          "5": "pool"
+        },
+        "comment": "mixer type"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3ActualFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002020700",
+    "zz": "15",
+    "comment": "ActualFlowTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current flow temperature setpoint of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3ExcessTemp",
+    "pbsb": "b524",
+    "id": "020002020b00",
+    "zz": "15",
+    "comment": "ExcessTemp Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3ExcessTemp",
+    "pbsb": "b524",
+    "id": "020102020b00",
+    "zz": "15",
+    "comment": "ExcessTemp Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K",
+        "comment": "excess temperature of Hc3 (flow temperature's setpoint is increased by this value to keep the mixing valve in its control range)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3AutoOffMode",
+    "pbsb": "b524",
+    "id": "020002020e00",
+    "zz": "15",
+    "comment": "AutoOffMode Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "eco",
+          "1": "night"
+        },
+        "comment": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3AutoOffMode",
+    "pbsb": "b524",
+    "id": "020102020e00",
+    "zz": "15",
+    "comment": "AutoOffMode Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "eco",
+          "1": "night"
+        },
+        "comment": "operation of Hc3 during the lowering time; no influence if room temperature modulation is set to thermostat"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3HeatCurve",
+    "pbsb": "b524",
+    "id": "020002020f00",
+    "zz": "15",
+    "comment": "Heizkurve Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "heating curve of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3HeatCurve",
+    "pbsb": "b524",
+    "id": "020102020f00",
+    "zz": "15",
+    "comment": "Heizkurve Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "heating curve of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3MaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002021000",
+    "zz": "15",
+    "comment": "MaxFlowTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3MaxFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020102021000",
+    "zz": "15",
+    "comment": "MaxFlowTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "maximum flow temperature setpoint (end emphasis) of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3MinCoolingTempDesired",
+    "pbsb": "b524",
+    "id": "020002021100",
+    "zz": "15",
+    "comment": "MinCoolingTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum cooling temperature setpoint Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3MinCoolingTempDesired",
+    "pbsb": "b524",
+    "id": "020102021100",
+    "zz": "15",
+    "comment": "MinCoolingTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum cooling temperature setpoint Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3MinFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020002021200",
+    "zz": "15",
+    "comment": "MinFlowTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3MinFlowTempDesired",
+    "pbsb": "b524",
+    "id": "020102021200",
+    "zz": "15",
+    "comment": "MinFlowTempDesired Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "minimum flow temperature setpoint (end emphasis) of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3SummerTempLimit",
+    "pbsb": "b524",
+    "id": "020002021400",
+    "zz": "15",
+    "comment": "AT-Abschaltgrenze Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3SummerTempLimit",
+    "pbsb": "b524",
+    "id": "020102021400",
+    "zz": "15",
+    "comment": "AT-Abschaltgrenze Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "if outside temperature > summer limit => heating is OFF;applies to comfort and night setback setpoint"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3RoomTempSwitchOn",
+    "pbsb": "b524",
+    "id": "020002021500",
+    "zz": "15",
+    "comment": "RoomTempSwitchOn Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "modulating",
+          "2": "thermostat"
+        },
+        "comment": "room temperature modulation of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3RoomTempSwitchOn",
+    "pbsb": "b524",
+    "id": "020102021500",
+    "zz": "15",
+    "comment": "RoomTempSwitchOn Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "modulating",
+          "2": "thermostat"
+        },
+        "comment": "room temperature modulation of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3MixerMovement",
+    "pbsb": "b524",
+    "id": "020002021a00",
+    "zz": "15",
+    "comment": "MixerMovement Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "status of mixer (<0 closing, >0 opening)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3HeatCurveAdaption",
+    "pbsb": "b524",
+    "id": "020002021c00",
+    "zz": "15",
+    "comment": "Anpassung Heizkurve Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "comment": "adaption applied to heating curve of Hc3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3Status",
+    "pbsb": "b524",
+    "id": "020002021b00",
+    "zz": "15",
+    "comment": "Status Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3Status",
+    "pbsb": "b524",
+    "id": "020102021b00",
+    "zz": "15",
+    "comment": "Status Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hc3PumpStatus",
+    "pbsb": "b524",
+    "id": "020002021e00",
+    "zz": "15",
+    "comment": "PumpStatus Heizkreis 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "pump status of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Hc3PumpStatus",
+    "pbsb": "b524",
+    "id": "020102021e00",
+    "zz": "15",
+    "comment": "PumpStatus Heizkreis 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "pump status of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1CoolingTemp",
+    "pbsb": "b524",
+    "id": "020003000200",
+    "zz": "15",
+    "comment": "Kühlsolltemperatur Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "desired cooling setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1CoolingTemp",
+    "pbsb": "b524",
+    "id": "020103000200",
+    "zz": "15",
+    "comment": "Kühlsolltemperatur Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "desired cooling setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1HolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020003000300",
+    "zz": "15",
+    "comment": "Ferienzeitraum Start Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1HolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020103000300",
+    "zz": "15",
+    "comment": "Ferienzeitraum Start Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1HolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020003000400",
+    "zz": "15",
+    "comment": "Ferienzeitraum Ende Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1HolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020103000400",
+    "zz": "15",
+    "comment": "Ferienzeitraum Ende Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1HolidayTemp",
+    "pbsb": "b524",
+    "id": "020003000500",
+    "zz": "15",
+    "comment": "Raumsollwert Ferienbetrieb Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "holiday setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1HolidayTemp",
+    "pbsb": "b524",
+    "id": "020103000500",
+    "zz": "15",
+    "comment": "Raumsollwert Ferienbetrieb Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "holiday setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1OpMode",
+    "pbsb": "b524",
+    "id": "020003000600",
+    "zz": "15",
+    "comment": "Betriebsart Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1OpMode",
+    "pbsb": "b524",
+    "id": "020103000600",
+    "zz": "15",
+    "comment": "Betriebsart Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1QuickVetoTemp",
+    "pbsb": "b524",
+    "id": "020003000800",
+    "zz": "15",
+    "comment": "Quick Veto Temperatur Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "manual override setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1QuickVetoTemp",
+    "pbsb": "b524",
+    "id": "020103000800",
+    "zz": "15",
+    "comment": "Quick Veto Temperatur Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "manual override setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1QuickVetoDuration",
+    "pbsb": "b524",
+    "id": "020003002600",
+    "zz": "15",
+    "comment": "Duration of Quick Veto mode Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "h",
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1QuickVetoDuration",
+    "pbsb": "b524",
+    "id": "020103002600",
+    "zz": "15",
+    "comment": "Duration of Quick Veto mode Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "h",
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1QuickVetoEndTime",
+    "pbsb": "b524",
+    "id": "020003001e00",
+    "zz": "15",
+    "comment": "Quick Veto end time Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HTI"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1QuickVetoEndDate",
+    "pbsb": "b524",
+    "id": "020003002400",
+    "zz": "15",
+    "comment": "Quick Veto end date Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "date"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1NightTemp",
+    "pbsb": "b524",
+    "id": "020003000900",
+    "zz": "15",
+    "comment": "Absenktemperatur Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "night setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1NightTemp",
+    "pbsb": "b524",
+    "id": "020103000900",
+    "zz": "15",
+    "comment": "Absenktemperatur Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "night setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1SFMode",
+    "pbsb": "b524",
+    "id": "020003000e00",
+    "zz": "15",
+    "comment": "SF mode zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1SFMode",
+    "pbsb": "b524",
+    "id": "020103000e00",
+    "zz": "15",
+    "comment": "SF mode zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1RoomTemp",
+    "pbsb": "b524",
+    "id": "020003000f00",
+    "zz": "15",
+    "comment": "Raumisttemperatur Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "aktuelle Raumtemperatur in Zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1ValveStatus",
+    "pbsb": "b524",
+    "id": "020003001200",
+    "zz": "15",
+    "comment": "Ventilstatus Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "valve status of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1ValveStatus",
+    "pbsb": "b524",
+    "id": "020103001200",
+    "zz": "15",
+    "comment": "Ventilstatus Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "valve status of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1RoomZoneMapping",
+    "pbsb": "b524",
+    "id": "020003001300",
+    "zz": "15",
+    "comment": "Raumregler Zuordnung Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "none",
+          "1": "VRC700",
+          "2": "VR91_1",
+          "3": "VR91_2",
+          "4": "VR91_3"
+        },
+        "comment": "configures which room temperature is assigned to zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1RoomZoneMapping",
+    "pbsb": "b524",
+    "id": "020103001300",
+    "zz": "15",
+    "comment": "Raumregler Zuordnung Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "none",
+          "1": "VRC700",
+          "2": "VR91_1",
+          "3": "VR91_2",
+          "4": "VR91_3"
+        },
+        "comment": "configures which room temperature is assigned to zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1ActualRoomTempDesired",
+    "pbsb": "b524",
+    "id": "020003001400",
+    "zz": "15",
+    "comment": "Raumsolltemperatur Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1ActualRoomTempDesired",
+    "pbsb": "b524",
+    "id": "020103001400",
+    "zz": "15",
+    "comment": "Raumsolltemperatur Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Shortname",
+    "pbsb": "b524",
+    "id": "020003001600",
+    "zz": "15",
+    "comment": "Kurzbezeichnung zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "short name of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1Shortname",
+    "pbsb": "b524",
+    "id": "020103001600",
+    "zz": "15",
+    "comment": "Kurzbezeichnung zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:6",
+        "comment": "short name of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Name1",
+    "pbsb": "b524",
+    "id": "020003001700",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 1 Teil 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "name of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1Name1",
+    "pbsb": "b524",
+    "id": "020103001700",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 1 Teil 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:5",
+        "comment": "name of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Name2",
+    "pbsb": "b524",
+    "id": "020003001800",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 1 Teil 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "name of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1Name2",
+    "pbsb": "b524",
+    "id": "020103001800",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 1 Teil 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:5",
+        "comment": "name of zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1DayTemp",
+    "pbsb": "b524",
+    "id": "020003002200",
+    "zz": "15",
+    "comment": "Solltemperatur Zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "day setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z1DayTemp",
+    "pbsb": "b524",
+    "id": "020103002200",
+    "zz": "15",
+    "comment": "Solltemperatur Zone 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "day setpoint for zone 1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2CoolingTemp",
+    "pbsb": "b524",
+    "id": "020003010200",
+    "zz": "15",
+    "comment": "Kühlsolltemperatur Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "desired cooling setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2CoolingTemp",
+    "pbsb": "b524",
+    "id": "020103010200",
+    "zz": "15",
+    "comment": "Kühlsolltemperatur Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "desired cooling setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2HolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020003010300",
+    "zz": "15",
+    "comment": "Ferienzeitraum Start Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2HolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020103010300",
+    "zz": "15",
+    "comment": "Ferienzeitraum Start Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2HolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020003010400",
+    "zz": "15",
+    "comment": "Ferienzeitraum Ende Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2HolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020103010400",
+    "zz": "15",
+    "comment": "Ferienzeitraum Ende Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2HolidayTemp",
+    "pbsb": "b524",
+    "id": "020003010500",
+    "zz": "15",
+    "comment": "Raumsollwert Ferienbetrieb Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "holiday setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2HolidayTemp",
+    "pbsb": "b524",
+    "id": "020103010500",
+    "zz": "15",
+    "comment": "Raumsollwert Ferienbetrieb Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "holiday setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2OpMode",
+    "pbsb": "b524",
+    "id": "020003010600",
+    "zz": "15",
+    "comment": "Betriebsart Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2OpMode",
+    "pbsb": "b524",
+    "id": "020103010600",
+    "zz": "15",
+    "comment": "Betriebsart Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2QuickVetoTemp",
+    "pbsb": "b524",
+    "id": "020003010800",
+    "zz": "15",
+    "comment": "Quick Veto Temperatur Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "manual override setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2QuickVetoTemp",
+    "pbsb": "b524",
+    "id": "020103010800",
+    "zz": "15",
+    "comment": "Quick Veto Temperatur Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "manual override setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2QuickVetoDuration",
+    "pbsb": "b524",
+    "id": "020003012600",
+    "zz": "15",
+    "comment": "Duration of Quick Veto mode Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "h",
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2QuickVetoDuration",
+    "pbsb": "b524",
+    "id": "020103012600",
+    "zz": "15",
+    "comment": "Duration of Quick Veto mode Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "h",
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2QuickVetoEndTime",
+    "pbsb": "b524",
+    "id": "020003011e00",
+    "zz": "15",
+    "comment": "Quick Veto end time Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HTI"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2QuickVetoEndDate",
+    "pbsb": "b524",
+    "id": "020003012400",
+    "zz": "15",
+    "comment": "Quick Veto end date Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "date"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2NightTemp",
+    "pbsb": "b524",
+    "id": "020003010900",
+    "zz": "15",
+    "comment": "Absenktemperatur Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "night setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2NightTemp",
+    "pbsb": "b524",
+    "id": "020103010900",
+    "zz": "15",
+    "comment": "Absenktemperatur Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "night setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2SFMode",
+    "pbsb": "b524",
+    "id": "020003010e00",
+    "zz": "15",
+    "comment": "SF mode zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2SFMode",
+    "pbsb": "b524",
+    "id": "020103010e00",
+    "zz": "15",
+    "comment": "SF mode zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2RoomTemp",
+    "pbsb": "b524",
+    "id": "020003010f00",
+    "zz": "15",
+    "comment": "Raumisttemperatur Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "aktuelle Raumtemperatur in Zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2ValveStatus",
+    "pbsb": "b524",
+    "id": "020003011200",
+    "zz": "15",
+    "comment": "Ventilstatus Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "valve status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2ValveStatus",
+    "pbsb": "b524",
+    "id": "020103011200",
+    "zz": "15",
+    "comment": "Ventilstatus Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "valve status of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2RoomZoneMapping",
+    "pbsb": "b524",
+    "id": "020003011300",
+    "zz": "15",
+    "comment": "Raumregler Zuordnung Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "none",
+          "1": "VRC700",
+          "2": "VR91_1",
+          "3": "VR91_2",
+          "4": "VR91_3"
+        },
+        "comment": "configures which room temperature is assigned to zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2RoomZoneMapping",
+    "pbsb": "b524",
+    "id": "020103011300",
+    "zz": "15",
+    "comment": "Raumregler Zuordnung Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "none",
+          "1": "VRC700",
+          "2": "VR91_1",
+          "3": "VR91_2",
+          "4": "VR91_3"
+        },
+        "comment": "configures which room temperature is assigned to zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2ActualRoomTempDesired",
+    "pbsb": "b524",
+    "id": "020003011400",
+    "zz": "15",
+    "comment": "Raumsolltemperatur Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2ActualRoomTempDesired",
+    "pbsb": "b524",
+    "id": "020103011400",
+    "zz": "15",
+    "comment": "Raumsolltemperatur Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Shortname",
+    "pbsb": "b524",
+    "id": "020003011600",
+    "zz": "15",
+    "comment": "Kurzbezeichnung zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "short name of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2Shortname",
+    "pbsb": "b524",
+    "id": "020103011600",
+    "zz": "15",
+    "comment": "Kurzbezeichnung zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:6",
+        "comment": "short name of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Name1",
+    "pbsb": "b524",
+    "id": "020003011700",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 2 Teil 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "name of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2Name1",
+    "pbsb": "b524",
+    "id": "020103011700",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 2 Teil 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:5",
+        "comment": "name of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Name2",
+    "pbsb": "b524",
+    "id": "020003011800",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 2 Teil 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "name of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2Name2",
+    "pbsb": "b524",
+    "id": "020103011800",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 2 Teil 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:5",
+        "comment": "name of zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2DayTemp",
+    "pbsb": "b524",
+    "id": "020003012200",
+    "zz": "15",
+    "comment": "Solltemperatur Zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "day setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z2DayTemp",
+    "pbsb": "b524",
+    "id": "020103012200",
+    "zz": "15",
+    "comment": "Solltemperatur Zone 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "day setpoint for zone 2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3HolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020003020300",
+    "zz": "15",
+    "comment": "Ferienzeitraum Start Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3HolidayStartPeriod",
+    "pbsb": "b524",
+    "id": "020103020300",
+    "zz": "15",
+    "comment": "Ferienzeitraum Start Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "start date of holidays for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3HolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020003020400",
+    "zz": "15",
+    "comment": "Ferienzeitraum Ende Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3HolidayEndPeriod",
+    "pbsb": "b524",
+    "id": "020103020400",
+    "zz": "15",
+    "comment": "Ferienzeitraum Ende Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "end date of holidays for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3HolidayTemp",
+    "pbsb": "b524",
+    "id": "020003020500",
+    "zz": "15",
+    "comment": "Raumsollwert Ferienbetrieb Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "holiday setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3HolidayTemp",
+    "pbsb": "b524",
+    "id": "020103020500",
+    "zz": "15",
+    "comment": "Raumsollwert Ferienbetrieb Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "holiday setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3OpMode",
+    "pbsb": "b524",
+    "id": "020003020600",
+    "zz": "15",
+    "comment": "Betriebsart Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3OpMode",
+    "pbsb": "b524",
+    "id": "020103020600",
+    "zz": "15",
+    "comment": "Betriebsart Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "auto",
+          "2": "day",
+          "3": "night"
+        },
+        "comment": "operation mode of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3QuickVetoTemp",
+    "pbsb": "b524",
+    "id": "020003020800",
+    "zz": "15",
+    "comment": "Quick Veto Temperatur Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "manual override setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3QuickVetoTemp",
+    "pbsb": "b524",
+    "id": "020103020800",
+    "zz": "15",
+    "comment": "Quick Veto Temperatur Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "manual override setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3QuickVetoDuration",
+    "pbsb": "b524",
+    "id": "020003022600",
+    "zz": "15",
+    "comment": "Duration of Quick Veto mode Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "h",
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3QuickVetoDuration",
+    "pbsb": "b524",
+    "id": "020103022600",
+    "zz": "15",
+    "comment": "Duration of Quick Veto mode Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "h",
+        "comment": "valid values are 0.5-12 in steps of 0.5 and writing enables quick veto mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3QuickVetoEndTime",
+    "pbsb": "b524",
+    "id": "020003021e00",
+    "zz": "15",
+    "comment": "Quick Veto end time Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HTI"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3QuickVetoEndDate",
+    "pbsb": "b524",
+    "id": "020003022400",
+    "zz": "15",
+    "comment": "Quick Veto end date Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "date"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3NightTemp",
+    "pbsb": "b524",
+    "id": "020003020900",
+    "zz": "15",
+    "comment": "Absenktemperatur Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "night setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3NightTemp",
+    "pbsb": "b524",
+    "id": "020103020900",
+    "zz": "15",
+    "comment": "Absenktemperatur Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "night setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3SFMode",
+    "pbsb": "b524",
+    "id": "020003020e00",
+    "zz": "15",
+    "comment": "SF mode zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3SFMode",
+    "pbsb": "b524",
+    "id": "020103020e00",
+    "zz": "15",
+    "comment": "SF mode zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "ventilation",
+          "2": "party",
+          "3": "veto",
+          "4": "onedayaway",
+          "5": "onedayathome",
+          "6": "load"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3ValveStatus",
+    "pbsb": "b524",
+    "id": "020003021200",
+    "zz": "15",
+    "comment": "Ventilstatus Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "valve status of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3ValveStatus",
+    "pbsb": "b524",
+    "id": "020103021200",
+    "zz": "15",
+    "comment": "Ventilstatus Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "valve status of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3RoomZoneMapping",
+    "pbsb": "b524",
+    "id": "020003021300",
+    "zz": "15",
+    "comment": "Raumregler Zuordnung Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "none",
+          "1": "VRC700",
+          "2": "VR91_1",
+          "3": "VR91_2",
+          "4": "VR91_3"
+        },
+        "comment": "configures which room temperature is assigned to zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3RoomZoneMapping",
+    "pbsb": "b524",
+    "id": "020103021300",
+    "zz": "15",
+    "comment": "Raumregler Zuordnung Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "none",
+          "1": "VRC700",
+          "2": "VR91_1",
+          "3": "VR91_2",
+          "4": "VR91_3"
+        },
+        "comment": "configures which room temperature is assigned to zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3ActualRoomTempDesired",
+    "pbsb": "b524",
+    "id": "020003021400",
+    "zz": "15",
+    "comment": "Raumsolltemperatur Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3ActualRoomTempDesired",
+    "pbsb": "b524",
+    "id": "020103021400",
+    "zz": "15",
+    "comment": "Raumsolltemperatur Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current room setpoint considering all basic conditions passed to the control algorithms"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3Shortname",
+    "pbsb": "b524",
+    "id": "020003021600",
+    "zz": "15",
+    "comment": "Kurzbezeichnung Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "short name of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3Shortname",
+    "pbsb": "b524",
+    "id": "020103021600",
+    "zz": "15",
+    "comment": "Kurzbezeichnung Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:6",
+        "comment": "short name of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3Name1",
+    "pbsb": "b524",
+    "id": "020003021700",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 3 Teil 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "name of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3Name1",
+    "pbsb": "b524",
+    "id": "020103021700",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 3 Teil 1",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:5",
+        "comment": "name of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3Name2",
+    "pbsb": "b524",
+    "id": "020003021800",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 3 Teil 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "STR:*",
+        "comment": "name of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3Name2",
+    "pbsb": "b524",
+    "id": "020103021800",
+    "zz": "15",
+    "comment": "Bezeichnung Zone 3 Teil 2",
+    "fields": [
+      {
+        "name": "value",
+        "type": "STR:5",
+        "comment": "name of zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z3DayTemp",
+    "pbsb": "b524",
+    "id": "020003022200",
+    "zz": "15",
+    "comment": "Solltemperatur Zone 3",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "day setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Z3DayTemp",
+    "pbsb": "b524",
+    "id": "020103022200",
+    "zz": "15",
+    "comment": "Solltemperatur Zone 3",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "day setpoint for zone 3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Timeframes",
+    "pbsb": "b555",
+    "id": "a40002",
+    "zz": "15",
+    "comment": "timer count hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1",
+        "comment": "Number of configured slots per weekday"
+      },
+      {
+        "name": "slotcount",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_1",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_2",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_3",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_4",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_5",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_6",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Monday0",
+    "pbsb": "b555",
+    "id": "a500020000",
+    "zz": "15",
+    "comment": "timer monday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Tuesday0",
+    "pbsb": "b555",
+    "id": "a500020100",
+    "zz": "15",
+    "comment": "timer tuesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Wednesday0",
+    "pbsb": "b555",
+    "id": "a500020200",
+    "zz": "15",
+    "comment": "timer wednesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Thursday0",
+    "pbsb": "b555",
+    "id": "a500020300",
+    "zz": "15",
+    "comment": "timer thursday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Friday0",
+    "pbsb": "b555",
+    "id": "a500020400",
+    "zz": "15",
+    "comment": "timer friday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Saturday0",
+    "pbsb": "b555",
+    "id": "a500020500",
+    "zz": "15",
+    "comment": "timer saturday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcTimer_Sunday0",
+    "pbsb": "b555",
+    "id": "a500020600",
+    "zz": "15",
+    "comment": "timer sunday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Timeframes",
+    "pbsb": "b555",
+    "id": "a40003",
+    "zz": "15",
+    "comment": "timer count circulation",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1",
+        "comment": "Number of configured slots per weekday"
+      },
+      {
+        "name": "slotcount",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_1",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_2",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_3",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_4",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_5",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_6",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Monday0",
+    "pbsb": "b555",
+    "id": "a500030000",
+    "zz": "15",
+    "comment": "timer monday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Tuesday0",
+    "pbsb": "b555",
+    "id": "a500030100",
+    "zz": "15",
+    "comment": "timer tuesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Wednesday0",
+    "pbsb": "b555",
+    "id": "a500030200",
+    "zz": "15",
+    "comment": "timer wednesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Thursday0",
+    "pbsb": "b555",
+    "id": "a500030300",
+    "zz": "15",
+    "comment": "timer thursday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Friday0",
+    "pbsb": "b555",
+    "id": "a500030400",
+    "zz": "15",
+    "comment": "timer friday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Saturday0",
+    "pbsb": "b555",
+    "id": "a500030500",
+    "zz": "15",
+    "comment": "timer saturday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CcTimer_Sunday0",
+    "pbsb": "b555",
+    "id": "a500030600",
+    "zz": "15",
+    "comment": "timer sunday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Timeframes",
+    "pbsb": "b555",
+    "id": "a40000",
+    "zz": "15",
+    "comment": "timer count zone 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1",
+        "comment": "Number of configured slots per weekday"
+      },
+      {
+        "name": "slotcount",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_1",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_2",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_3",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_4",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_5",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_6",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Monday0",
+    "pbsb": "b555",
+    "id": "a500000000",
+    "zz": "15",
+    "comment": "timer heating monday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Tuesday0",
+    "pbsb": "b555",
+    "id": "a500000100",
+    "zz": "15",
+    "comment": "timer heating tuesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Wednesday0",
+    "pbsb": "b555",
+    "id": "a500000200",
+    "zz": "15",
+    "comment": "timer heating wednesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Thursday0",
+    "pbsb": "b555",
+    "id": "a500000300",
+    "zz": "15",
+    "comment": "timer heating thursday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Friday0",
+    "pbsb": "b555",
+    "id": "a500000400",
+    "zz": "15",
+    "comment": "timer heating friday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Saturday0",
+    "pbsb": "b555",
+    "id": "a500000500",
+    "zz": "15",
+    "comment": "timer heating saturday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z1Timer_Sunday0",
+    "pbsb": "b555",
+    "id": "a500000600",
+    "zz": "15",
+    "comment": "timer heating sunday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Timeframes",
+    "pbsb": "b555",
+    "id": "a40100",
+    "zz": "15",
+    "comment": "timer count zone 2",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1",
+        "comment": "Number of configured slots per weekday"
+      },
+      {
+        "name": "slotcount",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_1",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_2",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_3",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_4",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_5",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "slotcount_6",
+        "type": "UCH",
+        "comment": "number of slots on a day"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:1"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Monday0",
+    "pbsb": "b555",
+    "id": "a501000000",
+    "zz": "15",
+    "comment": "timer heating monday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Tuesday0",
+    "pbsb": "b555",
+    "id": "a501000100",
+    "zz": "15",
+    "comment": "timer heating tuesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Wednesday0",
+    "pbsb": "b555",
+    "id": "a501000200",
+    "zz": "15",
+    "comment": "timer heating wednesday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Thursday0",
+    "pbsb": "b555",
+    "id": "a501000300",
+    "zz": "15",
+    "comment": "timer heating thursday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Friday0",
+    "pbsb": "b555",
+    "id": "a501000400",
+    "zz": "15",
+    "comment": "timer heating friday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Saturday0",
+    "pbsb": "b555",
+    "id": "a501000500",
+    "zz": "15",
+    "comment": "timer heating saturday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Z2Timer_Sunday0",
+    "pbsb": "b555",
+    "id": "a501000600",
+    "zz": "15",
+    "comment": "timer heating sunday 1",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "htm",
+        "type": "HTM"
+      },
+      {
+        "name": "htm_1",
+        "type": "HTM"
+      },
+      {
+        "name": "slottemp",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "°C",
+        "comment": "desired temperature of a slot"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcLegionellaTime",
+    "pbsb": "b524",
+    "id": "020000002a00",
+    "zz": "15",
+    "comment": "Legionellenschutz Uhrzeit",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "HTI"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HwcLegionellaDay",
+    "pbsb": "b524",
+    "id": "020000002b00",
+    "zz": "15",
+    "comment": "Legionellenschutz Wochentag",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "off",
+          "1": "Mo",
+          "2": "Di",
+          "3": "Mi",
+          "4": "Do",
+          "5": "Fr",
+          "6": "Sa",
+          "7": "So",
+          "8": "taeglich"
+        }
+      }
+    ]
+  }
+]

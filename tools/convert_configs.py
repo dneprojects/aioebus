@@ -28,20 +28,19 @@ ROOT = Path(__file__).resolve().parent.parent
 CFG = ROOT / "configs" / "vaillant"
 SRC = CFG / "src"
 
-# Our own, independently-created definitions only (Apache-2.0). Definitions
-# derived from the GPL-3.0 ebusd-configuration are NOT kept here; convert those
-# locally with `python -m aioebus.convert <file.csv>` against your own copy.
+# Own definitions authored as CSV (Apache-2.0), converted to JSON here. Device
+# types re-engineered from an observed bus capture (ctlv3/pmw/vr_71/hmu/broadcast)
+# are produced by tools/reengineer.py instead and only read back for the strings
+# base below. GPL-3.0 ebusd-configuration derivatives are not kept in the repo.
 DEVICES = {
     "eloblock@38": "38.v32.csv",
     "netx@f6": "f6.netx3.csv",
-    "arotherm@08": "arotherm.csv",
 }
 
 
 def main(src_dir: str | None) -> int:
     CFG.mkdir(parents=True, exist_ok=True)
     SRC.mkdir(parents=True, exist_ok=True)
-    all_msgs = []
     rc = 0
     for label, name in DEVICES.items():
         pinned = SRC / name
@@ -70,11 +69,15 @@ def main(src_dir: str | None) -> int:
             json.dumps(to_dicts(msgs), indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
-        all_msgs += msgs
         cond = sum(1 for m in msgs if m.conditions)
         print(f"  {label:12} {name:22} {len(msgs):4} msgs ({cond} cond)  round-trip={'ok' if ok else 'FAIL'}")
         rc |= 0 if ok else 1
 
+    # Strings base covers every definition in the folder -- the CSV-converted
+    # ones above and the re-engineered device types -- so each entity gets a key.
+    all_msgs = []
+    for jf in sorted(CFG.glob("*.json")):
+        all_msgs += from_dicts(json.loads(jf.read_text(encoding="utf-8")))
     strings = ha_strings(all_msgs)
     (CFG / "translations").mkdir(exist_ok=True)
     (CFG / "translations" / "strings.json").write_text(

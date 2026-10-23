@@ -1,9 +1,0 @@
-type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
-# Our own aroTHERM (heat pump, scan ident HMU00) definitions. Register ids are
-# protocol facts; names/descriptions are original; semantics verified against
-# our own live bus captures (see docs/eloblock.md run 2026-10-23). Not derived
-# from any third-party expression.
-*r,wp,,,,,08
-# electrical power input of the heat pump, in watts. Verified: tracked the heat
-# pump run on 2026-10-23 (58 W standby -> ~2300 W while running).
-r1,,,ElectricPower,heat pump electrical power input,,,b509,5402005b0d,ign,,IGN:4,,,,value,,EXP,,W,

@@ -1,0 +1,296 @@
+[
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SetActorState",
+    "pbsb": "b523",
+    "id": "05",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "r1",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r2",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r3",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r4",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r5",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r6",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r7",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r8",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r9",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r10",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r11",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r12",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "rx",
+        "type": "HEX:2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Mc1Operation",
+    "pbsb": "b523",
+    "id": "0200",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "status",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "flowtempdesired",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "pump",
+        "type": "UCH",
+        "part": "s",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "mixer",
+        "type": "SCH",
+        "part": "s",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Mc2Operation",
+    "pbsb": "b523",
+    "id": "0201",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "status",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "flowtempdesired",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "pump",
+        "type": "UCH",
+        "part": "s",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "mixer",
+        "type": "SCH",
+        "part": "s",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SensorData1",
+    "pbsb": "b523",
+    "id": "06",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "s1",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s2",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s3",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s4",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s5",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s6",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s7",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "ignore",
+        "type": "HEX:2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SensorData2",
+    "pbsb": "b523",
+    "id": "07",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "s8",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s9",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s10",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s11",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "s12",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "sx",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "ignore",
+        "type": "HEX:3"
+      }
+    ]
+  }
+]

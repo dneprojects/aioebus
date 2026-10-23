@@ -1,0 +1,1570 @@
+[
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SingleStorageCharge",
+    "pbsb": "b509",
+    "id": "0d4400",
+    "zz": "0a",
+    "comment": "Enable SingleTankCharge",
+    "conditions": [
+      "id_sw>=38"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "OperatingHours",
+    "pbsb": "b509",
+    "id": "0d4500",
+    "zz": "0a",
+    "comment": "ZaehlerBetriebsStunden: Working Hours",
+    "conditions": [
+      "id_sw>=38"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FlowTemp",
+    "pbsb": "b509",
+    "id": "0d4600",
+    "zz": "0a",
+    "comment": "TDurchfluss: flow in l/min",
+    "conditions": [
+      "id_sw>=39"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "VPMWMode",
+    "pbsb": "b509",
+    "id": "0d4b00",
+    "zz": "0a",
+    "comment": "VPMW_Mode: 1=VPM 20/25W, 2=VPM 30/35W",
+    "conditions": [
+      "id_sw>=112"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HexMonitoringCounter",
+    "pbsb": "b509",
+    "id": "0d4700",
+    "zz": "0a",
+    "comment": "HexMonitoringCounter: RO",
+    "conditions": [
+      "id_sw>=40"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HExThreshold",
+    "pbsb": "b509",
+    "id": "0d4800",
+    "zz": "0a",
+    "comment": "HExThreshold",
+    "conditions": [
+      "id_sw>=40"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 100,
+        "comment": "RO"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HExIndex",
+    "pbsb": "b509",
+    "id": "0d4a00",
+    "zz": "0a",
+    "comment": "HExIndex",
+    "conditions": [
+      "id_sw>=40"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 100,
+        "comment": "RO"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "KrmFaktorSmall",
+    "pbsb": "b509",
+    "id": "0d4e00",
+    "zz": "0a",
+    "comment": "Krm_Faktor_Small",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "Krm Verstärkungsfaktor Small (1/1000)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "KrmFaktorMiddl",
+    "pbsb": "b509",
+    "id": "0d4f00",
+    "zz": "0a",
+    "comment": "Krm_Faktor_Middl",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "Krm Verstärkungsfaktor Middl (1/1000)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TnmFaktorSmall",
+    "pbsb": "b509",
+    "id": "0d5000",
+    "zz": "0a",
+    "comment": "Tnm_Faktor_Small",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "Tnm Verstärkungsfaktor Small (1/1000)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TnmFaktorMiddl",
+    "pbsb": "b509",
+    "id": "0d5100",
+    "zz": "0a",
+    "comment": "Tnm_Faktor_Middl",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "Tnm Verstärkungsfaktor Middl (1/1000)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Ntc1Sensor",
+    "pbsb": "b509",
+    "id": "0d0000",
+    "zz": "0a",
+    "comment": "Ntc1Sensor: T1 Temperature",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "sensor",
+        "type": "UCH",
+        "values": {
+          "0": "ok",
+          "85": "circuit",
+          "170": "cutoff"
+        },
+        "comment": "sensor status"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Ntc2Sensor",
+    "pbsb": "b509",
+    "id": "0d0100",
+    "zz": "0a",
+    "comment": "Ntc2Sensor: T2 Temperature",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "sensor",
+        "type": "UCH",
+        "values": {
+          "0": "ok",
+          "85": "circuit",
+          "170": "cutoff"
+        },
+        "comment": "sensor status"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Ntc3Sensor",
+    "pbsb": "b509",
+    "id": "0d0200",
+    "zz": "0a",
+    "comment": "Ntc3Sensor: T3 Temperature",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "sensor",
+        "type": "UCH",
+        "values": {
+          "0": "ok",
+          "85": "circuit",
+          "170": "cutoff"
+        },
+        "comment": "sensor status"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CircoPump",
+    "pbsb": "b509",
+    "id": "0d0400",
+    "zz": "0a",
+    "comment": "CircoPump: Power in %",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PumpED",
+    "pbsb": "b509",
+    "id": "0d0500",
+    "zz": "0a",
+    "comment": "Pump_ED: Power in %",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CalculatedMixerPosition",
+    "pbsb": "b509",
+    "id": "0d0600",
+    "zz": "0a",
+    "comment": "CalculatedMixerPosition: 0: primary open; 220: primary closed",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ElectricalHeater",
+    "pbsb": "b509",
+    "id": "0d0800",
+    "zz": "0a",
+    "comment": "ElectricalHeater",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HeatDemand",
+    "pbsb": "b509",
+    "id": "0d0900",
+    "zz": "0a",
+    "comment": "HeatDemand",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "OperatingMode",
+    "pbsb": "b509",
+    "id": "0d0a00",
+    "zz": "0a",
+    "comment": "OperatingMode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on",
+          "2": "auto",
+          "3": "manual"
+        },
+        "comment": "hot water mode"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "OperatingMode",
+    "pbsb": "b509",
+    "id": "0e0a00",
+    "zz": "0a",
+    "level": "install",
+    "comment": "OperatingMode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on",
+          "2": "auto",
+          "3": "manual"
+        },
+        "comment": "hot water mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ManualTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0d0b00",
+    "zz": "0a",
+    "comment": "ManualTappingSetpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "ManualTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0e0b00",
+    "zz": "0a",
+    "level": "install",
+    "comment": "ManualTappingSetpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "AutoTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0d0c00",
+    "zz": "0a",
+    "comment": "AutoTappingSetpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "QuickVetoTempDesired",
+    "pbsb": "b509",
+    "id": "0d0d00",
+    "zz": "0a",
+    "comment": "QuickVetoSetpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ActualTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0d0e00",
+    "zz": "0a",
+    "comment": "ActualTappingSetpoint",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "QuickVetoStart",
+    "pbsb": "b509",
+    "id": "0d0f00",
+    "zz": "0a",
+    "comment": "QuickVetoStart",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "LegioStartDay",
+    "pbsb": "b509",
+    "id": "0d1000",
+    "zz": "0a",
+    "comment": "LegioStartDay",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "comment": "0=Monday, 1=Tue, … 6=Sunday, 7=LegioProtect off, 8=every day"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "LegioStartTime",
+    "pbsb": "b509",
+    "id": "0d1100",
+    "zz": "0a",
+    "comment": "LegioStartTime: Time when LegioProtect starts on specific day",
+    "fields": [
+      {
+        "name": "value",
+        "type": "VTI",
+        "comment": "time"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PartyStart",
+    "pbsb": "b509",
+    "id": "0d1200",
+    "zz": "0a",
+    "comment": "PartyStart: Start Party Mode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HolidayStart",
+    "pbsb": "b509",
+    "id": "0d1300",
+    "zz": "0a",
+    "comment": "HolidayStart: Start Holiday Mode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ActorFernsteuerung",
+    "pbsb": "b509",
+    "id": "0d1b00",
+    "zz": "0a",
+    "comment": "ActorFernsteuerung: TRUE -> RemoteControl of actors",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Time",
+    "pbsb": "b509",
+    "id": "0d2c00",
+    "zz": "0a",
+    "comment": "System Time",
+    "fields": [
+      {
+        "name": "value",
+        "type": "VTI",
+        "comment": "time"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Date",
+    "pbsb": "b509",
+    "id": "0d2d00",
+    "zz": "0a",
+    "comment": "System Date",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3",
+        "comment": "date"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Weekday",
+    "pbsb": "b509",
+    "id": "0d2e00",
+    "zz": "0a",
+    "comment": "System Weekday (0=Monday, 5=Saturday, 6=Sunday)",
+    "fields": [
+      {
+        "name": "value",
+        "type": "BDY",
+        "comment": "weekday"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TeleSwitch",
+    "pbsb": "b509",
+    "id": "0d3900",
+    "zz": "0a",
+    "comment": "TeleSwitch",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        },
+        "comment": "TeleSwitch Operating Mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TeleSwitchState",
+    "pbsb": "b509",
+    "id": "0d3a00",
+    "zz": "0a",
+    "comment": "TeleSwitchState: Teleswitch port state",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "EnableHwcOperation",
+    "pbsb": "b509",
+    "id": "0d4300",
+    "zz": "0a",
+    "comment": "EnableDHWOperation: Enable DHW Ooperation",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Krm",
+    "pbsb": "b509",
+    "id": "0d1400",
+    "zz": "0a",
+    "comment": "Krm",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tm",
+    "pbsb": "b509",
+    "id": "0d1500",
+    "zz": "0a",
+    "comment": "Tm",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tnm",
+    "pbsb": "b509",
+    "id": "0d1600",
+    "zz": "0a",
+    "comment": "Tnm",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tvm",
+    "pbsb": "b509",
+    "id": "0d1700",
+    "zz": "0a",
+    "comment": "Tvm",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Krp",
+    "pbsb": "b509",
+    "id": "0d1800",
+    "zz": "0a",
+    "comment": "Krp",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tvp",
+    "pbsb": "b509",
+    "id": "0d1900",
+    "zz": "0a",
+    "comment": "Tvp",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tp",
+    "pbsb": "b509",
+    "id": "0d1a00",
+    "zz": "0a",
+    "comment": "Tp",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000,
+        "comment": "enter value in 1/1000: 25=0.025, 250=0,25, 2500=2,5"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateMainControl",
+    "pbsb": "b509",
+    "id": "0d2f00",
+    "zz": "0a",
+    "comment": "State_MainControl: Aktuelle Zustandsnummer MainControl",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateMixerPumpControl",
+    "pbsb": "b509",
+    "id": "0d3000",
+    "zz": "0a",
+    "comment": "State_MixerPumpControl: Aktuelle Zustandsnummer MixerPumpControl",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateCircoKick",
+    "pbsb": "b509",
+    "id": "0d3100",
+    "zz": "0a",
+    "comment": "State_CircoKick: Aktuelle Zustandsnummer CircoKickControl",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateHExMonitoring",
+    "pbsb": "b509",
+    "id": "0d3200",
+    "zz": "0a",
+    "comment": "State_HExMonitoring: Aktuelle Zustandsnummer HExMonitoring",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TimeTicker",
+    "pbsb": "b509",
+    "id": "0d3300",
+    "zz": "0a",
+    "comment": "TimeTicker: Sekunden des Tages",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "s",
+        "comment": "seconds"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StLegioStopTimeCounter",
+    "pbsb": "b509",
+    "id": "0d3e00",
+    "zz": "0a",
+    "comment": "StLegioStopTimeCounter: End LegioProtect with Stop",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "StLegioStopTimeCounter",
+    "pbsb": "b509",
+    "id": "0e3e00",
+    "zz": "0a",
+    "level": "service",
+    "comment": "StLegioStopTimeCounter: End LegioProtect with Stop",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StLegioAbortTimeCounter",
+    "pbsb": "b509",
+    "id": "0d3f00",
+    "zz": "0a",
+    "comment": "StLegioAbortTimeCounter: End LegioProtect with Abort",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "StLegioAbortTimeCounter",
+    "pbsb": "b509",
+    "id": "0e3f00",
+    "zz": "0a",
+    "level": "service",
+    "comment": "StLegioAbortTimeCounter: End LegioProtect with Abort",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StFrostProtCounter",
+    "pbsb": "b509",
+    "id": "0d4000",
+    "zz": "0a",
+    "comment": "StFrostProtCounter: FrostProtectCounter",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "StFrostProtCounter",
+    "pbsb": "b509",
+    "id": "0e4000",
+    "zz": "0a",
+    "level": "service",
+    "comment": "StFrostProtCounter: FrostProtectCounter",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Mode",
+    "pbsb": "b504",
+    "id": "01",
+    "zz": "0a",
+    "comment": "Operation mode",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "UCH",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "hwcmode",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        },
+        "comment": "hot water mode"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:2"
+      },
+      {
+        "name": "hwcmode_1",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        },
+        "comment": "hot water mode"
+      },
+      {
+        "name": "mctype",
+        "type": "BI0:7",
+        "values": {
+          "0": "inactive",
+          "1": "mixer",
+          "2": "fixed",
+          "3": "hwc",
+          "4": "returnincr",
+          "5": "pool",
+          "6": "circulation"
+        },
+        "comment": "mixer type"
+      },
+      {
+        "name": "hex",
+        "type": "HEX"
+      },
+      {
+        "name": "daynight",
+        "type": "UCH",
+        "values": {
+          "0": "night",
+          "1": "day",
+          "4": "load",
+          "7": "floorpaving"
+        },
+        "comment": "day/night mode"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SetTempDesired",
+    "pbsb": "b505",
+    "id": "01",
+    "zz": "0a",
+    "comment": "Set desired temperature",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SetMode",
+    "pbsb": "b505",
+    "id": "02",
+    "zz": "0a",
+    "comment": "Set operation mode",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        },
+        "comment": "hot water mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Status",
+    "pbsb": "b504",
+    "id": "0d",
+    "zz": "0a",
+    "comment": "Desired flow/status/flow/desired temperature",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "UCH",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "onoff",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "temp_1",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "temp_2",
+        "type": "UCH",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Monday",
+    "pbsb": "b505",
+    "id": "0901",
+    "zz": "0a",
+    "comment": "Periods Monday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Tuesday",
+    "pbsb": "b505",
+    "id": "0902",
+    "zz": "0a",
+    "comment": "Periods Tuesday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Wednesday",
+    "pbsb": "b505",
+    "id": "0903",
+    "zz": "0a",
+    "comment": "Periods Wednesday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Thursday",
+    "pbsb": "b505",
+    "id": "0904",
+    "zz": "0a",
+    "comment": "Periods Thursday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Friday",
+    "pbsb": "b505",
+    "id": "0905",
+    "zz": "0a",
+    "comment": "Periods Friday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Saturday",
+    "pbsb": "b505",
+    "id": "0906",
+    "zz": "0a",
+    "comment": "Periods Saturday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Sunday",
+    "pbsb": "b505",
+    "id": "0907",
+    "zz": "0a",
+    "comment": "Periods Sunday",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "from",
+        "type": "TTM",
+        "comment": "from"
+      },
+      {
+        "name": "to",
+        "type": "TTM",
+        "comment": "to"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        },
+        "comment": "day selector"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Party",
+    "pbsb": "b505",
+    "id": "05",
+    "zz": "0a",
+    "comment": "Quick - party",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Load",
+    "pbsb": "b505",
+    "id": "06",
+    "zz": "0a",
+    "comment": "quick - hot water tank filling",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  }
+]

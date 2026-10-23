@@ -1,0 +1,1794 @@
+[
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "State",
+    "pbsb": "b511",
+    "id": "07",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "energy",
+        "type": "UCH"
+      },
+      {
+        "name": "energy_1",
+        "type": "UIN",
+        "unit": "kWh"
+      },
+      {
+        "name": "onoff",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "state",
+        "type": "UCH",
+        "values": {
+          "1": "ready",
+          "11": "error",
+          "9": "heating",
+          "17": "cooling",
+          "129": "heating_water"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldHcDay",
+    "pbsb": "b51a",
+    "id": "05ff3200",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldCoolDay",
+    "pbsb": "b51a",
+    "id": "05ff3201",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldHwcDay",
+    "pbsb": "b51a",
+    "id": "05ff3202",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldHcMonth",
+    "pbsb": "b51a",
+    "id": "05ff320e",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CopHcMonth",
+    "pbsb": "b51a",
+    "id": "05ff320f",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldHc",
+    "pbsb": "b51a",
+    "id": "05ff3210",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CopHc",
+    "pbsb": "b51a",
+    "id": "05ff3211",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldHwcMonth",
+    "pbsb": "b51a",
+    "id": "05ff3212",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CopHwcMonth",
+    "pbsb": "b51a",
+    "id": "05ff3213",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "YieldHwc",
+    "pbsb": "b51a",
+    "id": "05ff3216",
+    "zz": "08",
+    "comment": "energy yield hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CopHwc",
+    "pbsb": "b51a",
+    "id": "05ff3217",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Hours",
+    "pbsb": "b51a",
+    "id": "05ff3240",
+    "zz": "08",
+    "comment": "operation hours",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HoursHc",
+    "pbsb": "b51a",
+    "id": "05ff3241",
+    "zz": "08",
+    "comment": "operation hours heating",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HoursCool",
+    "pbsb": "b51a",
+    "id": "05ff3243",
+    "zz": "08",
+    "comment": "operation hours cooling",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HoursHwc",
+    "pbsb": "b51a",
+    "id": "05ff3244",
+    "zz": "08",
+    "comment": "operation hours hot water",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TargetFlowTemp",
+    "pbsb": "b51a",
+    "id": "05ff321f",
+    "zz": "08",
+    "comment": "target flow temperature",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FlowTemp",
+    "pbsb": "b51a",
+    "id": "05ff3220",
+    "zz": "08",
+    "comment": "current flow temperature",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "EnergyIntegral",
+    "pbsb": "b51a",
+    "id": "05ff3221",
+    "zz": "08",
+    "comment": "current energy integral",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "SIN",
+        "unit": "°min"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CurrentYieldPower",
+    "pbsb": "b51a",
+    "id": "05ff3223",
+    "zz": "08",
+    "comment": "current yielded energy from the environment",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "SCH",
+        "divisor": 10,
+        "unit": "kW"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CurrentConsumedPower",
+    "pbsb": "b51a",
+    "id": "05ff3224",
+    "zz": "08",
+    "comment": "current power consumption",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "SCH",
+        "divisor": 10,
+        "unit": "kW"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CurrentCompressorUtil",
+    "pbsb": "b51a",
+    "id": "05ff3225",
+    "zz": "08",
+    "comment": "current compressor utilization",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "BuildingCircuitFlow",
+    "pbsb": "b51a",
+    "id": "05ff323c",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "l/h"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FlowPressure",
+    "pbsb": "b51a",
+    "id": "05ff323d",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "D2C",
+        "divisor": 4,
+        "unit": "bar"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TotalEnergyUsage",
+    "pbsb": "b51a",
+    "id": "05ff324d",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CompressorHours",
+    "pbsb": "b51a",
+    "id": "05ff3400",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CompressorStarts",
+    "pbsb": "b51a",
+    "id": "05ff3401",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "BuildingPumpHours",
+    "pbsb": "b51a",
+    "id": "05ff3402",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "BuildingPumpStarts",
+    "pbsb": "b51a",
+    "id": "05ff3403",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FourWayValveHours",
+    "pbsb": "b51a",
+    "id": "05ff3406",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FourWayValveSwitches",
+    "pbsb": "b51a",
+    "id": "05ff3407",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Fan1Hours",
+    "pbsb": "b51a",
+    "id": "05ff3451",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Fan1Starts",
+    "pbsb": "b51a",
+    "id": "05ff3452",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Fan2Hours",
+    "pbsb": "b51a",
+    "id": "05ff345e",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Fan2Starts",
+    "pbsb": "b51a",
+    "id": "05ff345f",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataCompressorSpeed",
+    "pbsb": "b509",
+    "id": "5402000d0a",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "rps"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataEEVPositionAbs",
+    "pbsb": "b509",
+    "id": "540200280a",
+    "zz": "08",
+    "comment": "(EEV Position in different scale?)",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataFan1Speed",
+    "pbsb": "b509",
+    "id": "540200470a",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "rpm"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataFan2Speed",
+    "pbsb": "b509",
+    "id": "540200490a",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "rpm"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataStatuscode",
+    "pbsb": "b509",
+    "id": "540200530d",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "34": "frost_protect",
+          "100": "standby",
+          "101": "heat_compressor_shutdown",
+          "102": "heat_compressor_blocked",
+          "103": "heat_prerun",
+          "104": "heat_compressor_active",
+          "107": "heat_overrun",
+          "111": "cool_compressor_shutdown",
+          "112": "cool_compressor_blocked",
+          "113": "cool_prerun",
+          "114": "cool_compressor_active",
+          "117": "cool_overrun",
+          "125": "heat_immersion_heater_active",
+          "132": "hwc_compressor_blocked",
+          "133": "hwc_prerun",
+          "134": "hwc_compressor_active",
+          "135": "hwc_immersion_heater_active",
+          "137": "hwc_overrun",
+          "141": "heat_immersion_heater_shutdown",
+          "142": "heat_immersion_heater_blocked",
+          "151": "hwc_immersion_heater_shutdown",
+          "152": "hwc_immersion_heater_blocked",
+          "202": "air_purging_program_active",
+          "240": "compressor_oil_heating_active",
+          "252": "fan1_blocked",
+          "255": "fan1_airinlet_too_high",
+          "256": "fan1_airinlet_too_low",
+          "260": "fan2_blocked",
+          "275": "building_circuit_flow_too_low",
+          "277": "building_circuit_pump_fault",
+          "280": "frequency_converter_fault_compressor",
+          "281": "frequency_converter_fault_mains_voltage",
+          "282": "frequency_converter_fault_overheating",
+          "283": "deicing_time_too_long",
+          "284": "deicing_flow_temp_too_low",
+          "285": "compressor_outlet_temp_too_high",
+          "286": "hot_gas_temp_switch_open",
+          "287": "fan1_wind",
+          "288": "fan2_wind",
+          "289": "current_limt_active",
+          "302": "high_pressure_switch_open",
+          "303": "compressor_outlet_temp_too_high_1",
+          "304": "evaporation_temp_too_low",
+          "305": "condensation_temp_too_low",
+          "306": "evaporation_temp_too_high",
+          "308": "condensation_temp_too_high",
+          "312": "building_circuit_return_temp_too_low",
+          "314": "building_circuit_return_temp_too_high",
+          "351": "immersion_heater_flow_temp_too_high",
+          "516": "deicing_active",
+          "575": "frequency_converter_fault",
+          "581": "connection_fault_frequency_converter",
+          "590": "four_port_valve_position_fault"
+        },
+        "comment": "HMU Status code"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataElectricPowerConsumption",
+    "pbsb": "b509",
+    "id": "5402005b0d",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "W",
+        "comment": "current electrical power consumption (Watt)"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataHighPressure",
+    "pbsb": "b509",
+    "id": "5402006a09",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "bar",
+        "comment": "pressure"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataCompressorInletTemp",
+    "pbsb": "b509",
+    "id": "5402009808",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataCompressorOutletTemp",
+    "pbsb": "b509",
+    "id": "540200a208",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataEEVOutletTemp",
+    "pbsb": "b509",
+    "id": "540200ac08",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataFlowTemp",
+    "pbsb": "b509",
+    "id": "540200fc08",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current flow temp, accurate to 2 decimal places"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataReturnTemp",
+    "pbsb": "b509",
+    "id": "5402000609",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "current return temp, accurate to 2 decimal places"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsHMUHours",
+    "pbsb": "b509",
+    "id": "540200b80b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsHcHours",
+    "pbsb": "b509",
+    "id": "540200b90b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsHwcHours",
+    "pbsb": "b509",
+    "id": "540200bc0b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "total runtime of Hwc mode"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsCompressorHours",
+    "pbsb": "b509",
+    "id": "540200c20b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsCompressorStarts",
+    "pbsb": "b509",
+    "id": "540200c30b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsBuildingPumpHours",
+    "pbsb": "b509",
+    "id": "540200c40b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataBuildingCPumpPower",
+    "pbsb": "b509",
+    "id": "540200c509",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsBuildingCPumpStarts",
+    "pbsb": "b509",
+    "id": "540200c50b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "total starts of building circuit pump"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStats4PortValveHours",
+    "pbsb": "b509",
+    "id": "540200c80b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStats4PortValveSwitches",
+    "pbsb": "b509",
+    "id": "540200c90b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsFan1Hours",
+    "pbsb": "b509",
+    "id": "540200d70b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsFan1Starts",
+    "pbsb": "b509",
+    "id": "540200d80b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsFan2Hours",
+    "pbsb": "b509",
+    "id": "540200d90b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h",
+        "comment": "hours"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsFan2Starts",
+    "pbsb": "b509",
+    "id": "540200da0b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataAirInletTemp",
+    "pbsb": "b509",
+    "id": "540200de08",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsCompressorHc",
+    "pbsb": "b511",
+    "id": "1801",
+    "zz": "08",
+    "comment": "compressor runtime in min and starts in Hc mode",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "runtime",
+        "type": "ULG",
+        "unit": "min",
+        "comment": "minutes"
+      },
+      {
+        "name": "cycles",
+        "type": "ULG",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsCompressorHwc",
+    "pbsb": "b511",
+    "id": "1802",
+    "zz": "08",
+    "comment": "compressor runtime in min and starts in Hwc mode",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "runtime",
+        "type": "ULG",
+        "unit": "min",
+        "comment": "minutes"
+      },
+      {
+        "name": "cycles",
+        "type": "ULG",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "DateTime",
+    "pbsb": "b504",
+    "id": "00",
+    "zz": "08",
+    "comment": "date/time",
+    "fields": [
+      {
+        "name": "dcfstate",
+        "type": "UCH",
+        "values": {
+          "0": "nosignal",
+          "1": "ok",
+          "2": "sync",
+          "3": "valid"
+        },
+        "comment": "DCF receiver state"
+      },
+      {
+        "name": "btime",
+        "type": "BTI",
+        "comment": "time"
+      },
+      {
+        "name": "bdate",
+        "type": "BDA",
+        "comment": "date"
+      },
+      {
+        "name": "temp",
+        "type": "D2B",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "uw",
+    "circuit": "",
+    "name": "SetMode",
+    "pbsb": "b510",
+    "id": "00",
+    "zz": "08",
+    "comment": "Operation mode",
+    "fields": [
+      {
+        "name": "hcmode",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "off",
+          "2": "heat",
+          "3": "water"
+        },
+        "comment": "boiler mode"
+      },
+      {
+        "name": "flowtempdesired",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "hwctempdesired",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "hwcflowtempdesired",
+        "type": "UCH",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "disablehc",
+        "type": "BI0"
+      },
+      {
+        "name": "disablehwctapping",
+        "type": "BI1"
+      },
+      {
+        "name": "disablehwcload",
+        "type": "BI2"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:1"
+      },
+      {
+        "name": "remotecontrolhcpump",
+        "type": "BI0"
+      },
+      {
+        "name": "releasebackup",
+        "type": "BI1"
+      },
+      {
+        "name": "releasecooling",
+        "type": "BI2"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SetMode",
+    "pbsb": "b510",
+    "id": "00",
+    "zz": "08",
+    "level": "install",
+    "comment": "Operation mode",
+    "fields": [
+      {
+        "name": "hcmode",
+        "type": "UCH",
+        "values": {
+          "0": "auto",
+          "1": "off",
+          "2": "heat",
+          "3": "water"
+        },
+        "comment": "boiler mode"
+      },
+      {
+        "name": "flowtempdesired",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "hwctempdesired",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "hwcflowtempdesired",
+        "type": "UCH",
+        "unit": "°C",
+        "comment": "temperature"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "disablehc",
+        "type": "BI0"
+      },
+      {
+        "name": "disablehwctapping",
+        "type": "BI1"
+      },
+      {
+        "name": "disablehwcload",
+        "type": "BI2"
+      },
+      {
+        "name": "ign_1",
+        "type": "IGN:1"
+      },
+      {
+        "name": "remotecontrolhcpump",
+        "type": "BI0"
+      },
+      {
+        "name": "releasebackup",
+        "type": "BI1"
+      },
+      {
+        "name": "releasecooling",
+        "type": "BI2"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Status01",
+    "pbsb": "b511",
+    "id": "01",
+    "zz": "08",
+    "comment": "Vorlauftemperatur/Rücklauftemperatur/Aussentemperatur/WW Temperatur/Speichertemperatur/Pumpenstatus",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "flow temperature"
+      },
+      {
+        "name": "temp_1",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "return temperature"
+      },
+      {
+        "name": "temp_2",
+        "type": "D2B",
+        "unit": "°C",
+        "comment": "outside temperature"
+      },
+      {
+        "name": "temp_3",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "hot water temperature"
+      },
+      {
+        "name": "temp_4",
+        "type": "D1C",
+        "unit": "°C",
+        "comment": "storage temperature"
+      },
+      {
+        "name": "pumpstate",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on",
+          "2": "overrun",
+          "4": "hwc"
+        },
+        "comment": "pump status"
+      }
+    ]
+  },
+  {
+    "direction": "uw",
+    "circuit": "",
+    "name": "StatusCirPump",
+    "pbsb": "b512",
+    "id": "00",
+    "zz": "08",
+    "comment": "Status circulation pump",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "100": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "CompressorHc",
+    "pbsb": "b511",
+    "id": "1801",
+    "zz": "08",
+    "conditions": [
+      "id_sw>=902"
+    ],
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "runtime",
+        "type": "ULG",
+        "unit": "min",
+        "comment": "minutes"
+      },
+      {
+        "name": "cycles",
+        "type": "ULG",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "CompressorHwc",
+    "pbsb": "b511",
+    "id": "1802",
+    "zz": "08",
+    "conditions": [
+      "id_sw>=902"
+    ],
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "runtime",
+        "type": "ULG",
+        "unit": "min",
+        "comment": "minutes"
+      },
+      {
+        "name": "cycles",
+        "type": "ULG",
+        "comment": "start count"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "CompressorBlocktime",
+    "pbsb": "b51a",
+    "id": "05ff321e",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "min"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "SupplyTempWeighted",
+    "pbsb": "b51a",
+    "id": "05ff321f",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C",
+        "comment": "temperature"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "YieldCoolingMonth",
+    "pbsb": "b51a",
+    "id": "05ff322a",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "CopCoolingMonth",
+    "pbsb": "b51a",
+    "id": "05ff322b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "YieldCooling",
+    "pbsb": "b51a",
+    "id": "05ff322c",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10,
+        "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "CopCooling",
+    "pbsb": "b51a",
+    "id": "05ff322d",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:3"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "divisor": 10
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "wp0",
+    "name": "PowerConsumptionHmu",
+    "pbsb": "b516",
+    "id": "14",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:1"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kW"
+      }
+    ]
+  }
+]
