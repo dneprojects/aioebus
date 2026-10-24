@@ -38,10 +38,13 @@ if TYPE_CHECKING:
 class PollItem:
     msg: MessageDef
     priority: int
-    last_update: float = field(default=0.0)  # last value time (poll OR passive)
+    last_update: float = field(default=0.0)  # last attempt time (value OR failed poll)
+    fails: int = 0  # consecutive unanswered polls; backs the interval off
 
 
 class PollScheduler:
+    MAX_BACKOFF: int = 5  # a dead register backs off up to 2**5 = 32x its interval
+
     def __init__(self, messages: list[MessageDef], base_interval: float = 60.0,
                  default_priority: int = 0):
         """``default_priority`` is the priority given to plain ``r`` reads (0 =
@@ -68,16 +71,28 @@ class PollScheduler:
                    default_priority=default_priority)
 
     def interval(self, item: PollItem) -> float:
-        return self.base_interval * item.priority
+        # a register the device keeps not answering is polled exponentially less
+        # often, so dead registers stop stealing bus slots from answering ones
+        return self.base_interval * item.priority * (1 << min(item.fails, self.MAX_BACKOFF))
 
     def mark(self, zz: str, name: str, now: float) -> None:
-        """Record that a fresh value arrived (from a poll or passively)."""
+        """Record that a fresh value arrived (from a poll or passively); clears
+        any backoff."""
         item = self._items.get((zz, name))
         if item is not None:
             item.last_update = now
+            item.fails = 0
 
     def mark_passive(self, msg: MessageDef, now: float) -> None:
         self.mark(msg.zz, msg.name, now)
+
+    def mark_failure(self, msg: MessageDef, now: float) -> None:
+        """Record that a poll went unanswered: keep it from being re-handed
+        immediately, and back its interval off so it fades out of the rotation."""
+        item = self._items.get((msg.zz, msg.name))
+        if item is not None:
+            item.last_update = now
+            item.fails += 1
 
     def next_due(self, now: float) -> PollItem | None:
         """The single most-overdue message to read now, or None if none is due.

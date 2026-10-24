@@ -95,6 +95,7 @@ class _CommandDriver:
         self.done = False
         self.result = None
         self.error: str | None = None
+        self.lost_to: int | None = None  # winning master address when arbitration is lost
 
     def start(self) -> list[bytes]:
         """Initial symbols to send: the arbitration START with QQ."""
@@ -125,6 +126,7 @@ class _CommandDriver:
                 self._state = "cmd"
                 return self._send_next_cmd()
             if code == FAILED:
+                self.lost_to = data  # the master that won the bus (for passive capture)
                 return self._fail(f"arbitration lost to {data:#04x}")
             return []  # ignore SYN/other while waiting to win
 

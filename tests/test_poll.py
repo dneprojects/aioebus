@@ -38,6 +38,19 @@ def test_priority_sets_interval():
     assert sch.next_due(60.0).msg.name == "Fast"
 
 
+def test_failed_poll_backoff():
+    sch = PollScheduler(MSGS, base_interval=10.0)
+    fast = next(m for m in MSGS if m.name == "Fast")  # r1 -> base interval 10
+    item = sch._items[("38", "Fast")]
+    assert sch.interval(item) == 10.0
+    sch.mark_failure(fast, now=0.0)
+    assert sch.interval(item) == 20.0          # 2x after one unanswered poll
+    sch.mark_failure(fast, now=0.0)
+    assert sch.interval(item) == 40.0          # 4x
+    sch.mark_passive(fast, now=0.0)            # a value clears the backoff
+    assert sch.interval(item) == 10.0
+
+
 def test_passive_update_suppresses_poll():
     sch = PollScheduler(MSGS, base_interval=10.0)
     assert sch.next_due(12.0).msg.name == "Fast"   # Fast would be polled at t=12

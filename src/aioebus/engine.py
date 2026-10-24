@@ -196,6 +196,15 @@ class EbusEngine:
             if act.future is not None and not act.future.done():
                 act.future.set_result(drv.result)
             return
+        # We lost the bus to another master: capture ITS telegram passively instead
+        # of discarding it. The arbitration consumed only the winner's address byte
+        # (reported as drv.lost_to); the rest of its telegram is still arriving, and
+        # now that _active is clear those bytes route to the passive buffer -- so
+        # seed the buffer with the winner's address and the next SYN decodes the
+        # whole telegram (a broadcast, or another master's read incl. the slave part).
+        lost_to = getattr(drv, "lost_to", None)
+        if isinstance(lost_to, int) and not self._buf:
+            self._buf.append(lost_to)
         # error: retry a lost/contended bus (rebuild a fresh driver), else give up
         retryable = "arbitration lost" in drv.error or "collision" in drv.error
         if retryable and act.attempts < self.MAX_ATTEMPTS:
@@ -205,8 +214,8 @@ class EbusEngine:
             act.future.set_exception(ReadError(drv.error))
         elif act.msg is not None and self.scheduler is not None:
             # a poll the device did not answer (NAK/timeout): record the attempt
-            # so it waits its normal interval before retrying. Without this its
-            # timer stays at zero, so it is forever the most-overdue item and the
-            # scheduler keeps handing back the same unanswered register, starving
-            # every other register behind it.
-            self.scheduler.mark_passive(act.msg, time.monotonic())
+            # and back it off. Without recording it, its timer stays at zero so it
+            # is forever the most-overdue item and the scheduler keeps re-handing
+            # the same dead register, starving the rest; the backoff then fades a
+            # persistently unanswered register out of the rotation entirely.
+            self.scheduler.mark_failure(act.msg, time.monotonic())

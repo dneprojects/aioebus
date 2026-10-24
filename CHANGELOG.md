@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+- Capture the telegram the engine loses arbitration to, instead of discarding it: the winner's address is known from the failed arbitration, so the engine seeds the passive buffer with it and decodes the whole telegram at the next SYN. Broadcasts (e.g. outside temperature) and other masters' reads are now decoded passively even while we are trying to poll
+- Back off a persistently unanswered poll: each consecutive no-answer doubles its interval (up to 32x), so a dead register fades out of the rotation instead of being retried every cycle
+
 ## 0.2.1
 
 - Fix a poll-scheduler starvation: a poll the device never answered kept its timer at zero, so it stayed the most-overdue item and the engine re-issued the same dead read forever — stalling every other register and the passive decode in between. A failed poll now records the attempt and waits its interval.
