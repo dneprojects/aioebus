@@ -40,6 +40,19 @@ class _Active:
     driver: _CommandDriver | None = None
 
 
+@dataclass
+class EngineStats:
+    """Live counters for the adapter link, meant to be surfaced as the adapter's
+    own diagnostic entities (connection, bus activity, poll success)."""
+
+    connected: bool = False  # the stream is up and bytes are arriving
+    telegrams: int = 0  # telegrams decoded off the bus passively (free)
+    polls_ok: int = 0  # scheduled polls that got an answer
+    polls_failed: int = 0  # scheduled polls that stayed unanswered (backed off)
+    writes: int = 0  # active writes performed
+    last_telegram: float | None = None  # monotonic time of the last bus telegram
+
+
 class EbusEngine:
     """Drive one eBUS adapter connection: passive decode + interleaved actives."""
 
@@ -68,6 +81,7 @@ class EbusEngine:
         self._active: _Active | None = None
         self._queue: deque[_Active] = deque()
         self.cache: dict[tuple[str, str, str], object] = {}
+        self.stats = EngineStats()
         self._stop = False
 
     # -- public API ---------------------------------------------------------
@@ -81,11 +95,14 @@ class EbusEngine:
                 break
             if not chunk:
                 break
+            self.stats.connected = True
             for code, data in self._dec.feed(chunk):
                 await self._on_event(code, data)
+        self.stats.connected = False
 
     def stop(self) -> None:
         self._stop = True
+        self.stats.connected = False
 
     def attach(self, send: Callable[[bytes], Awaitable[None]],
                recv: Callable[[], Awaitable[bytes]]) -> None:
@@ -97,6 +114,7 @@ class EbusEngine:
         self._buf.clear()
         self._active = None
         self._stop = False
+        self.stats.connected = False
 
     async def read(self, msg: MessageDef, timeout: float = 4.0) -> dict:
         """Actively read a message as soon as the bus is idle; return its values."""
@@ -154,6 +172,8 @@ class EbusEngine:
             return
         if not tg.crc_ok:
             return
+        self.stats.telegrams += 1
+        self.stats.last_telegram = time.monotonic()
         decoded = self.registry.decode(tg)
         if decoded is not None:
             self._store(*decoded)
@@ -193,6 +213,10 @@ class EbusEngine:
         if drv.error is None:
             if isinstance(drv, ReadDriver) and act.msg is not None:
                 self._store(act.msg, act.msg.decode_labeled(slave=drv.result))
+                if act.future is None:  # a scheduled poll, not an explicit read
+                    self.stats.polls_ok += 1
+            elif isinstance(drv, WriteDriver):
+                self.stats.writes += 1
             if act.future is not None and not act.future.done():
                 act.future.set_result(drv.result)
             return
@@ -219,3 +243,4 @@ class EbusEngine:
             # the same dead register, starving the rest; the backoff then fades a
             # persistently unanswered register out of the rotation entirely.
             self.scheduler.mark_failure(act.msg, time.monotonic())
+            self.stats.polls_failed += 1

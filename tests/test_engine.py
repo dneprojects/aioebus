@@ -112,6 +112,40 @@ class _ArbLossAdapter:
         return bytes(out)
 
 
+def test_stats_track_connection_and_bus_activity():
+    """A decoded bus telegram counts as activity and marks the link connected;
+    an unanswered poll is counted as a failed poll."""
+    async def inner():
+        link = _Link()
+        eng = EbusEngine(link.send, link.recv, REG)
+        assert eng.stats.connected is False
+        task = asyncio.create_task(eng.run())
+        link.inject(encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00")))
+        await asyncio.sleep(0.05)
+        assert eng.stats.connected is True
+        assert eng.stats.telegrams == 1
+        assert eng.stats.last_telegram is not None
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+        assert eng.stats.connected is False
+
+        msg = BY["Statenumber"]
+        sched = PollScheduler([msg], base_interval=10.0)
+        eng2 = EbusEngine(link.send, link.recv, REG, scheduler=sched)
+
+        class _FailedDriver:
+            error = "timeout waiting for slave"
+
+        act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
+        act.driver = _FailedDriver()
+        eng2._active = act
+        await eng2._finish_active()
+        assert eng2.stats.polls_failed == 1
+
+    asyncio.run(inner())
+
+
 def test_arbitration_loss_captures_winner_passively():
     """When our poll loses arbitration, the telegram that won is decoded
     passively (seeded with the winner's address) instead of being discarded."""

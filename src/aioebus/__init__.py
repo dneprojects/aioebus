@@ -20,7 +20,7 @@ from .active import (
 )
 from .codecs import Codec, decode, encode, make_codec
 from .conditions import ConditionContext, context_from_scan, evaluate, evaluate_all
-from .engine import EbusEngine, value_key
+from .engine import EbusEngine, EngineStats, value_key
 from .frame import Telegram, crc8, escape, parse_telegram, unescape
 from .messages import FieldDef, MessageDef, parse_csv
 from .passive import MessageRegistry, decode_raw
@@ -34,6 +34,7 @@ __all__ = [
     "Codec",
     "ConditionContext",
     "EbusEngine",
+    "EngineStats",
     "EnhDecoder",
     "FieldDef",
     "MessageDef",
@@ -64,4 +65,4 @@ __all__ = [
     "unescape",
     "value_key",
 ]
-__version__ = "0.2.2"
+__version__ = "0.3.0"

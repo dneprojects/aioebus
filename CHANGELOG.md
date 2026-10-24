@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- Engine exposes an `EngineStats` surface (`engine.stats`): link `connected` flag, count of telegrams decoded off the bus, answered/unanswered scheduled polls, active writes, and the time of the last bus telegram — so a consumer can present the adapter's own connection and activity as entities
+
 ## 0.2.2
 
 - Capture the telegram the engine loses arbitration to, instead of discarding it: the winner's address is known from the failed arbitration, so the engine seeds the passive buffer with it and decodes the whole telegram at the next SYN. Broadcasts (e.g. outside temperature) and other masters' reads are now decoded passively even while we are trying to poll
