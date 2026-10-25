@@ -24,6 +24,21 @@ def _slug(text: str) -> str:
     return _SLUG.sub("_", text.lower()).strip("_")
 
 
+def localized(tr: dict[str, str] | None, lang: str, fallback: str) -> str:
+    """Pick the display text for ``lang`` from an embedded translations map,
+    falling back to English, then to ``fallback`` (usually the technical label).
+
+    This is the single resolution used for data-driven entity names: a definition
+    carries its own ``tr`` (merged from the per-language CSVs at import), so the
+    same code path serves bundled and imported devices, in any installed language.
+    """
+    if tr:
+        text = tr.get(lang) or tr.get("en")
+        if text:
+            return text
+    return fallback
+
+
 def translation_key(msg: MessageDef, field: FieldDef) -> str:
     """Stable HA translation_key for one decodable field. A lone generic
     ``value`` field keys off the message name alone (matching the HA-style label

@@ -37,6 +37,9 @@ class FieldDef:
     values: dict[int, str] | None
     unit: str
     comment: str
+    # display-text translations by language code ({"en": ..., "de": ...}); the
+    # technical `name` stays the language-neutral key, so entity ids are stable
+    tr: dict[str, str] | None = None
 
 
 @dataclass
@@ -52,6 +55,8 @@ class MessageDef:
     msgid: str  # hex after pbsb, e.g. "0d1800"
     fields: list[FieldDef]
     conditions: list[str] | None = None  # e.g. ["id_sw>=200"]; evaluated in P4
+    # display-text translations by language code for the message-level name
+    tr: dict[str, str] | None = None
 
     @property
     def is_read(self) -> bool:

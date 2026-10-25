@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Definitions can carry embedded display-text translations: `MessageDef.tr` / `FieldDef.tr` (`{lang: text}`), round-tripped through the JSON format; `translations.localized(tr, lang, fallback)` resolves a language with English-then-technical fallback. Lets one definition serve bundled and imported devices in any installed language, with the technical `name` staying the stable key
+
 ## 0.3.0
 
 - Engine exposes an `EngineStats` surface (`engine.stats`): link `connected` flag, count of telegrams decoded off the bus, answered/unanswered scheduled polls, active writes, and the time of the last bus telegram — so a consumer can present the adapter's own connection and activity as entities

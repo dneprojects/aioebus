@@ -34,6 +34,8 @@ def to_dicts(msgs: list[MessageDef]) -> list[dict]:
                 fd["unit"] = f.unit
             if f.comment:
                 fd["comment"] = f.comment
+            if f.tr:
+                fd["tr"] = f.tr
             fields.append(fd)
         out.append(
             {
@@ -44,6 +46,7 @@ def to_dicts(msgs: list[MessageDef]) -> list[dict]:
                 **({"level": m.level} if m.level else {}),
                 **({"comment": m.comment} if m.comment else {}),
                 **({"conditions": m.conditions} if m.conditions else {}),
+                **({"tr": m.tr} if m.tr else {}),
                 "fields": fields,
             }
         )
@@ -58,7 +61,7 @@ def from_dicts(data: list[dict]) -> list[MessageDef]:
                 name=f.get("name", ""), part=f.get("part", ""), type=f["type"],
                 divisor=f.get("divisor"),
                 values={int(k): v for k, v in f["values"].items()} if f.get("values") else None,
-                unit=f.get("unit", ""), comment=f.get("comment", ""),
+                unit=f.get("unit", ""), comment=f.get("comment", ""), tr=f.get("tr"),
             )
             for f in m.get("fields", [])
         ]
@@ -68,6 +71,7 @@ def from_dicts(data: list[dict]) -> list[MessageDef]:
                 level=m.get("level", ""), name=m["name"], comment=m.get("comment", ""),
                 qq=m.get("qq", ""), zz=m.get("zz", ""), pbsb=m["pbsb"],
                 msgid=m["id"], fields=fields, conditions=m.get("conditions"),
+                tr=m.get("tr"),
             )
         )
     return msgs
