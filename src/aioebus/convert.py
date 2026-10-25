@@ -81,6 +81,74 @@ def csv_to_json(csv_text: str) -> str:
     return json.dumps(to_dicts(parse_csv(csv_text)), indent=2, ensure_ascii=False)
 
 
+def _msg_key(m: MessageDef) -> tuple[str, str, str, str]:
+    return (m.direction, m.pbsb, m.msgid, m.name)
+
+
+def attach_translations(
+    defs: list[MessageDef], by_lang: dict[str, list[MessageDef]]
+) -> list[MessageDef]:
+    """Set ``tr`` on each def from the same message in every provided language.
+
+    ``by_lang`` maps a language code to that language's parsed definitions of the
+    *same device* (the per-language CSVs are structurally identical). Messages are
+    matched by ``(direction, pbsb, id, name)`` and fields by position (guarded by
+    the field name), so order differences do not matter. Only non-empty comments
+    are stored; a message/field with no translation anywhere keeps ``tr=None``.
+    Mutates and returns ``defs``."""
+    index = {lang: {_msg_key(m): m for m in msgs} for lang, msgs in by_lang.items()}
+    for m in defs:
+        key = _msg_key(m)
+        m_tr = {lang: o.comment for lang, idx in index.items()
+                if (o := idx.get(key)) is not None and o.comment}
+        m.tr = m_tr or None
+        for i, f in enumerate(m.fields):
+            f_tr = {
+                lang: o.fields[i].comment
+                for lang, idx in index.items()
+                if (o := idx.get(key)) is not None
+                and i < len(o.fields) and o.fields[i].name == f.name and o.fields[i].comment
+            }
+            f.tr = f_tr or None
+    return defs
+
+
+def merge_languages(by_lang_text: dict[str, str], base_lang: str = "en") -> list[MessageDef]:
+    """Merge one device's CSV in several languages into a single definition list
+    carrying per-language display text in ``tr``. ``by_lang_text`` maps a language
+    code to that language's CSV text (e.g. the ``/en/`` and ``/de/`` files from the
+    ebus.github.io CDN). The base language defines the structure (English, else the
+    first given); every language's comments land in ``tr``."""
+    parsed = {lang: parse_csv(text) for lang, text in by_lang_text.items()}
+    base = base_lang if base_lang in parsed else next(iter(parsed))
+    return attach_translations(parsed[base], parsed)
+
+
+def merge_languages_to_json(by_lang_text: dict[str, str], base_lang: str = "en") -> str:
+    return json.dumps(
+        to_dicts(merge_languages(by_lang_text, base_lang)), indent=2, ensure_ascii=False)
+
+
+def convert_langs_dir(src_dir: Path, out_dir: Path, langs: tuple[str, ...] = ("en", "de")) -> int:
+    """Batch-merge per-language CSV mirrors into native JSON. Expects
+    ``<src_dir>/<lang>/<name>.csv`` for each language (a local mirror of the
+    ebus.github.io layout). The first language present is the structural base; the
+    GPL-3.0 derivative stays on your machine."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    base = langs[0]
+    n = 0
+    for csv_file in sorted((src_dir / base).glob("*.csv")):
+        by_lang = {
+            lang: (src_dir / lang / csv_file.name).read_text(encoding="utf-8", errors="replace")
+            for lang in langs
+            if (src_dir / lang / csv_file.name).exists()
+        }
+        (out_dir / (csv_file.stem + ".json")).write_text(
+            merge_languages_to_json(by_lang, base_lang=base) + "\n", encoding="utf-8")
+        n += 1
+    return n
+
+
 def convert_dir(src_dir: Path, out_dir: Path) -> int:
     """Batch-convert every ebusd CSV in a directory to native JSON (same base
     name). Used to generate device definitions locally from your own copy of

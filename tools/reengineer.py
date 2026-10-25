@@ -8,18 +8,23 @@ is our own selection -- the subset observed here, not upstream's full curated
 compilation -- emitted in the native JSON format.
 
     python tools/reengineer.py <telegrams.db> <out_dir> \
-        [--device ADDR NAME.json CSV [CSV ...]] ...
+        [--device ADDR NAME.json CSV [CSV ...] [--tr LANG CSV ...] ...] ...
 
 Example (one --device group per emitted file):
 
     python tools/reengineer.py log.db out \
-        --device 15 ctlv3.json csv/15.ctlv3.csv \
-        --device 08 hmu.json  csv/08.hmu.csv csv/08.hmu.HW5103.csv
+        --device 15 ctlv3.json csv/en/15.ctlv3.csv --tr de csv/de/15.ctlv3.csv \
+        --device 08 hmu.json  csv/en/08.hmu.csv csv/en/08.hmu.HW5103.csv
 
 A message is kept when at least one of its fields decoded to a non-None value
 somewhere in the log; every field of a kept message is retained so byte offsets
 stay correct. Only facts (ids/types/divisors/units/value tables) and the short
 functional field names are carried over.
+
+The CSVs before any --tr are the decoding key (their language -- usually English
+-- becomes the ``en`` display text). Each ``--tr LANG CSV ...`` adds that
+language's comments as display translations (``tr``) on the kept messages, so one
+definition carries every language. Without --tr the output is unchanged.
 """
 from __future__ import annotations
 
@@ -31,7 +36,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from aioebus.convert import to_dicts
+from aioebus.convert import attach_translations, to_dicts
 from aioebus.messages import MessageDef, parse_csv
 
 BROADCAST = 0xFE
@@ -79,9 +84,14 @@ def _live_fields(m: MessageDef, dd: str, s_dd: str) -> set[str]:
     return {k for k, v in out.items() if v is not None}
 
 
-def reengineer(db_path: Path, addr: int | None, csv_paths: list[Path]):
+def reengineer(db_path: Path, addr: int | None, csv_paths: list[Path],
+               tr_csvs: dict[str, list[Path]] | None = None):
     """Return (kept_defs, report) for one device address, or for the broadcast
-    pseudo-circuit when addr is None (telegrams sent to 0xfe)."""
+    pseudo-circuit when addr is None (telegrams sent to 0xfe).
+
+    ``tr_csvs`` maps a language code to that language's CSVs of the same device;
+    their comments are attached to the kept definitions as display translations
+    (``tr``). The decode-key CSVs provide the ``en`` text."""
     defs = _load_defs(csv_paths)
     idx = _by_pbsb(defs)
     live: dict[int, set[str]] = {id(m): set() for m in defs}
@@ -124,6 +134,9 @@ def reengineer(db_path: Path, addr: int | None, csv_paths: list[Path]):
         return bool(live[id(m)]) or (m.is_write and (m.circuit, m.name) in live_read_keys)
 
     kept = [m for m in defs if keep(m)]
+    if tr_csvs:  # attach per-language display text (en from the decode-key CSVs)
+        by_lang = {"en": defs, **{lang: _load_defs(p) for lang, p in tr_csvs.items()}}
+        attach_translations(kept, by_lang)
     report = {
         "total": len(defs),
         "kept": len(kept),
@@ -149,9 +162,14 @@ def reengineer(db_path: Path, addr: int | None, csv_paths: list[Path]):
     return kept, report
 
 
-def _parse_groups(argv: list[str]) -> list[tuple[int | None, str, list[Path]]]:
-    """--device ADDR NAME CSV... or --broadcast NAME CSV... (addr None)."""
-    groups: list[tuple[int | None, str, list[Path]]] = []
+def _parse_groups(
+    argv: list[str],
+) -> list[tuple[int | None, str, list[Path], dict[str, list[Path]]]]:
+    """--device ADDR NAME CSV... [--tr LANG CSV...] or --broadcast NAME CSV...
+
+    CSVs before any --tr are the decode key; each ``--tr LANG`` switches the
+    following CSVs into that language's translation set for the group."""
+    groups: list[tuple[int | None, str, list[Path], dict[str, list[Path]]]] = []
     i = 0
     while i < len(argv):
         kind = argv[i]
@@ -162,19 +180,25 @@ def _parse_groups(argv: list[str]) -> list[tuple[int | None, str, list[Path]]]:
             addr, name, i = None, argv[i + 1], i + 2
         else:
             raise SystemExit(f"expected --device/--broadcast, got {kind!r}")
-        paths = []
+        paths: list[Path] = []
+        tr: dict[str, list[Path]] = {}
+        cur = paths  # collect into the decode-key list until a --tr switches
         while i < len(argv) and argv[i] not in ("--device", "--broadcast"):
-            paths.append(Path(argv[i]))
+            if argv[i] == "--tr":
+                cur = tr.setdefault(argv[i + 1], [])
+                i += 2
+                continue
+            cur.append(Path(argv[i]))
             i += 1
-        groups.append((addr, name, paths))
+        groups.append((addr, name, paths, tr))
     return groups
 
 
 def main(argv: list[str]) -> None:
     db_path, out_dir = Path(argv[0]), Path(argv[1])
     out_dir.mkdir(parents=True, exist_ok=True)
-    for addr, name, csv_paths in _parse_groups(argv[2:]):
-        kept, report = reengineer(db_path, addr, csv_paths)
+    for addr, name, csv_paths, tr_csvs in _parse_groups(argv[2:]):
+        kept, report = reengineer(db_path, addr, csv_paths, tr_csvs)
         zz = "fe" if addr is None else f"{addr:02x}"
         stamped = [replace(m, zz=zz) for m in kept]
         if kept:

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Definitions can carry embedded display-text translations: `MessageDef.tr` / `FieldDef.tr` (`{lang: text}`), round-tripped through the JSON format; `translations.localized(tr, lang, fallback)` resolves a language with English-then-technical fallback. Lets one definition serve bundled and imported devices in any installed language, with the technical `name` staying the stable key
+- Merge a device's per-language CSVs into one definition carrying `tr`: `convert.merge_languages({lang: csv_text})` / `merge_languages_to_json` / `convert_langs_dir` (ebus.github.io `/en/`, `/de/` layout), `convert.attach_translations`. `tools/reengineer.py` gains `--tr LANG CSV...` to attach translations to re-engineered definitions
 
 ## 0.3.0
 
