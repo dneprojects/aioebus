@@ -48,3 +48,49 @@ def decode_scan(slave: bytes) -> ScanResult:
     hw = _four(slave[8], slave[9])
     return ScanResult(mf, _MANUFACTURERS.get(mf, f"{mf:#04x}"), ident, sw, hw,
                       _num(sw), _num(hw))
+
+
+@dataclass
+class Identification:
+    """Vaillant extended identification (read from b509 24/25/26). The 0704 scan
+    only gives the control-board id (e.g. HMU00), which is shared across many
+    appliances; this adds the 10-digit article number (Sachnummer) that maps to
+    the actual model, the full factory serial, and the manufacture year/week."""
+    article: str  # 10-digit article number (Sachnummer)
+    serial: str   # full factory serial (unique per unit)
+    year: int | None
+    week: int | None
+
+
+def _digits(raw: bytes) -> str:
+    """ASCII digits from a raw answer, dropping status/padding bytes."""
+    return "".join(chr(b) for b in raw if 0x30 <= b <= 0x39)
+
+
+def _suffix(raw: bytes) -> str:
+    """The revision tail of field 27 -- a letter and one digit (e.g. 'N3'). The
+    rest is padding (which varies: '<', '0' or null), so take just the two chars
+    the Vaillant app shows."""
+    return raw[:2].decode("latin-1", "ignore")
+
+
+def decode_identification(
+    f24: bytes, f25: bytes, f26: bytes, f27: bytes
+) -> Identification | None:
+    """Decode the Vaillant identification from the four b509 reads (24/25/26/27).
+
+    The article number is the last two digits of field 24 plus the first eight of
+    field 25 -- validated against a sensoCOMFORT VRC 720, whose manual lists
+    0010045478. The serial is the full 28-character string exactly as the Vaillant
+    app shows it (24 + 25 + 26 + the 'N#' of 27, e.g. 21233400100211220001015434N3).
+    Field 24 is '21' + year + week + the first two article digits. Returns None
+    when the bytes are not a Vaillant identification."""
+    d24, d25, d26 = _digits(f24), _digits(f25), _digits(f26)
+    if len(d24) < 8 or not d24.startswith("21") or len(d25) < 8:
+        return None
+    return Identification(
+        article=d24[6:8] + d25[:8],
+        serial=d24 + d25 + d26 + _suffix(f27),
+        year=2000 + int(d24[2:4]) if d24[2:4].isdigit() else None,
+        week=int(d24[4:6]) if d24[4:6].isdigit() else None,
+    )

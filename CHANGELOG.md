@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Read the Vaillant extended identification: `ActiveReader.read_identification` (from `b509` 24/25/26/27) and `scan.decode_identification` yield the 10-digit article number (Sachnummer, which maps to the actual model, unlike the shared control-board id), the full 28-character serial (character-for-character as the Vaillant app shows it) and the manufacture year/week. Validated against a sensoCOMFORT VRC 720 (article 0010045478) and four real app serials
+
 ## 0.4.0
 
 - Definitions can carry embedded display-text translations: `MessageDef.tr` / `FieldDef.tr` (`{lang: text}`), round-tripped through the JSON format; `translations.localized(tr, lang, fallback)` resolves a language with English-then-technical fallback. Lets one definition serve bundled and imported devices in any installed language, with the technical `name` staying the stable key

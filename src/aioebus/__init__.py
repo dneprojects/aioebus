@@ -25,7 +25,7 @@ from .frame import Telegram, crc8, escape, parse_telegram, unescape
 from .messages import FieldDef, MessageDef, parse_csv
 from .passive import MessageRegistry, decode_raw
 from .poll import PollScheduler
-from .scan import ScanResult, decode_scan
+from .scan import Identification, ScanResult, decode_identification, decode_scan
 from .transport import EnhDecoder, PassiveListener, listen
 
 __all__ = [
@@ -37,6 +37,7 @@ __all__ = [
     "EngineStats",
     "EnhDecoder",
     "FieldDef",
+    "Identification",
     "MessageDef",
     "MessageRegistry",
     "PassiveListener",
@@ -52,6 +53,7 @@ __all__ = [
     "context_from_scan",
     "crc8",
     "decode",
+    "decode_identification",
     "decode_raw",
     "decode_scan",
     "encode",
@@ -65,4 +67,4 @@ __all__ = [
     "unescape",
     "value_key",
 ]
-__version__ = "0.4.0"
+__version__ = "0.5.0"

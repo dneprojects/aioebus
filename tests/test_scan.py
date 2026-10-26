@@ -19,3 +19,29 @@ def test_decode_scan_real():
 def test_scan_strips_null_padding():
     # V32 id is 3 chars, padded with nulls in the 5-byte field
     assert decode_scan(bytes.fromhex("b5563332000001219802")).ident == "V32"
+
+
+def test_identification_matches_manual_and_app():
+    """b509 24/25/26/27 decode to the Vaillant article number and the full serial.
+    The article matches a sensoCOMFORT VRC 720 manual (0010045478); the serials
+    match the strings shown in the Vaillant app, character for character."""
+    from aioebus.scan import decode_identification
+    # f24 has a leading 00 status byte; f25/f26 are ASCII digits; f27 is 'N#' + padding
+    ctlv3 = decode_identification(
+        bytes.fromhex("00") + b"21242400", b"100454780", b"953014926", b"N20000000")
+    assert ctlv3 is not None
+    assert ctlv3.article == "0010045478"  # matches the printed manual
+    assert ctlv3.year == 2024 and ctlv3.week == 24
+
+    # the two heat pumps share the article (same model), differ in the serial;
+    # serials are exactly the strings the Vaillant app shows
+    wp1 = decode_identification(
+        bytes.fromhex("00") + b"21233400", b"100211220", b"001015434", b"N3<<<<<<<")
+    wp2 = decode_identification(
+        bytes.fromhex("00") + b"21233400", b"100211220", b"001015550", b"N3<<<<<<<")
+    assert wp1.article == wp2.article == "0010021122"
+    assert wp1.serial == "21233400100211220001015434N3"
+    assert wp2.serial == "21233400100211220001015550N3"
+
+    # not a Vaillant identification -> None
+    assert decode_identification(b"\x00garbage", b"x", b"y", b"z") is None
