@@ -62,16 +62,10 @@ class Identification:
     week: int | None
 
 
-def _digits(raw: bytes) -> str:
-    """ASCII digits from a raw answer, dropping status/padding bytes."""
-    return "".join(chr(b) for b in raw if 0x30 <= b <= 0x39)
-
-
-def _suffix(raw: bytes) -> str:
-    """The revision tail of field 27 -- a letter and one digit (e.g. 'N3'). The
-    rest is padding (which varies: '<', '0' or null), so take just the two chars
-    the Vaillant app shows."""
-    return raw[:2].decode("latin-1", "ignore")
+def _ascii(raw: bytes) -> str:
+    """Printable ASCII payload of a field: keeps digits, letters and the '<'
+    padding, dropping the leading status byte and any control/pad nulls."""
+    return "".join(chr(b) for b in raw if 0x21 <= b <= 0x7E)
 
 
 def decode_identification(
@@ -79,18 +73,18 @@ def decode_identification(
 ) -> Identification | None:
     """Decode the Vaillant identification from the four b509 reads (24/25/26/27).
 
-    The article number is the last two digits of field 24 plus the first eight of
-    field 25 -- validated against a sensoCOMFORT VRC 720, whose manual lists
-    0010045478. The serial is the full 28-character string exactly as the Vaillant
-    app shows it (24 + 25 + 26 + the 'N#' of 27, e.g. 21233400100211220001015434N3).
-    Field 24 is '21' + year + week + the first two article digits. Returns None
-    when the bytes are not a Vaillant identification."""
-    d24, d25, d26 = _digits(f24), _digits(f25), _digits(f26)
-    if len(d24) < 8 or not d24.startswith("21") or len(d25) < 8:
+    The four fields concatenate to the 28-character serial exactly as the Vaillant
+    app shows it. Its documented layout is '21' (data identifier) + year + week +
+    10-char article number (a 6-digit one is padded with '<') + factory mark +
+    product counter + 'N' + check digit. The article number maps to the actual
+    model and is validated against a sensoCOMFORT VRC 720 (0010045478). Returns
+    None when the bytes are not a Vaillant identification."""
+    full = _ascii(f24) + _ascii(f25) + _ascii(f26) + _ascii(f27)[:2]
+    if len(full) < 16 or full[:2] != "21" or not full[2:6].isdigit():
         return None
     return Identification(
-        article=d24[6:8] + d25[:8],
-        serial=d24 + d25 + d26 + _suffix(f27),
-        year=2000 + int(d24[2:4]) if d24[2:4].isdigit() else None,
-        week=int(d24[4:6]) if d24[4:6].isdigit() else None,
+        article=full[6:16].rstrip("<"),  # 6-digit articles are '<'-padded to 10
+        serial=full,
+        year=2000 + int(full[2:4]),
+        week=int(full[4:6]),
     )

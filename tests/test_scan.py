@@ -26,11 +26,12 @@ def test_identification_matches_manual_and_app():
     The article matches a sensoCOMFORT VRC 720 manual (0010045478); the serials
     match the strings shown in the Vaillant app, character for character."""
     from aioebus.scan import decode_identification
-    # f24 has a leading 00 status byte; f25/f26 are ASCII digits; f27 is 'N#' + padding
+    # f24 has a leading 00 status byte; f25/f26 are ASCII; f27 is 'N#' + padding
     ctlv3 = decode_identification(
         bytes.fromhex("00") + b"21242400", b"100454780", b"953014926", b"N20000000")
     assert ctlv3 is not None
     assert ctlv3.article == "0010045478"  # matches the printed manual
+    assert ctlv3.serial == "21242400100454780953014926N2"
     assert ctlv3.year == 2024 and ctlv3.week == 24
 
     # the two heat pumps share the article (same model), differ in the serial;
@@ -42,6 +43,13 @@ def test_identification_matches_manual_and_app():
     assert wp1.article == wp2.article == "0010021122"
     assert wp1.serial == "21233400100211220001015434N3"
     assert wp2.serial == "21233400100211220001015550N3"
+
+    # a 6-digit article is '<'-padded to ten and stripped back (Vaillant doc example)
+    doc = decode_identification(
+        bytes.fromhex("00") + b"21040100", b"6304<<<<0", b"001005001", b"N7")
+    assert doc.article == "006304"
+    assert doc.serial == "210401006304<<<<0001005001N7"
+    assert doc.year == 2004 and doc.week == 1
 
     # not a Vaillant identification -> None
     assert decode_identification(b"\x00garbage", b"x", b"y", b"z") is None
