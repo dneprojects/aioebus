@@ -289,12 +289,17 @@ class _Float(Codec):
     def __init__(self, name, big):
         super().__init__(name, 4)
         self.fmt = ">f" if big else "<f"
+        self.extra_div: float | None = None  # from the CSV divisor column
 
     def decode(self, data: bytes):
         if len(data) < 4:
             return None
         value = struct.unpack(self.fmt, data[:4])[0]
-        return None if value != value else value  # NaN (replacement) -> None
+        if value != value:  # NaN (replacement) -> None
+            return None
+        if self.extra_div:  # ebusd: positive divides, negative multiplies
+            value = value / self.extra_div if self.extra_div > 0 else value * -self.extra_div
+        return value
 
 
 # base name -> factory(n_or_None). n is the suffix (bytes) where adjustable.
@@ -352,7 +357,7 @@ def decode(spec: str, data, divisor: float | None = None):
     if isinstance(data, str):
         data = bytes.fromhex(data)
     codec = make_codec(spec)
-    if divisor and isinstance(codec, _Numeric):
+    if divisor and hasattr(codec, "extra_div"):  # _Numeric and _Float (EXP/EXR)
         codec.extra_div = divisor
     return codec.decode(data)
 

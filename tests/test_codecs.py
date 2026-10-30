@@ -41,6 +41,16 @@ def test_divisor_column():
     assert decode("UCH", "05", divisor=-100) == 500
 
 
+def test_float_divisor_column():
+    # EXP/EXR (IEEE binary32) must honor the CSV divisor like the integer types.
+    # Real HMU b516/10 StatEnvironmentEnergySumHc: trailing float -> kWh (/1000).
+    assert decode("EXP", "372f9f4b") == 20864622.0  # raw float, no divisor
+    assert decode("EXP", "372f9f4b", divisor=1000) == 20864.622
+    assert decode("EXP", "372f9f4b", divisor=-2) == 41729244.0  # negative multiplies
+    # big-endian EXR (same bytes reversed) applies it too
+    assert decode("EXR", "4b9f2f37", divisor=1000) == 20864.622
+
+
 def test_signed_and_remainder():
     assert decode("SCH", "fe") == -2
     assert decode("STR:*", "466268") == "Fbh"  # variable-length zone short name

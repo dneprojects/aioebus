@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Fix: `EXP`/`EXR` (IEEE binary32) float fields now honor the CSV divisor column, like the integer types already did — it was silently ignored, so a value such as `b516`/`10` lifetime energy decoded 1000x too large (raw instead of kWh)
+
 ## 0.5.0
 
 - Read the Vaillant extended identification: `ActiveReader.read_identification` (from `b509` 24/25/26/27) and `scan.decode_identification` yield the 10-digit article number (Sachnummer, which maps to the actual model, unlike the shared control-board id), the full 28-character serial (character-for-character as the Vaillant app shows it) and the manufacture year/week. Validated against a sensoCOMFORT VRC 720 (article 0010045478) and four real app serials
