@@ -23,7 +23,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 
-from .frame import SYN, crc8, escape, unescape
+from .frame import ESC, SYN, crc8, escape
 from .messages import MessageDef
 from .scan import SCAN_PBSB, Identification, ScanResult, decode_identification, decode_scan
 from .transport import FAILED, RECEIVED, STARTED, EnhDecoder
@@ -166,7 +166,8 @@ class ReadDriver(_CommandDriver):
     def __init__(self, zz: int, pbsb: str, msgid: str, qq: int = DEFAULT_SOURCE,
                  master_data: bytes = b""):
         super().__init__(zz, pbsb, bytes.fromhex(msgid) + master_data, qq)
-        self._slave_wire = bytearray()
+        self._slave = bytearray()  # unescaped slave bytes so far
+        self._esc = False  # an escape prefix arrived, its second byte is pending
 
     def _acked(self) -> list[bytes]:
         self._state = "res"
@@ -175,10 +176,23 @@ class ReadDriver(_CommandDriver):
     def _handle(self, code: int, data: int) -> list[bytes]:
         if self._state != "res" or code != RECEIVED:
             return []
-        self._slave_wire.append(data)
-        u = unescape(bytes(self._slave_wire))
-        if len(u) >= 1 and len(u) >= u[0] + 2:  # SN + SN data + CRC
-            return self._finish_slave(u)
+        # a raw SYN never occurs inside a frame: the slave did not answer and the
+        # bus went idle, so give up now instead of waiting for a 0xAA-byte answer
+        if data == SYN:
+            return self._fail("no answer from slave")
+        # unescape byte by byte, so a frame ending in an escaped byte (e.g. a CRC
+        # of 0xAA sent as A9 01) is not judged complete on its first half
+        if self._esc:
+            self._esc = False
+            self._slave.append(SYN if data == 0x01 else ESC if data == 0x00 else data)
+        elif data == ESC:
+            self._esc = True
+            return []
+        else:
+            self._slave.append(data)
+        u = self._slave
+        if len(u) >= u[0] + 2:  # SN + SN data + CRC
+            return self._finish_slave(bytes(u))
         return []
 
     def _finish_slave(self, u: bytes) -> list[bytes]:
@@ -279,6 +293,8 @@ class ActiveReader:
             f25 = await self.read_raw(zz, "b509", "25", timeout=timeout, tries=3)
             f26 = await self.read_raw(zz, "b509", "26", timeout=timeout, tries=3)
             f27 = await self.read_raw(zz, "b509", "27", timeout=timeout, tries=3)
+        except ConnectionError:
+            raise  # the link itself is gone: the caller must reconnect, not skip
         except (ReadError, TimeoutError, OSError):
             return None
         return decode_identification(f24, f25, f26, f27)

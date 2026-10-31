@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.2
+
+- Fix: an active transaction now has a deadline (`EbusEngine.ACTIVE_DEADLINE`, 3 s) — one the bus never completed held the engine in the active state forever, stopping passive decoding and all polls
+- Fix: a read the slave ACKs but never answers fails at the next SYN instead of waiting for a phantom 0xAA-length answer
+- Fix: a slave answer whose last byte is escaped (e.g. CRC 0xAA sent as `A9 01`) was judged complete on the escape prefix and failed the CRC
+- Fix: another master's unanswered read no longer decodes to `None` values that overwrite the cache and suppress the poll
+- Fix: an explicit read/write whose caller timed out is never sent later — withdrawn from the queue, not retried after a lost arbitration, and not started without time left to finish (`read`/`write` default timeout now 6 s)
+- Fix: an empty answer (SN=0) to one of our own reads counts as unanswered instead of caching `None`
+- `ActiveReader.read_identification` re-raises a lost link (`ConnectionError`) instead of reporting "no identification"
+- `PollScheduler.carry_from(old)` keeps register timing across a poll-set rebuild, so re-scoping polling causes no burst
+
 ## 0.5.1
 
 - Fix: `EXP`/`EXR` (IEEE binary32) float fields now honor the CSV divisor column, like the integer types already did — it was silently ignored, so a value such as `b516`/`10` lifetime energy decoded 1000x too large (raw instead of kWh)

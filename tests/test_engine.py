@@ -155,6 +155,7 @@ def test_arbitration_loss_captures_winner_passively():
         # winner 0x10, rest is the telegram without its leading (arbitrated) 0x10
         link.adapter = _ArbLossAdapter(0x10, "feb5160301c00d12")
         eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE = 0.1  # below the request timeout, so the read starts
         task = asyncio.create_task(eng.run())
         rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=0.2))
         await asyncio.sleep(0)
@@ -195,6 +196,140 @@ def test_failed_poll_is_recorded_not_restuck():
     asyncio.run(inner())
 
 
+def test_stuck_transaction_hits_deadline():
+    """A transaction the bus never completes (here: no reply to our START) must
+    not hold the engine forever: past the deadline it fails like an unanswered
+    poll and the engine returns to passive decoding."""
+    async def inner():
+        link = _Link()  # no adapter: nothing ever answers our START
+        msg = BY["Statenumber"]
+        sched = PollScheduler([msg], base_interval=10.0)
+        eng = EbusEngine(link.send, link.recv, REG, scheduler=sched)
+        eng.ACTIVE_DEADLINE = 0.05
+        task = asyncio.create_task(eng.run())
+        link.inject(encode_symbol(RECEIVED, SYN))  # idle -> the poll starts
+        await asyncio.sleep(0.02)
+        assert eng._active is not None
+        await asyncio.sleep(0.06)
+        link.inject(encode_symbol(RECEIVED, SYN))  # next bus event, past the deadline
+        await asyncio.sleep(0.02)
+        assert eng._active is None
+        assert eng.stats.polls_failed == 1
+        link.inject(encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00")))
+        await asyncio.sleep(0.02)
+        assert eng.cache[value_key(BY["FlowTemp"], "FlowTemp")] == 25.0625
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_timed_out_request_is_withdrawn():
+    """A request the caller gave up on is removed from the queue, so it is never
+    sent later (a write must not land after the caller saw it fail)."""
+    async def inner():
+        link = _Link()
+        eng = EbusEngine(link.send, link.recv, REG)  # not running: nothing is dequeued
+        with contextlib.suppress(TimeoutError):
+            await eng.read(BY["Statenumber"], timeout=0.01)
+        assert not eng._queue
+
+    asyncio.run(inner())
+
+
+class _AlwaysLoseAdapter:
+    """Every START loses arbitration; records when each START was sent."""
+
+    def __init__(self):
+        self._dec = EnhDecoder()
+        self.starts: list[float] = []
+
+    def on_send(self, sent: bytes) -> bytes:
+        out = bytearray()
+        for code, _data in self._dec.feed(sent):
+            if code == START:
+                self.starts.append(asyncio.get_running_loop().time())
+                out += encode_symbol(FAILED, 0x10)
+        return bytes(out)
+
+
+def test_abandoned_request_is_not_retried():
+    """A request that keeps losing arbitration must stop once its caller timed
+    out -- a write may not go out after HA already reported it as failed."""
+    async def inner():
+        link = _Link()
+        link.adapter = adapter = _AlwaysLoseAdapter()
+        eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE = 0.01
+        eng.MAX_ATTEMPTS = 1000  # retries alone would outlast the caller
+        task = asyncio.create_task(eng.run())
+        loop = asyncio.get_running_loop()
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=0.1))
+        gave_up: list[float] = []
+        rtask.add_done_callback(lambda _t: gave_up.append(loop.time()))
+        end = loop.time() + 0.3
+        while loop.time() < end:  # a busy bus: idle SYNs keep coming
+            link.inject(encode_symbol(RECEIVED, SYN))
+            await asyncio.sleep(0.005)
+        with contextlib.suppress(TimeoutError):
+            await rtask
+        assert adapter.starts, "the read never started"
+        assert not [t for t in adapter.starts if t > gave_up[0]]
+        assert not eng._queue
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_request_without_time_to_finish_is_not_started():
+    """With less time left than one transaction may take, the request fails at
+    once instead of starting and possibly landing after the caller gave up."""
+    async def inner():
+        link = _Link()
+        link.adapter = adapter = _AlwaysLoseAdapter()
+        eng = EbusEngine(link.send, link.recv, REG)  # deadline 3 s > timeout 1 s
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=1.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        try:
+            await asyncio.wait_for(rtask, 0.5)  # fails long before its own timeout
+        except TimeoutError as err:
+            assert "no time left" in str(err)
+        assert adapter.starts == []
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_empty_answer_counts_as_unanswered_poll():
+    """A slave answering a read with no data (SN=0) delivers no value: the poll
+    is backed off like an unanswered one, nothing None is cached."""
+    async def inner():
+        link = _Link()
+        msg = BY["Statenumber"]
+        cmd = build_read_frame(0x38, "b509", "0dab00", QQ)[len(escape(bytes((QQ,)))):]
+        link.adapter = _Adapter(cmd, _slave_wire(""))
+        sched = PollScheduler([msg], base_interval=10.0)
+        eng = EbusEngine(link.send, link.recv, REG, scheduler=sched)
+        task = asyncio.create_task(eng.run())
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.05)
+        assert eng.stats.polls_failed == 1 and eng.stats.polls_ok == 0
+        assert value_key(msg, "Statenumber") not in eng.cache
+        assert sched._items[(msg.zz, msg.name)].fails == 1
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
 def test_active_read_interleaved():
     async def inner():
         link = _Link()
@@ -202,6 +337,7 @@ def test_active_read_interleaved():
         cmd = build_read_frame(0x38, "b509", "0dab00", QQ)[len(escape(bytes((QQ,)))):]
         link.adapter = _Adapter(cmd, _slave_wire("1f"))  # 0x1f -> "sommer"
         eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE = 1.0  # below the request timeout, so the read starts
         task = asyncio.create_task(eng.run())
         rtask = asyncio.create_task(eng.read(msg, timeout=2))
         await asyncio.sleep(0)                      # let the read enqueue

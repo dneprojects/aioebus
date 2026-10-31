@@ -59,6 +59,18 @@ def test_passive_update_suppresses_poll():
     assert sch.next_due(13.0) is None              # so no poll is due anymore
 
 
+def test_rebuild_carries_timing_over():
+    old = PollScheduler(MSGS, base_interval=10.0)
+    fast = next(m for m in MSGS if m.name == "Fast")
+    old.mark_passive(fast, now=100.0)
+    old.mark_failure(next(m for m in MSGS if m.name == "Slow"), now=100.0)
+    new = PollScheduler(MSGS, base_interval=10.0, default_priority=7)
+    new.carry_from(old)
+    assert new._items[("38", "Fast")].last_update == 100.0   # not due again at once
+    assert new._items[("38", "Slow")].fails == 1              # backoff kept
+    assert new._items[("38", "OnDemand")].last_update == 0.0  # new register: due now
+
+
 def test_one_at_a_time_and_due_count():
     sch = PollScheduler(MSGS, base_interval=10.0)
     assert sch.due_count(60.0) == 2       # both overdue

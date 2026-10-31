@@ -17,6 +17,12 @@ from .frame import Telegram, parse_telegram
 from .messages import MessageDef
 
 
+def expects_slave(d: MessageDef) -> bool:
+    """True if any field of the definition lives in the slave's answer."""
+    default = "s" if d.direction[:1] == "r" else "m"
+    return any((f.part if f.part in ("m", "s") else default) == "s" for f in d.fields)
+
+
 class MessageRegistry:
     """Indexes message definitions for fast lookup from a live telegram.
 
@@ -68,6 +74,11 @@ class MessageRegistry:
         """Match and decode one telegram into HA-style labelled values."""
         d = self.match(tg)
         if d is None:
+            return None
+        if not tg.slave_data and expects_slave(d):
+            # another master's read that went unanswered: there is no value to
+            # decode, so do not report one (it would overwrite a good value with
+            # None and suppress the poll as if the register had been seen)
             return None
         mid_len = len(bytes.fromhex(d.msgid)) if d.msgid else 0
         values = d.decode_labeled(master=tg.data[mid_len:], slave=tg.slave_data)

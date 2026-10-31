@@ -35,6 +35,12 @@ def test_passive_decode_real_frames():
         assert values == expected, (raw, values)
 
 
+def test_unanswered_read_has_no_value():
+    # another master's FlowTemp read, ACKed but never answered (the capture ends
+    # after the ACK): nothing to decode, so no None value may be reported
+    assert decode_raw(REGISTRY, "3138b509030d18007400") is None
+
+
 def test_unknown_command_returns_none():
     # a valid frame whose command/id isn't in the registry decodes to None
     assert decode_raw(REGISTRY, "31fe07fe0035") is None

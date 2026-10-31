@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from .active import DEFAULT_SOURCE, ReadDriver, ReadError, WriteDriver, _CommandDriver
 from .frame import SYN, FrameError, parse_telegram
 from .messages import MessageDef
-from .passive import MessageRegistry
+from .passive import MessageRegistry, expects_slave
 from .poll import PollScheduler
 from .transport import RECEIVED, EnhDecoder
 
@@ -31,13 +31,15 @@ def value_key(msg: MessageDef, field: str) -> tuple[str, str, str]:
     return (msg.zz or msg.circuit, msg.name, field)
 
 
-@dataclass
+@dataclass(eq=False)  # compared by identity (queue removal)
 class _Active:
     make: Callable[[], _CommandDriver]  # builds a fresh driver (they are single-shot)
     msg: MessageDef | None  # message being read/polled (for storing the result)
     future: asyncio.Future | None  # set for explicit read/write requests
     attempts: int = 0
     driver: _CommandDriver | None = None
+    started: float = 0.0  # monotonic time the current attempt began
+    expires: float | None = None  # monotonic time the caller stops waiting
 
 
 @dataclass
@@ -57,6 +59,10 @@ class EbusEngine:
     """Drive one eBUS adapter connection: passive decode + interleaved actives."""
 
     MAX_ATTEMPTS = 12  # arbitration retries for an explicit request
+    # one transaction (arbitration to final SYN) must finish within this; a bus
+    # that never completes it would otherwise hold the engine in the active state
+    # forever, starving passive decoding and every later poll
+    ACTIVE_DEADLINE = 3.0
 
     def __init__(
         self,
@@ -116,7 +122,7 @@ class EbusEngine:
         self._stop = False
         self.stats.connected = False
 
-    async def read(self, msg: MessageDef, timeout: float = 4.0) -> dict:
+    async def read(self, msg: MessageDef, timeout: float = 6.0) -> dict:
         """Actively read a message as soon as the bus is idle; return its values."""
         self._require_addr(msg)
         zz = int(msg.zz, 16)
@@ -124,7 +130,7 @@ class EbusEngine:
                                    msg, timeout)
         return msg.decode_labeled(slave=slave)
 
-    async def write(self, msg: MessageDef, values: dict, timeout: float = 4.0) -> None:
+    async def write(self, msg: MessageDef, values: dict, timeout: float = 6.0) -> None:
         """Actively write a message (requires allow_write=True)."""
         if not self._allow_write:
             raise PermissionError("writing is disabled; construct the engine with allow_write=True")
@@ -144,14 +150,25 @@ class EbusEngine:
 
     async def _submit(self, make: Callable[[], _CommandDriver], msg: MessageDef, timeout: float):
         fut: asyncio.Future = asyncio.get_running_loop().create_future()
-        self._queue.append(_Active(make, msg, fut))
-        return await asyncio.wait_for(fut, timeout)
+        act = _Active(make, msg, fut, expires=time.monotonic() + timeout)
+        self._queue.append(act)
+        try:
+            return await asyncio.wait_for(fut, timeout)
+        finally:
+            # a request the caller gave up on must not go out later (a stale write
+            # landing minutes after the user saw it fail)
+            if act in self._queue:
+                self._queue.remove(act)
 
     async def _on_event(self, code: int, data: int) -> None:
         if self._active is not None:
-            for sym in self._active.driver.feed_events([(code, data)]):
-                await self._send(sym)
-            if self._active.driver.done:
+            drv = self._active.driver
+            if time.monotonic() - self._active.started > self.ACTIVE_DEADLINE:
+                drv._fail("timeout")
+            else:
+                for sym in drv.feed_events([(code, data)]):
+                    await self._send(sym)
+            if drv.done:
                 await self._finish_active()
             return
 
@@ -189,27 +206,48 @@ class EbusEngine:
     async def _maybe_start_active(self) -> None:
         if self._active is not None or self._buf:
             return
-        if self._queue:
-            act = self._queue.popleft()
-        elif self.scheduler is not None:
+        act = self._next_request()
+        if act is None:
+            if self.scheduler is None:
+                return
             item = self.scheduler.next_due(time.monotonic())
             if item is None:
                 return
             msg = item.msg
             zz = int(msg.zz, 16)
             act = _Active(lambda: ReadDriver(zz, msg.pbsb, msg.msgid, self.qq), msg, None)
-        else:
-            return
         act.driver = act.make()
         act.attempts += 1
+        act.started = time.monotonic()
         self._active = act
         for sym in act.driver.start():
             await self._send(sym)
+
+    def _next_request(self) -> _Active | None:
+        """The next explicit request still worth starting. One whose caller gave up
+        is dropped, and so is one that could no longer finish before its caller's
+        timeout (a write must never land after the caller saw it fail)."""
+        now = time.monotonic()
+        while self._queue:
+            act = self._queue.popleft()
+            if act.future is not None and act.future.done():
+                continue
+            if act.expires is not None and act.expires - now < self.ACTIVE_DEADLINE:
+                if act.future is not None:
+                    act.future.set_exception(TimeoutError("no time left to run the request"))
+                continue
+            return act
+        return None
 
     async def _finish_active(self) -> None:
         act = self._active
         self._active = None
         drv = act.driver
+        if (drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None
+                and not drv.result and expects_slave(act.msg)):
+            # an empty answer to a read that expects data carries no value; treat it
+            # like no answer instead of storing None and resetting the backoff
+            drv.error = "empty answer"
         if drv.error is None:
             if isinstance(drv, ReadDriver) and act.msg is not None:
                 self._store(act.msg, act.msg.decode_labeled(slave=drv.result))
@@ -231,7 +269,8 @@ class EbusEngine:
             self._buf.append(lost_to)
         # error: retry a lost/contended bus (rebuild a fresh driver), else give up
         retryable = "arbitration lost" in drv.error or "collision" in drv.error
-        if retryable and act.attempts < self.MAX_ATTEMPTS:
+        abandoned = act.future is not None and act.future.done()  # caller gave up
+        if retryable and not abandoned and act.attempts < self.MAX_ATTEMPTS:
             self._queue.appendleft(act)  # make() runs again on the next idle
             return
         if act.future is not None and not act.future.done():

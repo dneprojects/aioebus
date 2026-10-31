@@ -87,6 +87,66 @@ def test_arbitration_lost():
     assert out == []
 
 
+def test_slave_crc_aa_is_unescaped_before_completion():
+    # a slave CRC of 0xAA travels as A9 01; the frame must not be judged complete
+    # (and fail the CRC) on the escape prefix alone
+    data = next(bytes((d,)) for d in range(256)
+                if d not in (0xA9, 0xAA) and crc8(escape(bytes((1, d)))) == 0xAA)
+    wire = bytes((ACK,)) + escape(bytes((1,)) + data + bytes((0xAA,)))
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, wire))
+    assert drv.error is None
+    assert drv.result == data
+
+
+def test_slave_data_with_escaped_bytes():
+    # 0xA9 and 0xAA inside the answer travel escaped (A9 00 / A9 01)
+    data = bytes((0xA9, 0x01, 0xAA, 0x00))
+    sn = bytes((len(data),))
+    crc = crc8(escape(sn + data))
+    wire = bytes((ACK,)) + escape(sn + data + bytes((crc,)))
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, wire))
+    assert drv.error is None
+    assert drv.result == data
+
+
+def test_read_command_nak_fails():
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, bytes((0xFF,))))
+    assert drv.done and drv.error == "command NAKed by slave"
+
+
+def test_unanswered_read_fails_on_syn():
+    # the slave ACKs the command but never answers: the bus goes idle (SYN), so
+    # the read fails at once instead of waiting for a 0xAA-byte answer
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, bytes((ACK, 0xAA))))
+    assert drv.done and drv.error == "no answer from slave"
+
+
+def test_identification_reraises_a_lost_link():
+    # a dropped link is not "device has no identification": the caller must see it
+    import asyncio
+
+    import pytest
+
+    from aioebus.active import ActiveReader
+
+    async def recv():
+        raise ConnectionResetError("adapter closed the connection")
+
+    async def send(_data):
+        return None
+
+    with pytest.raises(ConnectionResetError):
+        asyncio.run(ActiveReader(send, recv).read_identification(0x08))
+
+
 def test_collision_on_echo_mismatch():
     drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
     drv.start()

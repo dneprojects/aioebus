@@ -70,6 +70,16 @@ class PollScheduler:
         return cls(registry.messages, base_interval=base_interval,
                    default_priority=default_priority)
 
+    def carry_from(self, old: PollScheduler) -> None:
+        """Take over the timing (last update, backoff) of registers ``old`` also
+        schedules, so rebuilding the poll set does not make every register due at
+        once. Registers new to this scheduler stay due immediately."""
+        for key, item in self._items.items():
+            prev = old._items.get(key)
+            if prev is not None:
+                item.last_update = prev.last_update
+                item.fails = prev.fails
+
     def interval(self, item: PollItem) -> float:
         # a register the device keeps not answering is polled exponentially less
         # often, so dead registers stop stealing bus slots from answering ones
