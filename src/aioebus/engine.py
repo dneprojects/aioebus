@@ -24,6 +24,7 @@ from .active import (
     WriteDriver,
     WriteUncertain,
     _CommandDriver,
+    build_read_frame,
 )
 from .frame import SYN, FrameError, parse_telegram
 from .messages import MessageDef
@@ -150,6 +151,15 @@ class EbusEngine:
                                    msg, timeout)
         return msg.decode_labeled(slave=slave)
 
+    async def read_raw(self, zz: int, pbsb: str, msgid: str, timeout: float = 6.0) -> bytes:
+        """Actively read a register without a definition; return the slave's raw
+        answer data (e.g. for the identification reads at runtime)."""
+        # malformed arguments fail this call, not later inside the bus loop
+        if len(pbsb) != 4:
+            raise ValueError(f"{pbsb!r}: PBSB must be 4 hex digits")
+        build_read_frame(zz, pbsb, msgid, self.qq)
+        return await self._submit(lambda: ReadDriver(zz, pbsb, msgid, self.qq), None, timeout)
+
     async def write(self, msg: MessageDef, values: dict, timeout: float = 6.0) -> None:
         """Actively write a message (requires allow_write=True)."""
         if not self._allow_write:
@@ -168,7 +178,8 @@ class EbusEngine:
         if not (msg.zz and len(msg.zz) == 2):
             raise ValueError(f"{msg.name}: no destination address")
 
-    async def _submit(self, make: Callable[[], _CommandDriver], msg: MessageDef, timeout: float):
+    async def _submit(self, make: Callable[[], _CommandDriver], msg: MessageDef | None,
+                      timeout: float):
         fut: asyncio.Future = asyncio.get_running_loop().create_future()
         act = _Active(make, msg, fut, expires=time.monotonic() + timeout)
         self._queue.append(act)

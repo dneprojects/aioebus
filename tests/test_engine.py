@@ -5,7 +5,7 @@ import contextlib
 
 import pytest
 
-from aioebus.active import ACK, SEND, START, WriteUncertain, build_read_frame
+from aioebus.active import ACK, SEND, START, ReadError, WriteUncertain, build_read_frame
 from aioebus.engine import EbusEngine, _Active, value_key
 from aioebus.frame import crc8, escape
 from aioebus.messages import parse_csv
@@ -473,6 +473,57 @@ def test_reconnect_mid_write_fails_the_caller_at_once():
         await asyncio.wait_for(task, 1)
 
     asyncio.run(inner())
+
+
+def test_read_raw_returns_the_answer_bytes():
+    async def inner():
+        link = _Link()
+        cmd = build_read_frame(0x38, "b509", "24", QQ)[len(escape(bytes((QQ,)))):]
+        link.adapter = _Adapter(cmd, _slave_wire("00414243"))
+        eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE = 1.0
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read_raw(0x38, "b509", "24", timeout=2))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        assert await asyncio.wait_for(rtask, 2) == bytes.fromhex("00414243")
+        assert eng.cache == {}  # no definition, nothing cached
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_read_raw_without_an_answer_fails_the_call_not_the_engine():
+    async def inner():
+        link = _Link()
+        cmd = build_read_frame(0x38, "b509", "24", QQ)[len(escape(bytes((QQ,)))):]
+        link.adapter = _Adapter(cmd, b"\xff")  # NAK, the repeat goes unanswered
+        eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE = 0.3
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read_raw(0x38, "b509", "24", timeout=2))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        with pytest.raises((ReadError, TimeoutError)):
+            await asyncio.wait_for(rtask, 3)
+        assert not task.done()
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+@pytest.mark.parametrize("zz,pbsb,msgid", [(0x38, "b5", "24"), (0x38, "b5091", "24"),
+                                           (0x38, "b509", "2x"), (0x138, "b509", "24"),
+                                           (0x38, "b509", "00" * 17)])
+def test_read_raw_rejects_malformed_arguments_before_the_bus(zz, pbsb, msgid):
+    eng = EbusEngine(None, None, REG)
+    with pytest.raises(ValueError):
+        asyncio.run(eng.read_raw(zz, pbsb, msgid))
+    assert not eng._queue  # never queued for the bus loop
 
 
 def test_read_refuses_a_write_message():

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- `EbusEngine.read_raw()` reads a register without a definition and returns the slave's raw answer (e.g. the identification at runtime)
+
 ## 0.6.0
 
 - Writes follow the eBUS telegram shape of their destination: a slave's answer is received and acknowledged before the bus is released (a SYN went out right after the ACK); master/master ends after the ACK, a broadcast expects none
