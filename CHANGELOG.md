@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- Fix: a read the slave ACKs but leaves unanswered is retried (up to 3 attempts) again; 0.5.2 failed it at once, so e.g. a device's identification could go missing
+
 ## 0.5.2
 
 - Fix: an active transaction now has a deadline (`EbusEngine.ACTIVE_DEADLINE`, 3 s) — one the bus never completed held the engine in the active state forever, stopping passive decoding and all polls

@@ -129,6 +129,52 @@ def test_unanswered_read_fails_on_syn():
     assert drv.done and drv.error == "no answer from slave"
 
 
+class _FlakyLink:
+    """Async send/recv pair whose slave leaves the first `misses` reads unanswered
+    (ACK, then the bus goes idle) and answers the next one."""
+
+    def __init__(self, misses: int, answer_hex: str):
+        import asyncio
+        self.q: asyncio.Queue = asyncio.Queue()
+        self.misses, self.answer, self.attempts = misses, answer_hex, 0
+        self._dec = EnhDecoder()
+        self._adapter: FakeAdapter | None = None
+
+    async def send(self, data: bytes) -> None:
+        for code, value in self._dec.feed(data):
+            if code == START:
+                self.attempts += 1
+                cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+                slave = (bytes((ACK, 0xAA)) if self.attempts <= self.misses
+                         else _slave_wire(self.answer))
+                self._adapter = FakeAdapter(cmd, slave)
+            reply = self._adapter.respond(code, value) if self._adapter else b""
+            if reply:
+                self.q.put_nowait(reply)
+
+    async def recv(self) -> bytes:
+        return await self.q.get()
+
+
+def test_unanswered_read_is_retried():
+    # a device skipping the odd answer must not lose e.g. its identification
+    import asyncio
+
+    from aioebus.active import NO_ANSWER_TRIES, ActiveReader, ReadError
+
+    link = _FlakyLink(misses=NO_ANSWER_TRIES - 1, answer_hex="910100")
+    result = asyncio.run(ActiveReader(link.send, link.recv).read_raw(ZZ, PBSB, MSGID))
+    assert result == bytes.fromhex("910100") and link.attempts == NO_ANSWER_TRIES
+
+    link = _FlakyLink(misses=99, answer_hex="910100")  # never answers: bounded
+    try:
+        asyncio.run(ActiveReader(link.send, link.recv).read_raw(ZZ, PBSB, MSGID))
+        raise AssertionError("expected ReadError")
+    except ReadError as err:
+        assert "no answer" in str(err)
+    assert link.attempts == NO_ANSWER_TRIES
+
+
 def test_identification_reraises_a_lost_link():
     # a dropped link is not "device has no identification": the caller must see it
     import asyncio

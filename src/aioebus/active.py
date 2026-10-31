@@ -33,6 +33,8 @@ SEND = 0x1
 START = 0x2
 ACK = 0x00
 NAK = 0xFF
+NO_ANSWER = "no answer from slave"
+NO_ANSWER_TRIES = 3  # attempts for a read the slave ACKs but leaves unanswered
 
 
 class ReadError(Exception):
@@ -179,7 +181,7 @@ class ReadDriver(_CommandDriver):
         # a raw SYN never occurs inside a frame: the slave did not answer and the
         # bus went idle, so give up now instead of waiting for a 0xAA-byte answer
         if data == SYN:
-            return self._fail("no answer from slave")
+            return self._fail(NO_ANSWER)
         # unescape byte by byte, so a frame ending in an escaped byte (e.g. a CRC
         # of 0xAA sent as A9 01) is not judged complete on its first half
         if self._esc:
@@ -226,8 +228,11 @@ async def _run_with_retry(send, recv, make_driver, timeout: float, tries: int):
     Returns the finished driver; a NAK or other error is returned, not retried,
     and is never retried for a write because the slave may already have applied
     one copy. The bus acquire itself is safe to retry: an incomplete master frame
-    is rejected on CRC, so no half-write lands."""
+    is rejected on CRC, so no half-write lands. A read the slave ACKed but did not
+    answer is retried too (up to NO_ANSWER_TRIES attempts, like ebusd's resend):
+    some devices skip the odd answer, and the read has no side effect."""
     last = "no attempt"
+    no_answer = 0
     for _ in range(tries):
         drv = make_driver()
         for sym in drv.start():
@@ -246,6 +251,10 @@ async def _run_with_retry(send, recv, make_driver, timeout: float, tries: int):
         if "arbitration lost" in last or "collision" in last:
             await asyncio.sleep(0.05)  # let the bus reach a fresh SYN
             continue
+        if last == NO_ANSWER:
+            no_answer += 1
+            if no_answer < NO_ANSWER_TRIES:
+                continue
         break
     raise ReadError(last)
 
