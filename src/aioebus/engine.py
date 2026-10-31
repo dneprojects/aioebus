@@ -17,7 +17,14 @@ from collections import deque
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from .active import DEFAULT_SOURCE, ReadDriver, ReadError, WriteDriver, _CommandDriver
+from .active import (
+    DEFAULT_SOURCE,
+    ReadDriver,
+    ReadError,
+    WriteDriver,
+    WriteUncertain,
+    _CommandDriver,
+)
 from .frame import SYN, FrameError, parse_telegram
 from .messages import MessageDef
 from .passive import MessageRegistry, expects_slave
@@ -63,6 +70,9 @@ class EbusEngine:
     # that never completes it would otherwise hold the engine in the active state
     # forever, starving passive decoding and every later poll
     ACTIVE_DEADLINE = 3.0
+    # an explicit request starts only with this much time to spare beyond the
+    # deadline, so its last bytes and ACK land before the caller stops waiting
+    START_MARGIN = 0.2
 
     def __init__(
         self,
@@ -118,12 +128,22 @@ class EbusEngine:
         self._recv = recv
         self._dec = EnhDecoder()
         self._buf.clear()
-        self._active = None
+        act, self._active = self._active, None
+        if act is not None and act.future is not None and not act.future.done():
+            # the link dropped mid-transaction: tell the caller now, and whether
+            # the write may already have been applied (so it is not blindly retried)
+            drv = act.driver
+            if isinstance(drv, WriteDriver) and (drv.accepted or drv.may_have_landed):
+                act.future.set_exception(WriteUncertain("connection lost after sending"))
+            else:
+                act.future.set_exception(ReadError("connection lost"))
         self._stop = False
         self.stats.connected = False
 
     async def read(self, msg: MessageDef, timeout: float = 6.0) -> dict:
         """Actively read a message as soon as the bus is idle; return its values."""
+        if msg.direction[:1] != "r":
+            raise ValueError(f"{msg.name}: not a readable message")
         self._require_addr(msg)
         zz = int(msg.zz, 16)
         slave = await self._submit(lambda: ReadDriver(zz, msg.pbsb, msg.msgid, self.qq),
@@ -163,11 +183,12 @@ class EbusEngine:
     async def _on_event(self, code: int, data: int) -> None:
         if self._active is not None:
             drv = self._active.driver
-            if time.monotonic() - self._active.started > self.ACTIVE_DEADLINE:
+            # feed first: a late ACK still counts (an applied write must not be
+            # reported as failed); only then give up a transaction past its time
+            for sym in drv.feed_events([(code, data)]):
+                await self._send(sym)
+            if not drv.done and time.monotonic() - self._active.started > self.ACTIVE_DEADLINE:
                 drv._fail("timeout")
-            else:
-                for sym in drv.feed_events([(code, data)]):
-                    await self._send(sym)
             if drv.done:
                 await self._finish_active()
             return
@@ -232,7 +253,8 @@ class EbusEngine:
             act = self._queue.popleft()
             if act.future is not None and act.future.done():
                 continue
-            if act.expires is not None and act.expires - now < self.ACTIVE_DEADLINE:
+            if (act.expires is not None
+                    and act.expires - now < self.ACTIVE_DEADLINE + self.START_MARGIN):
                 if act.future is not None:
                     act.future.set_exception(TimeoutError("no time left to run the request"))
                 continue
@@ -248,6 +270,10 @@ class EbusEngine:
             # an empty answer to a read that expects data carries no value; treat it
             # like no answer instead of storing None and resetting the backoff
             drv.error = "empty answer"
+        if isinstance(drv, WriteDriver) and drv.error is not None and drv.accepted:
+            # the destination ACKed the write, so it is applied; only the tail of
+            # the telegram (its answer) failed -- report success, never resend
+            drv.error, drv.result = None, True
         if drv.error is None:
             if isinstance(drv, ReadDriver) and act.msg is not None:
                 self._store(act.msg, act.msg.decode_labeled(slave=drv.result))
@@ -269,12 +295,15 @@ class EbusEngine:
             self._buf.append(lost_to)
         # error: retry a lost/contended bus (rebuild a fresh driver), else give up
         retryable = "arbitration lost" in drv.error or "collision" in drv.error
+        if isinstance(drv, WriteDriver) and drv.may_have_landed:
+            retryable = False  # the whole command went out: a resend could apply it twice
         abandoned = act.future is not None and act.future.done()  # caller gave up
         if retryable and not abandoned and act.attempts < self.MAX_ATTEMPTS:
             self._queue.appendleft(act)  # make() runs again on the next idle
             return
         if act.future is not None and not act.future.done():
-            act.future.set_exception(ReadError(drv.error))
+            uncertain = isinstance(drv, WriteDriver) and drv.may_have_landed
+            act.future.set_exception((WriteUncertain if uncertain else ReadError)(drv.error))
         elif act.msg is not None and self.scheduler is not None:
             # a poll the device did not answer (NAK/timeout): record the attempt
             # and back it off. Without recording it, its timer stays at zero so it

@@ -7,6 +7,7 @@ captures. No bus, no I/O.
 """
 from __future__ import annotations
 
+import math
 import struct
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -84,15 +85,22 @@ class _Numeric(Codec):
                 raise ValueError(f"{self.name}: no replacement value to encode None")
             return self.repl.to_bytes(self.length, order)
         v = float(value)
+        if not math.isfinite(v):
+            raise ValueError(f"{self.name}: value {value} is not a finite number")
         if self.extra_div:  # inverse of decode's divide/multiply
             v = v * self.extra_div if self.extra_div > 0 else v / -self.extra_div
         if self.base_div != 1:
             v = v * self.base_div
-        raw = round(v)
-        if self.signed and raw < 0:
-            raw += 1 << (8 * self.length)
-        if not 0 <= raw < (1 << (8 * self.length)):
+        # half away from zero, like ebusd (round() would send 40.5 as 40, not 41)
+        raw = math.floor(abs(v) + 0.5) * (1 if v >= 0 else -1)
+        bits = 8 * self.length
+        lo, hi = (-(1 << (bits - 1)), 1 << (bits - 1)) if self.signed else (0, 1 << bits)
+        if not lo <= raw < hi:  # checked before two's complement, so nothing wraps
             raise ValueError(f"{self.name}: value {value} out of range")
+        if self.signed and raw < 0:
+            raw += 1 << bits
+        if raw == self.repl:  # the device would read "no value", not this number
+            raise ValueError(f"{self.name}: value {value} is the replacement (invalid) value")
         return raw.to_bytes(self.length, order)
 
 
@@ -301,6 +309,20 @@ class _Float(Codec):
             value = value / self.extra_div if self.extra_div > 0 else value * -self.extra_div
         return value
 
+    def encode(self, value) -> bytes:
+        """Inverse of decode; None encodes the replacement (NaN)."""
+        if value is None:
+            return struct.pack(self.fmt, float("nan"))
+        v = float(value)
+        if v != v or v in (float("inf"), float("-inf")):
+            raise ValueError(f"{self.name}: value {value} is not a finite number")
+        if self.extra_div:  # inverse of decode's divide/multiply
+            v = v * self.extra_div if self.extra_div > 0 else v / -self.extra_div
+        try:
+            return struct.pack(self.fmt, v)
+        except OverflowError as err:
+            raise ValueError(f"{self.name}: value {value} out of range") from err
+
 
 # base name -> factory(n_or_None). n is the suffix (bytes) where adjustable.
 _SPECIAL = {
@@ -363,9 +385,9 @@ def decode(spec: str, data, divisor: float | None = None):
 
 
 def encode(spec: str, value, divisor: float | None = None) -> bytes:
-    """Encode a value to raw field bytes (numeric types only, for writes)."""
+    """Encode a value to raw field bytes (numeric and float types, for writes)."""
     codec = make_codec(spec)
-    if not isinstance(codec, _Numeric):
+    if not isinstance(codec, (_Numeric, _Float)):
         raise NotImplementedError(f"encode not supported for type {spec!r}")
     if divisor:
         codec.extra_div = divisor

@@ -1,6 +1,6 @@
 [project]
 name = "aioebus"
-version = "0.5.3"
+version = "0.6.0"
 description = "Standalone async eBUS library (decode-first). No ebusd daemon required."
 readme = "README.md"
 requires-python = ">=3.11"

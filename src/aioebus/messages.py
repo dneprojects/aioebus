@@ -132,10 +132,15 @@ class MessageDef:
     def encode(self, values: dict) -> bytes:
         """Build the master data (message id + encoded master fields) for a write.
 
-        `values` is keyed by field name; a lone ``value`` field also accepts the
-        message name. Enum labels are mapped back to their numbers. Numeric types
-        only -- bit-field and string writes are not supported yet and raise."""
+        `values` is keyed by field name; a message with a single value field also
+        accepts the message name (as its decoded label is). Enum labels are mapped
+        back to their numbers. Numeric and float types only -- bit-field and
+        string writes are not supported yet and raise."""
         data = bytearray(bytes.fromhex(self.msgid))
+        named = [f for f in self.fields
+                 if f.name and not f.type.upper().startswith("IGN")
+                 and (f.part if f.part in ("m", "s") else "m") == "m"]
+        lone = named[0].name if len(named) == 1 else None
         for f in self.fields:
             part = f.part if f.part in ("m", "s") else "m"  # writes carry fields in master
             if part != "m":
@@ -146,10 +151,12 @@ class MessageDef:
                 continue
             if f.name in values:
                 val = values[f.name]
-            elif f.name == "value" and self.name in values:
+            elif f.name in (lone, "value") and self.name in values:
                 val = values[self.name]
             else:
                 raise ValueError(f"{self.name}: missing value for field {f.name!r}")
+            if val is None:  # would send the type's "no value" marker to the device
+                raise ValueError(f"{self.name}: no value given for field {f.name!r}")
             if f.values and isinstance(val, str):  # map an enum label back to its number
                 reverse = {label: num for num, label in f.values.items()}
                 if val not in reverse:

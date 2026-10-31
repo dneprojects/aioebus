@@ -113,10 +113,20 @@ def test_slave_data_with_escaped_bytes():
     assert drv.result == data
 
 
-def test_read_command_nak_fails():
-    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+def test_read_command_nak_twice_fails():
+    # a NAKed command is sent once more (no new arbitration); a second NAK fails
+    full = build_read_frame(ZZ, PBSB, MSGID, QQ)
     drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
-    _run(drv, FakeAdapter(cmd, bytes((0xFF,))))
+    drv.start()
+    out = drv.feed(encode_symbol(STARTED, QQ))
+    dec = EnhDecoder()
+    for attempt, part in enumerate((full[1:], full)):  # repeat starts again at QQ
+        for b in part:
+            assert [d for _c, d in dec.feed(b"".join(out))] == [b]
+            out = drv.feed(encode_symbol(RECEIVED, b))  # echo
+        out = drv.feed(encode_symbol(RECEIVED, 0xFF))  # NAK
+        if attempt == 0:
+            assert not drv.done
     assert drv.done and drv.error == "command NAKed by slave"
 
 

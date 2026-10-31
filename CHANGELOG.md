@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- Writes follow the eBUS telegram shape of their destination: a slave's answer is received and acknowledged before the bus is released (a SYN went out right after the ACK); master/master ends after the ACK, a broadcast expects none
+- A NAKed command is repeated once from QQ, a slave answer failing its CRC is NAKed once so it is repeated (as the spec and ebusd do)
+- A write is never sent twice once it may have landed: an ACKed write counts as applied even if its answer fails (also when the ACK arrives late), and one whose whole command went out unconfirmed raises the new `WriteUncertain` (a `ReadError`) instead of being retried
+- `EXP`/`EXR` values can be written; out-of-range numbers, a type's replacement value, `None` and non-finite values are rejected instead of wrapping or sending "no value"; rounding is half away from zero like ebusd
+- `MessageDef.encode` takes the message name for its single value field whatever that field is called
+- Engine: explicit requests start only with time to finish (`START_MARGIN`); a reconnect fails an in-flight request at once; `read()` refuses non-read messages; at most 16 master data bytes
+
 ## 0.5.3
 
 - Fix: a read the slave ACKs but leaves unanswered is retried (up to 3 attempts) again; 0.5.2 failed it at once, so e.g. a device's identification could go missing

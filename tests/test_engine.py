@@ -3,7 +3,9 @@ interleaved at bus idle. Driven by a fake async link (no pytest-asyncio)."""
 import asyncio
 import contextlib
 
-from aioebus.active import ACK, SEND, START, build_read_frame
+import pytest
+
+from aioebus.active import ACK, SEND, START, WriteUncertain, build_read_frame
 from aioebus.engine import EbusEngine, _Active, value_key
 from aioebus.frame import crc8, escape
 from aioebus.messages import parse_csv
@@ -22,9 +24,9 @@ from aioebus.transport import (
 CSV = """\
 type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
 *r,elo,,,,,38
-r1,,,FlowTemp,,,,b509,0d1800,value,,D2C,,°C,,ign,,IGN:1,,,
+r1,,,FlowTemp,,,,b509,0d1800,value,,D2C,,Â°C,,ign,,IGN:1,,,
 r1,,,Statenumber,,,,b509,0dab00,value,,UCH,0=kein_bedarf;31=sommer,,
-u,bc,,Outsidetemp,,,fe,b516,01,value,,D2B,,°C,
+u,bc,,Outsidetemp,,,fe,b516,01,value,,D2B,,Â°C,
 """
 REG = MessageRegistry(parse_csv(CSV))
 BY = {m.name: m for m in parse_csv(CSV)}
@@ -156,6 +158,7 @@ def test_arbitration_loss_captures_winner_passively():
         link.adapter = _ArbLossAdapter(0x10, "feb5160301c00d12")
         eng = EbusEngine(link.send, link.recv, REG)
         eng.ACTIVE_DEADLINE = 0.1  # below the request timeout, so the read starts
+        eng.START_MARGIN = 0.0
         task = asyncio.create_task(eng.run())
         rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=0.2))
         await asyncio.sleep(0)
@@ -262,6 +265,7 @@ def test_abandoned_request_is_not_retried():
         link.adapter = adapter = _AlwaysLoseAdapter()
         eng = EbusEngine(link.send, link.recv, REG)
         eng.ACTIVE_DEADLINE = 0.01
+        eng.START_MARGIN = 0.0
         eng.MAX_ATTEMPTS = 1000  # retries alone would outlast the caller
         task = asyncio.create_task(eng.run())
         loop = asyncio.get_running_loop()
@@ -328,6 +332,153 @@ def test_empty_answer_counts_as_unanswered_poll():
         await asyncio.wait_for(task, 1)
 
     asyncio.run(inner())
+
+
+_Z1 = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,"
+                "divisor/values,unit,comment\n"
+                "w,,,Z1DayTemp,,,15,b524,02,temp,,EXP,,Â°C,\n")[0]
+
+
+def _engine_write(sim_kwargs: dict):
+    """Write Z1DayTemp=21.5 through the engine against a simulated bus; returns
+    (simulator, engine, exception or None)."""
+    from test_write import _BusSim
+
+    frame = build_read_frame(0x15, "b524", "", QQ, _Z1.encode({"Z1DayTemp": 21.5}))
+    sim = _BusSim(frame, **sim_kwargs)
+
+    async def inner():
+        link = _Link()
+
+        class _Wrap:
+            _dec = EnhDecoder()
+
+            def on_send(self, data: bytes) -> bytes:
+                return b"".join(sim.respond(c, d) for c, d in self._dec.feed(data))
+
+        link.adapter = _Wrap()
+        eng = EbusEngine(link.send, link.recv, REG, allow_write=True)
+        eng.ACTIVE_DEADLINE = 0.5
+        task = asyncio.create_task(eng.run())
+        wtask = asyncio.create_task(eng.write(_Z1, {"Z1DayTemp": 21.5}, timeout=1.5))
+        await asyncio.sleep(0)
+        for _ in range(40):  # idle SYNs keep coming, as on a real bus
+            link.inject(encode_symbol(RECEIVED, SYN))
+            await asyncio.sleep(0.02)
+        err = None
+        try:
+            await asyncio.wait_for(wtask, 2)
+        except Exception as exc:
+            err = exc
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+        return eng, err
+
+    eng, err = asyncio.run(inner())
+    return sim, eng, err
+
+
+def test_engine_write_to_slave_completes_after_answer():
+    """The path Home Assistant uses: a write through the engine is reported done
+    only after the slave answered; its closing ACK/SYN echoes are harmless."""
+    from test_write import _answer
+
+    sim, eng, err = _engine_write({"answers": [_answer("")]})
+    assert err is None and eng.stats.writes == 1 and sim.answered == 1
+    assert sim.commands == 1 and sim.sent[-2:] == [ACK, SYN]
+
+
+def test_engine_accepted_write_with_broken_tail_is_sent_once():
+    # ACKed = applied; a garbled echo of our NAK afterwards is a "collision" the
+    # engine would otherwise retry -- re-sending the setpoint up to 12 times
+    from test_write import _answer
+
+    sim, eng, err = _engine_write({"answers": [_answer("", crc=0x12)], "nak_echo": 0x12})
+    assert err is None and eng.stats.writes == 1
+    assert sim.commands == 1
+
+
+def test_engine_write_colliding_on_its_last_byte_is_sent_once():
+    # the whole command was on the bus: it may have landed -- say so, never resend
+    sim, _eng, err = _engine_write({"last_echo": 0x12})
+    assert isinstance(err, WriteUncertain)
+    assert sim.commands == 1 and sim.starts == 1
+
+
+class _EchoOnly:
+    """Echoes what we send and wins every arbitration, nothing else; the test
+    injects the destination's replies itself (to delay or drop them)."""
+
+    def __init__(self):
+        self._dec = EnhDecoder()
+        self.sent: list[int] = []
+        self.starts = 0
+
+    def on_send(self, data: bytes) -> bytes:
+        out = bytearray()
+        for code, value in self._dec.feed(data):
+            if code == START:
+                self.starts += 1
+                out += encode_symbol(STARTED, value)
+            elif code == SEND:
+                self.sent.append(value)
+                out += encode_symbol(RECEIVED, value)
+        return bytes(out)
+
+
+def test_engine_late_ack_still_counts():
+    """An ACK arriving after the deadline means the write was applied: success,
+    not 'timeout' (a caller would otherwise retry an applied setpoint)."""
+    frame = build_read_frame(0x15, "b524", "", QQ, _Z1.encode({"Z1DayTemp": 21.5}))
+
+    async def inner():
+        link = _Link()
+        link.adapter = adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG, allow_write=True)
+        eng.ACTIVE_DEADLINE = 0.05
+        eng.START_MARGIN = 0.0
+        task = asyncio.create_task(eng.run())
+        wtask = asyncio.create_task(eng.write(_Z1, {"Z1DayTemp": 21.5}, timeout=1.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.02)
+        assert len(adapter.sent) == len(frame) - 1  # the whole command is out
+        await asyncio.sleep(0.1)  # past the deadline, then the ACK arrives
+        link.inject(encode_symbol(RECEIVED, ACK))
+        await asyncio.wait_for(wtask, 1)
+        assert eng.stats.writes == 1 and adapter.starts == 1
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_reconnect_mid_write_fails_the_caller_at_once():
+    async def inner():
+        link = _Link()
+        link.adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG, allow_write=True)
+        task = asyncio.create_task(eng.run())
+        wtask = asyncio.create_task(eng.write(_Z1, {"Z1DayTemp": 21.5}, timeout=5.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.02)  # command sent, waiting for the ACK
+        eng.attach(link.send, link.recv)  # the supervisor reconnected
+        with pytest.raises(WriteUncertain):
+            await asyncio.wait_for(wtask, 0.5)  # not the full 5 s
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+def test_read_refuses_a_write_message():
+    eng = EbusEngine(None, None, REG)
+    with pytest.raises(ValueError):
+        asyncio.run(eng.read(_Z1))
 
 
 def test_active_read_interleaved():
