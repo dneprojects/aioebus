@@ -1,6 +1,6 @@
 [project]
 name = "aioebus"
-version = "0.6.1"
+version = "0.6.2"
 description = "Standalone async eBUS library (decode-first). No ebusd daemon required."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,6 +16,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Home Automation",
   "Typing :: Typed",
 ]

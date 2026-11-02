@@ -34,6 +34,14 @@ if TYPE_CHECKING:
     from .passive import MessageRegistry
 
 
+def _is_hex(text: str) -> bool:
+    try:
+        int(text, 16)
+    except ValueError:
+        return False
+    return True
+
+
 @dataclass
 class PollItem:
     msg: MessageDef
@@ -56,6 +64,8 @@ class PollScheduler:
         self._items: dict[tuple[str, str], PollItem] = {}
         for m in messages:
             if m.direction[:1] != "r":  # only true reads are polled (not w/u)
+                continue
+            if not (len(m.zz) == 2 and _is_hex(m.zz)):  # no address to read from
                 continue
             priority = m.poll_priority or default_priority
             if priority > 0:

@@ -234,6 +234,7 @@ def test_timed_out_request_is_withdrawn():
     async def inner():
         link = _Link()
         eng = EbusEngine(link.send, link.recv, REG)  # not running: nothing is dequeued
+        eng.ACTIVE_DEADLINE, eng.START_MARGIN = 0.005, 0.0
         with contextlib.suppress(TimeoutError):
             await eng.read(BY["Statenumber"], timeout=0.01)
         assert not eng._queue
@@ -294,10 +295,11 @@ def test_request_without_time_to_finish_is_not_started():
     async def inner():
         link = _Link()
         link.adapter = adapter = _AlwaysLoseAdapter()
-        eng = EbusEngine(link.send, link.recv, REG)  # deadline 3 s > timeout 1 s
+        eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE, eng.START_MARGIN = 0.3, 0.1
         task = asyncio.create_task(eng.run())
-        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=1.0))
-        await asyncio.sleep(0)
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=0.45))
+        await asyncio.sleep(0.1)  # queued while the bus is busy: 0.35 s < 0.4 s left
         link.inject(encode_symbol(RECEIVED, SYN))
         try:
             await asyncio.wait_for(rtask, 0.5)  # fails long before its own timeout
@@ -550,5 +552,254 @@ def test_active_read_interleaved():
         eng.stop()
         link.inject(b"")
         await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())
+
+
+async def _stop(eng, link, task):
+    eng.stop()
+    link.inject(b"")
+    await asyncio.wait_for(task, 1)
+
+
+def test_undecodable_telegram_does_not_stop_the_engine(monkeypatch):
+    async def inner():
+        link = _Link()
+        eng = EbusEngine(link.send, link.recv, MessageRegistry(parse_csv(CSV)))
+        real = eng.registry.decode
+        calls = []
+
+        def decode(tg):
+            calls.append(tg)
+            if len(calls) == 1:
+                raise ValueError("broken definition")
+            return real(tg)
+
+        monkeypatch.setattr(eng.registry, "decode", decode)
+        task = asyncio.create_task(eng.run())
+        frame = encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00"))
+        link.inject(frame)
+        link.inject(frame)
+        await asyncio.sleep(0.05)
+        assert not task.done()
+        assert eng.cache[value_key(BY["FlowTemp"], "FlowTemp")] == 25.0625
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_failing_value_callback_does_not_stop_the_engine():
+    def boom(msg, values):
+        raise RuntimeError("consumer bug")
+
+    async def inner():
+        link = _Link()
+        eng = EbusEngine(link.send, link.recv, REG, on_value=boom)
+        task = asyncio.create_task(eng.run())
+        link.inject(encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00")))
+        await asyncio.sleep(0.05)
+        assert not task.done()
+        assert eng.cache[value_key(BY["FlowTemp"], "FlowTemp")] == 25.0625
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_unexpected_error_fails_only_the_request_in_flight(monkeypatch):
+    async def inner():
+        link = _Link()
+        link.adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=5.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))  # the read starts and sends
+        await asyncio.sleep(0.02)
+
+        async def broken():
+            raise RuntimeError("bug")
+
+        monkeypatch.setattr(eng, "_finish_active", broken)
+        link.inject(b"".join(encode_symbol(RECEIVED, b) for b in _slave_wire("1f")))
+        with pytest.raises(ReadError, match="internal error"):
+            await asyncio.wait_for(rtask, 1)  # at once, not after 5 s
+        monkeypatch.undo()
+        link.inject(encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00")))
+        await asyncio.sleep(0.05)
+        assert not task.done()  # the loop runs on and still decodes
+        assert eng.cache[value_key(BY["FlowTemp"], "FlowTemp")] == 25.0625
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_link_end_fails_the_request_in_flight_at_once():
+    async def inner():
+        link = _Link()
+        link.adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG, allow_write=True)
+        task = asyncio.create_task(eng.run())
+        wtask = asyncio.create_task(eng.write(_Z1, {"Z1DayTemp": 21.5}, timeout=5.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.02)  # the whole command is out, no ACK yet
+        link.inject(b"")  # EOF: run() ends, no reconnect yet
+        await asyncio.wait_for(task, 1)
+        with pytest.raises(WriteUncertain):
+            await asyncio.wait_for(wtask, 0.5)  # not the full 5 s
+        assert not eng.stats.connected
+
+    asyncio.run(inner())
+
+
+def test_send_failure_ends_the_loop_and_fails_the_request():
+    async def inner():
+        link = _Link()
+
+        async def send(data):
+            raise ConnectionResetError("gone")
+
+        eng = EbusEngine(send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=5.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))  # START cannot be sent
+        await asyncio.wait_for(task, 1)  # run() ends like on a receive error
+        assert not eng.stats.connected
+        with pytest.raises(ReadError):
+            await asyncio.wait_for(rtask, 0.5)
+
+    asyncio.run(inner())
+
+
+def test_malformed_requests_fail_the_call_not_the_loop():
+    eng = EbusEngine(None, None, REG, allow_write=True)
+    long = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                     "w,,,Big,,,15,b524,02000000,a,,ULG,,,,b,,ULG,,,,"
+                     "c,,ULG,,,,d,,ULG,,,\n")[0]
+    with pytest.raises(ValueError):  # 4 id + 16 data bytes > 16
+        asyncio.run(eng.write(long, {"a": 0, "b": 0, "c": 0, "d": 0}))
+    bad = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                    "r,,,Bad,,,15,b5,01,value,,UCH,,,\n")[0]
+    with pytest.raises(ValueError):
+        asyncio.run(eng.read(bad))
+    with pytest.raises(ValueError, match="shorter than one transaction"):
+        asyncio.run(eng.read(BY["Statenumber"], timeout=1.0))
+    assert not eng._queue
+
+
+class _SilentArbitration:
+    """Swallows every START (the adapter waits for a free SYN slot); records the
+    symbols the host sends."""
+
+    def __init__(self):
+        self._dec = EnhDecoder()
+        self.events: list[tuple[int, int]] = []
+
+    def on_send(self, data: bytes) -> bytes:
+        self.events += self._dec.feed(data)
+        return b""
+
+
+def test_arbitration_past_its_deadline_is_withdrawn():
+    async def inner():
+        link = _Link()
+        link.adapter = adapter = _SilentArbitration()
+        eng = EbusEngine(link.send, link.recv, REG)
+        eng.ACTIVE_DEADLINE, eng.START_MARGIN = 0.05, 0.0
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=1.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.1)
+        link.inject(encode_symbol(RECEIVED, SYN))  # an event past the deadline
+        await asyncio.sleep(0.02)
+        assert adapter.events[0] == (START, QQ)
+        assert (START, SYN) in adapter.events  # START with SYN cancels it
+        rtask.cancel()
+        with contextlib.suppress(ReadError, asyncio.CancelledError):
+            await rtask
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_telegram_passing_while_arbitrating_is_decoded():
+    async def inner():
+        link = _Link()
+        link.adapter = _SilentArbitration()
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read(BY["Statenumber"], timeout=5.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))  # START goes out, not yet won
+        await asyncio.sleep(0.01)
+        # another master's telegram in the slot before our arbitration
+        link.inject(encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00")))
+        await asyncio.sleep(0.05)
+        assert eng.cache[value_key(BY["FlowTemp"], "FlowTemp")] == 25.0625
+        rtask.cancel()
+        with contextlib.suppress(ReadError, asyncio.CancelledError):
+            await rtask
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_poll_failing_internally_is_backed_off(monkeypatch):
+    async def inner():
+        link = _Link()
+        link.adapter = _EchoOnly()
+        sched = PollScheduler([BY["Statenumber"]])
+        eng = EbusEngine(link.send, link.recv, REG, scheduler=sched)
+        task = asyncio.create_task(eng.run())
+
+        def broken(self, code, data):
+            raise RuntimeError("bug")
+
+        monkeypatch.setattr(type(eng.registry), "decode", lambda self, tg: None)
+        from aioebus.active import _CommandDriver
+        monkeypatch.setattr(_CommandDriver, "_step", broken)
+        for _ in range(5):
+            link.inject(encode_symbol(RECEIVED, SYN))
+            await asyncio.sleep(0.01)
+        import time
+        assert eng.stats.polls_failed == 1  # failed once, then backed off:
+        assert sched.next_due(time.monotonic()) is None  # not restarted at every idle bus
+        await _stop(eng, link, task)
+
+    asyncio.run(asyncio.wait_for(inner(), 5))  # a restart loop must fail, not hang
+
+
+def test_accepted_write_succeeds_when_the_link_ends():
+    async def inner():
+        link = _Link()
+        link.adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG, allow_write=True)
+        task = asyncio.create_task(eng.run())
+        wtask = asyncio.create_task(eng.write(_Z1, {"Z1DayTemp": 21.5}, timeout=5.0))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.02)
+        link.inject(encode_symbol(RECEIVED, ACK))  # applied; the answer never comes
+        await asyncio.sleep(0.02)
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+        await asyncio.wait_for(wtask, 0.5)  # success, not WriteUncertain
+        assert eng.stats.writes == 1
+
+    asyncio.run(inner())
+
+
+def test_stray_started_releases_the_bus():
+    async def inner():
+        link = _Link()
+        link.adapter = adapter = _SilentArbitration()
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        link.inject(encode_symbol(STARTED, QQ))  # a late win nobody waits for
+        await asyncio.sleep(0.02)
+        assert adapter.events == [(SEND, SYN)]
+        await _stop(eng, link, task)
 
     asyncio.run(inner())

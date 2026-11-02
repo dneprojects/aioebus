@@ -38,3 +38,14 @@ def test_evaluate_all_combination():
     assert evaluate_all(["id_sw>=200", "Unknownthing=5"], CTX) is None  # else unknown
     assert evaluate_all([], CTX) is True
     assert evaluate_all(None, CTX) is True
+
+
+def test_divisor_values_and_labels_in_conditions():
+    from aioebus.conditions import ConditionContext, evaluate
+    ctx = ConditionContext(values={"T": 3.0, "H": 2.5, "Mode": "auto"})
+    assert evaluate("T=3", ctx) is True  # a type with a divisor decodes to 3.0
+    assert evaluate("T>2", ctx) is True
+    assert evaluate("H=2-3", ctx) is True
+    assert evaluate("H=2", ctx) is False
+    assert evaluate("Mode=1", ctx) is None  # a label vs a number: undecided
+    assert evaluate("Mode=auto", ctx) is True

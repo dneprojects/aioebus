@@ -29,6 +29,9 @@ _NUMERIC = {
     "FLT": (2, True, 1000, 0x8000),
 }
 
+# types whose valid raw range ends below the byte's maximum (ebusd: D1C 0..100.0)
+_MAX_RAW = {"D1C": 0xC8}
+
 # reversed (high-byte-first) integer variants: name -> same tuple, big-endian
 _NUMERIC_REV = {
     "UIR": (2, False, 1, 0xFFFF),
@@ -60,12 +63,13 @@ class _Numeric(Codec):
         self.repl = repl
         self.big = big  # byte order; True for the reversed types (UIR/SIR)
         self.extra_div: float | None = None  # from the CSV divisor column
+        self.max_raw = _MAX_RAW.get(name)  # a type narrower than its bytes (D1C)
 
     def decode(self, data: bytes):
         if len(data) < self.length:
             return None
         raw = int.from_bytes(data[: self.length], "big" if self.big else "little")
-        if raw == self.repl:
+        if raw == self.repl or (self.max_raw is not None and raw > self.max_raw):
             return None
         if self.signed and raw >= 1 << (8 * self.length - 1):
             raw -= 1 << (8 * self.length)
@@ -95,7 +99,8 @@ class _Numeric(Codec):
         raw = math.floor(abs(v) + 0.5) * (1 if v >= 0 else -1)
         bits = 8 * self.length
         lo, hi = (-(1 << (bits - 1)), 1 << (bits - 1)) if self.signed else (0, 1 << bits)
-        if not lo <= raw < hi:  # checked before two's complement, so nothing wraps
+        if not lo <= raw < hi or (self.max_raw is not None and raw > self.max_raw):
+            # checked before two's complement, so nothing wraps
             raise ValueError(f"{self.name}: value {value} out of range")
         if self.signed and raw < 0:
             raw += 1 << bits
@@ -155,15 +160,16 @@ class _TruncTime(Codec):
     """1-byte truncated time: value counts `step` minutes from 00:00 (TTM/10,
     TTH/30, TTQ/15). The replacement raw reads as no value."""
 
-    def __init__(self, name, step, repl):
+    def __init__(self, name, step, repl, bits=8):
         super().__init__(name, 1)
         self.step = step
         self.repl = repl
+        self.mask = (1 << bits) - 1  # TTH/TTQ use the low 6/7 bits only (ebusd)
 
     def decode(self, data: bytes):
-        if len(data) < 1 or data[0] == self.repl:
+        if len(data) < 1 or (raw := data[0] & self.mask) == self.repl:
             return None
-        mins = data[0] * self.step
+        mins = raw * self.step
         if mins > 1440:
             return None
         return f"{mins // 60:02d}:{mins % 60:02d}"
@@ -189,7 +195,8 @@ class _ClockTime(Codec):
             return None
         h, m = vals[0], vals[1]
         s = vals[2] if self.parts == 3 else 0
-        if h > 23 or m > 59 or s > 59:
+        # 24:00 is valid (end of a day, e.g. a timer slot until midnight), as in ebusd
+        if h > 24 or m > 59 or s > 59 or (h == 24 and (m or s)):
             return None
         return f"{h:02d}:{m:02d}:{s:02d}" if self.parts == 3 else f"{h:02d}:{m:02d}"
 
@@ -241,7 +248,11 @@ class _DateTime(Codec):
         raw = int.from_bytes(data[:4], "little")
         if raw == 0xFFFFFFFF:
             return None
-        return (self._EPOCH + timedelta(minutes=raw)).strftime("%Y-%m-%d %H:%M")
+        try:
+            when = self._EPOCH + timedelta(minutes=raw)
+        except OverflowError:  # beyond year 9999: no real time
+            return None
+        return when.strftime("%d.%m.%Y %H:%M")  # date as DAY/HDA, like ebusd
 
 
 class _Days(Codec):
@@ -327,8 +338,8 @@ class _Float(Codec):
 # base name -> factory(n_or_None). n is the suffix (bytes) where adjustable.
 _SPECIAL = {
     "TTM": lambda n: _TruncTime("TTM", 10, 0x90),
-    "TTH": lambda n: _TruncTime("TTH", 30, 0x00),
-    "TTQ": lambda n: _TruncTime("TTQ", 15, 0x00),
+    "TTH": lambda n: _TruncTime("TTH", 30, 0x00, bits=6),
+    "TTQ": lambda n: _TruncTime("TTQ", 15, 0x00, bits=7),
     "HTM": lambda n: _ClockTime("HTM", 2, bcd=False, reversed_=False),
     "BTM": lambda n: _ClockTime("BTM", 2, bcd=True, reversed_=True),
     "VTM": lambda n: _ClockTime("VTM", 2, bcd=False, reversed_=True),
@@ -382,6 +393,38 @@ def decode(spec: str, data, divisor: float | None = None):
     if divisor and hasattr(codec, "extra_div"):  # _Numeric and _Float (EXP/EXR)
         codec.extra_div = divisor
     return codec.decode(data)
+
+
+def is_numeric(spec: str) -> bool:
+    """True for an integer type (with or without a base divisor) whose value range
+    is known, i.e. one that can back a number control."""
+    try:
+        return isinstance(make_codec(spec), _Numeric)
+    except ValueError:
+        return False
+
+
+def value_range(spec: str, divisor: float | None = None) -> tuple[float, float, float] | None:
+    """(min, max, step) of the values an integer type can carry -- its replacement
+    (no value) excluded, the divisor column applied (negative multiplies) -- or
+    None for any other type."""
+    try:
+        codec = make_codec(spec)
+    except ValueError:
+        return None
+    if not isinstance(codec, _Numeric):
+        return None
+    bits = 8 * codec.length
+    lo, hi = (-(1 << (bits - 1)), (1 << (bits - 1)) - 1) if codec.signed else (0, (1 << bits) - 1)
+    if codec.repl is not None:
+        repl = codec.repl - (1 << bits) if codec.signed and codec.repl >= 1 << (bits - 1) else codec.repl
+        lo, hi = (lo + 1 if repl == lo else lo), (hi - 1 if repl == hi else hi)
+    if codec.max_raw is not None:
+        hi = min(hi, codec.max_raw)
+    scale = codec.base_div * (divisor if divisor and divisor > 0 else 1)
+    factor = -divisor if divisor and divisor < 0 else 1
+    # divide by the scale (not multiply by its inverse): 65534 / 10 is 6553.4 exactly
+    return lo * factor / scale, hi * factor / scale, factor / scale
 
 
 def encode(spec: str, value, divisor: float | None = None) -> bytes:

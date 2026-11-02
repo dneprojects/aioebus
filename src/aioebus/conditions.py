@@ -36,10 +36,12 @@ class ConditionContext:
         return self.values.get(name)
 
 
-def _as_int(value) -> int | None:
+def _as_number(value) -> int | float | None:
+    """The value as a number (a type with a divisor decodes to a float), or None
+    for anything else, e.g. a value table's label."""
     if isinstance(value, bool):
         return int(value)
-    if isinstance(value, int):
+    if isinstance(value, int | float):
         return value
     if isinstance(value, str) and value.isdigit():
         return int(value)
@@ -59,16 +61,18 @@ def evaluate(cond: str, ctx: ConditionContext) -> bool | None:
         if "'" in rhs or ";" in rhs:  # value-in-list of (quoted) strings
             options = [p.strip().strip("'") for p in rhs.split(";") if p.strip()]
             return str(value) in options
+        # a numeric test against a value that is no whole number (e.g. a value
+        # table's label) cannot be decided here: unknown, never a definite False
         lo_hi = rhs.split("-")
         if len(lo_hi) == 2 and all(p.isdigit() for p in lo_hi):  # inclusive range
-            v = _as_int(value)
-            return v is not None and int(lo_hi[0]) <= v <= int(lo_hi[1])
+            v = _as_number(value)
+            return None if v is None else int(lo_hi[0]) <= v <= int(lo_hi[1])
         if rhs.isdigit():
-            v = _as_int(value)
-            return v is not None and v == int(rhs)
+            v = _as_number(value)
+            return None if v is None else v == int(rhs)
         return str(value) == rhs
 
-    v, r = _as_int(value), _as_int(rhs)
+    v, r = _as_number(value), _as_number(rhs)
     if v is None or r is None:
         return None
     if op == ">=":

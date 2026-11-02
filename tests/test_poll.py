@@ -78,3 +78,12 @@ def test_one_at_a_time_and_due_count():
     assert picked is not None
     sch.mark(picked.msg.zz, picked.msg.name, 60.0)
     assert sch.due_count(60.0) == 1
+
+
+def test_read_without_a_device_address_is_not_polled():
+    msgs = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                     "r1,elo,,NoAddr,,,,b509,0d1800,value,,UCH,,,\n"
+                     "r1,elo,,BadAddr,,,x8,b509,0d1900,value,,UCH,,,\n"
+                     "r1,elo,,Good,,,38,b509,0d2000,value,,UCH,,,\n")
+    sched = PollScheduler(msgs)
+    assert [k[1] for k in sched._items] == ["Good"]

@@ -15,7 +15,7 @@ import json
 import sys
 from pathlib import Path
 
-from .messages import FieldDef, MessageDef, parse_csv
+from .messages import FieldDef, MessageDef, parse_csv, usable_fields
 
 
 def to_dicts(msgs: list[MessageDef]) -> list[dict]:
@@ -65,6 +65,9 @@ def from_dicts(data: list[dict]) -> list[MessageDef]:
             )
             for f in m.get("fields", [])
         ]
+        if (usable := usable_fields(m["name"], fields)) is None:
+            continue
+        fields = usable
         msgs.append(
             MessageDef(
                 direction=m["direction"], circuit=m.get("circuit", ""),

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.2
+
+- Engine: a failure while handling one telegram, answer or callback fails only the transaction in flight, never the bus loop; a send error ends the loop like a receive error
+- Engine: when the link ends, the request in flight fails at once (`WriteUncertain` for a write that may have landed, success for one already ACKed) instead of at its timeout; a poll that fails internally is backed off
+- Engine: a STARTED nobody waits for (a cancel that came too late) releases the bus with a SYN
+- Engine: `read()`/`write()` reject a malformed request (PBSB, id, more than 16 data bytes) and a timeout shorter than one transaction in the call
+- An arbitration given up at its deadline is withdrawn at the adapter (START with SYN); telegrams passing while arbitrating are decoded
+- `ActiveReader`/`ActiveWriter` raise at EOF instead of spinning the event loop
+- Definitions with a type this library cannot decode are skipped (logged); repeated field names get `_1`, `_2` suffixes; reads without a device address are not polled
+- Codecs: 24:00 is a valid time, D1C ends at 100.0, TTH/TTQ use their low 6/7 bits, DTM out of range gives no value and prints `dd.mm.yyyy hh:mm` like ebusd
+- New `codecs.is_numeric()` and `codecs.value_range()` (min, max, step of an integer type)
+- Enh decoder keeps short-form bus bytes after a desync; conditions compare numbers with a divisor and leave a label against a number undecided
+- CI also tests Python 3.14
+
 ## 0.6.1
 
 - `EbusEngine.read_raw()` reads a register without a definition and returns the slave's raw answer (e.g. the identification at runtime)

@@ -54,6 +54,12 @@ def _symbol2(code: int, value: int) -> bytes:
                   0x80 | (value & 0x3F)))
 
 
+# START with SYN as the address withdraws a pending arbitration (enh protocol), so
+# an abandoned START cannot win the bus later with nobody to continue the telegram
+CANCEL_ARBITRATION = _symbol2(START, SYN)
+RELEASE_BUS = _symbol2(SEND, SYN)  # a SYN from the bus owner ends its turn
+
+
 def build_read_frame(
     zz: int, pbsb: str, msgid: str, qq: int = DEFAULT_SOURCE, master_data: bytes = b""
 ) -> bytes:
@@ -137,6 +143,11 @@ class _CommandDriver:
     def start(self) -> list[bytes]:
         """Initial symbols to send: the arbitration START with QQ."""
         return [_symbol2(START, self.qq)]
+
+    @property
+    def arbitrating(self) -> bool:
+        """START sent, the bus not yet won or lost: the adapter still holds it."""
+        return self._state == "arb" and not self.done
 
     def feed(self, chunk: bytes) -> list[bytes]:
         """Process adapter bytes, return the enh symbols to send next."""
@@ -295,9 +306,17 @@ async def _run_with_retry(send, recv, make_driver, timeout: float, tries: int):
         try:
             while not drv.done:
                 chunk = await asyncio.wait_for(recv(), timeout)
+                if not chunk:  # EOF: recv() would return b"" at once forever
+                    if isinstance(drv, WriteDriver) and drv.accepted:
+                        return drv  # the destination ACKed it: applied
+                    if isinstance(drv, WriteDriver) and drv.may_have_landed:
+                        raise WriteUncertain("connection closed after sending")
+                    raise ConnectionResetError("adapter closed the connection")
                 for sym in drv.feed(chunk):
                     await send(sym)
         except TimeoutError:
+            if drv.arbitrating:
+                await send(CANCEL_ARBITRATION)
             drv.error = last = "timeout"
         if drv.error is None:
             return drv

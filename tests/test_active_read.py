@@ -210,3 +210,79 @@ def test_collision_on_echo_mismatch():
     out = drv.feed(encode_symbol(RECEIVED, 0x99))  # wrong echo
     assert drv.done and "collision" in drv.error
     assert out == []
+
+
+def test_reader_at_eof_fails_instead_of_spinning():
+    import asyncio
+
+    import pytest
+
+    from aioebus.active import ActiveReader
+
+    async def send(data):
+        pass
+
+    async def recv():
+        return b""  # a closed connection answers at once, forever
+
+    async def inner():
+        reader = ActiveReader(send, recv)
+        with pytest.raises(ConnectionResetError):
+            await asyncio.wait_for(reader.read_raw(ZZ, PBSB, MSGID), 1)
+
+    asyncio.run(inner())
+
+
+def test_writer_at_eof_after_sending_reports_uncertain():
+    import asyncio
+
+    import pytest
+
+    from aioebus.active import ActiveWriter, WriteUncertain
+
+    master = bytes.fromhex("0e2000") + b"\x05"
+    cmd = build_read_frame(ZZ, PBSB, "", QQ, master)[len(escape(bytes((QQ,)))):]
+    queue: asyncio.Queue = asyncio.Queue()
+    dec = EnhDecoder()
+    adapter = FakeAdapter(cmd, b"")
+
+    async def send(data):
+        for code, value in dec.feed(data):
+            reply = adapter.respond(code, value)
+            if reply:
+                queue.put_nowait(reply)
+        if adapter.i == len(cmd):
+            queue.put_nowait(b"")  # the link drops before the ACK
+
+    async def inner():
+        writer = ActiveWriter(send, queue.get, allow_write=True)
+        with pytest.raises(WriteUncertain):
+            await asyncio.wait_for(writer.write_raw(ZZ, PBSB, master, tries=1), 1)
+
+    asyncio.run(inner())
+
+
+def test_reader_withdraws_an_arbitration_it_gives_up():
+    import asyncio
+
+    import pytest
+
+    from aioebus.active import ActiveReader, ReadError
+
+    sent = []
+    dec = EnhDecoder()
+
+    async def send(data):
+        sent.extend(dec.feed(data))
+
+    async def recv():
+        await asyncio.sleep(10)  # the adapter never gets a free slot
+        return b""
+
+    async def inner():
+        reader = ActiveReader(send, recv)
+        with pytest.raises(ReadError, match="timeout"):
+            await reader.read_raw(ZZ, PBSB, MSGID, timeout=0.05, tries=1)
+
+    asyncio.run(inner())
+    assert sent == [(START, QQ), (START, 0xAA)]  # START with SYN cancels it

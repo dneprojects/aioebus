@@ -1,10 +1,9 @@
 """Enhanced-adapter transport (Phase 3b) -- the host<->adapter byte protocol.
 
 The enhanced adapter (ebusd's `enh:` device) does bus arbitration and timing in
-hardware and speaks a small framed protocol over TCP/serial. For passive
-listening we only decode the adapter->host direction and collect the received
-eBUS symbols into telegrams, split on SYN. We never send -- so this touches the
-bus not at all.
+hardware and speaks a small framed protocol over TCP/serial. This module decodes the
+adapter->host direction and collects the received eBUS symbols into telegrams,
+split on SYN; it never sends (active transactions live in active.py/engine.py).
 
 Wire framing (adapter->host):
   * a plain byte < 0x80 is a received eBUS byte (short form)
@@ -83,9 +82,10 @@ class EnhDecoder:
                     data = ((self._first & 0x03) << 6) | (b & 0x3F)
                     events.append((code, data))
                     self._first = None
-                elif b & 0x40:                          # resync: new first half
+                elif b & 0x80:                          # resync: new first half
                     self._first = b
-                else:
+                else:                                   # short form: still a bus byte
+                    events.append((RECEIVED, b))
                     self._first = None
         return events
 

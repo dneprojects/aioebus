@@ -16,8 +16,9 @@ from __future__ import annotations
 import contextlib
 import csv
 import io
+import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .codecs import _Bit, make_codec
 from .codecs import encode as _encode_field
@@ -26,6 +27,8 @@ from .codecs import encode as _encode_field
 # Anything else in column 0 -- the CSV header line, condition/template rows we do
 # not yet support -- is skipped rather than turned into a bogus message.
 _DIRECTION = re.compile(r"^(r[1-9]?|w|uw?)$")
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -193,6 +196,31 @@ def _split_divisor_values(text: str):
         return None, None
 
 
+def usable_fields(name: str, fields: list[FieldDef]) -> list[FieldDef] | None:
+    """The fields ready for decoding, or None (logged) when one has a type this
+    library cannot decode -- its length is unknown, so no later field could be
+    placed either. Repeated field names (upstream CSVs have e.g. temp,temp,temp)
+    get ``_1``, ``_2`` suffixes, so every value keeps its own key."""
+    for f in fields:
+        try:
+            make_codec(f.type)
+        except ValueError as err:
+            _LOGGER.warning("eBUS definition %s skipped: %s", name, err)
+            return None
+    used = {f.name for f in fields}
+    taken: set[str] = set()
+    out: list[FieldDef] = []
+    for f in fields:
+        if f.name and f.name in taken:
+            n = 1
+            while f"{f.name}_{n}" in taken or f"{f.name}_{n}" in used:
+                n += 1  # never collide with another field's own name
+            f = replace(f, name=f"{f.name}_{n}")
+        taken.add(f.name)
+        out.append(f)
+    return out
+
+
 def parse_csv(text: str) -> list[MessageDef]:
     defaults: dict[str, list[str]] = {}
     out: list[MessageDef] = []
@@ -229,6 +257,9 @@ def parse_csv(text: str) -> list[MessageDef]:
             i += 6
             if typ:
                 fields.append(FieldDef(name, part, typ, div, vals, unit, cmt))
+        if (usable := usable_fields(c(3), fields)) is None:
+            continue
+        fields = usable
         out.append(
             MessageDef(
                 direction=core, circuit=g(1), level=g(2), name=c(3), comment=c(4),

@@ -57,3 +57,9 @@ def test_decoding_survives_fragmentation():
         results += listener.feed(stream[i : i + 1])
     got = [(d.name, list(v.values())[0]) for d, v in results]
     assert got == [exp for _, exp in FRAMES]
+
+
+def test_short_form_byte_after_an_orphan_first_half_is_kept():
+    # a desynced first half followed by short-form bus bytes: ebusd keeps them
+    events = EnhDecoder().feed(bytes((0xC4, 0x45, 0x31, 0x32)))
+    assert events == [(RECEIVED, 0x45), (RECEIVED, 0x31), (RECEIVED, 0x32)]

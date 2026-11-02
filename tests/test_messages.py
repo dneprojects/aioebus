@@ -62,3 +62,31 @@ def test_native_json_roundtrip():
     # the FULL dataclasses survive the round-trip (not just a lossy projection),
     # so a dropped field such as zz/qq would fail here
     assert back == msgs
+
+
+def test_repeated_field_names_get_their_own_keys():
+    msg = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                    "r,hmu,,Status01,,,08,b511,01,temp,,D1C,,,,temp,,D1C,,,,temp,,D1C,,,\n")[0]
+    assert [f.name for f in msg.fields] == ["temp", "temp_1", "temp_2"]
+    assert msg.decode(slave="283c50") == {"temp": 20.0, "temp_1": 30.0, "temp_2": 40.0}
+    again = from_dicts(json.loads(csv_to_json(
+        "type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+        "r,hmu,,Status01,,,08,b511,01,temp,,D1C,,,,temp,,D1C,,,\n")))[0]
+    assert [f.name for f in again.fields] == ["temp", "temp_1"]
+
+
+def test_definition_with_an_unknown_type_is_skipped(caplog):
+    msgs = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                     "r,,,Odd,,,08,b509,01,value,,SLG,,,\n"
+                     "r,,,Fine,,,08,b509,02,value,,UCH,,,\n")
+    assert [m.name for m in msgs] == ["Fine"]
+    assert "Odd" in caplog.text
+    raw = [{"direction": "r", "name": "Odd", "pbsb": "b509", "id": "01",
+            "fields": [{"name": "value", "type": "SLG"}]}]
+    assert from_dicts(raw) == []
+
+
+def test_renamed_field_never_takes_another_fields_name():
+    msg = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                    "r,hmu,,S,,,08,b511,01,temp,,UCH,,,,temp,,UCH,,,,temp_1,,UCH,,,\n")[0]
+    assert [f.name for f in msg.fields] == ["temp", "temp_2", "temp_1"]
