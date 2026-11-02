@@ -7,6 +7,7 @@ Pure, offline eBUS decoding validated against real captured telegrams:
   - passive: raw wire bytes -> matched message -> named values (read-only)
   - transport/active/engine: enhanced-adapter I/O, active read/write, and a
     passive-first engine that caches decoded values and interleaves reads.
+  - discovery: which devices are on the bus and what they are (scan, identification).
 """
 from .active import (
     ActiveReader,
@@ -20,6 +21,7 @@ from .active import (
 )
 from .codecs import Codec, decode, encode, make_codec
 from .conditions import ConditionContext, context_from_scan, evaluate, evaluate_all
+from .discovery import BusSilent, Device, Discovery, discover, identify_later
 from .engine import EbusEngine, EngineStats, value_key
 from .frame import Telegram, crc8, escape, parse_telegram, unescape
 from .messages import FieldDef, MessageDef, parse_csv
@@ -31,8 +33,11 @@ from .transport import EnhDecoder, PassiveListener, listen
 __all__ = [
     "ActiveReader",
     "ActiveWriter",
+    "BusSilent",
     "Codec",
     "ConditionContext",
+    "Device",
+    "Discovery",
     "EbusEngine",
     "EngineStats",
     "EnhDecoder",
@@ -56,10 +61,12 @@ __all__ = [
     "decode_identification",
     "decode_raw",
     "decode_scan",
+    "discover",
     "encode",
     "escape",
     "evaluate",
     "evaluate_all",
+    "identify_later",
     "listen",
     "make_codec",
     "parse_csv",
@@ -67,4 +74,4 @@ __all__ = [
     "unescape",
     "value_key",
 ]
-__version__ = "0.6.3"
+__version__ = "0.7.0"

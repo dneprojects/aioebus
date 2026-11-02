@@ -827,3 +827,62 @@ def test_read_identification_through_the_engine(monkeypatch):
 
     monkeypatch.setattr(eng, "read_raw", silent)
     assert asyncio.run(eng.read_identification(0x15)) is None
+
+
+def test_wait_for_traffic_and_running_flag():
+    async def inner():
+        link = _Link()
+        eng = EbusEngine(link.send, link.recv, REG)
+        assert not eng.running
+        assert not await eng.wait_for_traffic(0.01)  # not running: nothing arrives
+        task = asyncio.create_task(eng.run())
+        await asyncio.sleep(0)
+        assert eng.running
+        link.inject(encode_symbol(RECEIVED, SYN))
+        assert await eng.wait_for_traffic(1)
+        await _stop(eng, link, task)
+        assert not eng.running
+
+    asyncio.run(inner())
+
+
+def test_scan_through_the_engine():
+    async def inner():
+        link = _Link()
+        cmd = build_read_frame(0x08, "0704", "", QQ)[len(escape(bytes((QQ,)))):]
+        link.adapter = _Adapter(cmd, _slave_wire("b5484d55303009025103"))
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        stask = asyncio.create_task(eng.scan(0x08, timeout=4))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        scan = await asyncio.wait_for(stask, 4)
+        assert (scan.ident, scan.sw, scan.hw) == ("HMU00", "0902", "5103")
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_explicit_read_tries_again_when_the_answer_is_skipped():
+    # the slave ACKs the read but stays silent (the bus goes idle); a read has no
+    # side effect, so it is tried again instead of failing the caller
+    async def inner():
+        link = _Link()
+        link.adapter = adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read_raw(0x38, "b509", "24", timeout=4))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.02)  # command echoed
+        link.inject(encode_symbol(RECEIVED, ACK) + encode_symbol(RECEIVED, SYN))
+        await asyncio.sleep(0.02)
+        assert not rtask.done()  # not given up after one silent answer
+        link.inject(encode_symbol(RECEIVED, SYN))  # idle: the second try starts
+        await asyncio.sleep(0.02)
+        link.inject(b"".join(encode_symbol(RECEIVED, b) for b in _slave_wire("00414243")))
+        assert await asyncio.wait_for(rtask, 4) == bytes.fromhex("00414243")
+        assert adapter.starts == 2
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())

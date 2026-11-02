@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+
+- New `discovery` module: `discover()` scans the bus through the running engine (waits for traffic, base or deep address space, Vaillant identification, remembered identifications of the same unit, phantom addresses dropped by serial) and `identify_later()` reads missed identifications at runtime; `BusSilent` when the bus stays quiet
+- Engine: `scan()`, `wait_for_traffic()` (ends early when the link drops), `running`; explicit reads are tried again when the slave skips its answer (as `ActiveReader` did)
+
 ## 0.6.3
 
 - `EbusEngine.read_identification()` reads the Vaillant identification through the running engine; `scan.VAILLANT`, `IDENT_PBSB`, `IDENT_MSGIDS` are its single home

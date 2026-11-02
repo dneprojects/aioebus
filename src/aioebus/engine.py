@@ -21,6 +21,8 @@ from dataclasses import dataclass
 from .active import (
     CANCEL_ARBITRATION,
     DEFAULT_SOURCE,
+    NO_ANSWER,
+    NO_ANSWER_TRIES,
     RELEASE_BUS,
     ReadDriver,
     ReadError,
@@ -32,7 +34,15 @@ from .frame import SYN, FrameError, parse_telegram
 from .messages import MessageDef
 from .passive import MessageRegistry, expects_slave
 from .poll import PollScheduler
-from .scan import IDENT_MSGIDS, IDENT_PBSB, Identification, decode_identification
+from .scan import (
+    IDENT_MSGIDS,
+    IDENT_PBSB,
+    SCAN_PBSB,
+    Identification,
+    ScanResult,
+    decode_identification,
+    decode_scan,
+)
 from .transport import RECEIVED, STARTED, EnhDecoder
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +61,10 @@ class _Active:
     attempts: int = 0
     driver: _CommandDriver | None = None
     started: float = 0.0  # monotonic time the current attempt began
+    # a read the slave ACKs but leaves unanswered is tried this often in all
+    # (some devices skip the odd answer; a read has no side effect)
+    answer_tries: int = 1
+    no_answers: int = 0
     expires: float | None = None  # monotonic time the caller stops waiting
 
 
@@ -104,12 +118,17 @@ class EbusEngine:
         self.cache: dict[tuple[str, str, str], object] = {}
         self.stats = EngineStats()
         self._stop = False
+        self.running = False  # run() is pumping the stream
+        self._traffic = asyncio.Event()  # set by the first bus symbol
+        self._ended = asyncio.Event()  # set when run() ends
 
     # -- public API ---------------------------------------------------------
 
     async def run(self) -> None:
         """Main loop until stop() or the link ends; pumps the adapter stream. A
         failure while handling one event fails only the transaction in flight."""
+        self.running = True
+        self._ended.clear()
         try:
             while not self._stop:
                 try:
@@ -120,6 +139,8 @@ class EbusEngine:
                     break
                 self.stats.connected = True
                 for code, data in self._dec.feed(chunk):
+                    if code == RECEIVED:
+                        self._traffic.set()
                     try:
                         await self._on_event(code, data)
                     except OSError:  # sending failed: the link is gone
@@ -131,9 +152,24 @@ class EbusEngine:
                         except OSError:  # the cancel could not be sent: link gone
                             return
         finally:
+            self.running = False
+            self._ended.set()
             self.stats.connected = False
             # the caller of a transaction in flight learns now, not at its timeout
             self._fail_active("connection lost")
+
+    async def wait_for_traffic(self, timeout: float) -> bool:
+        """Whether the bus delivers a symbol within ``timeout`` s (a live bus
+        streams SYN continuously; silence means no bus power or a dead link).
+        Returns early when run() ends meanwhile (the link dropped)."""
+        waits = [asyncio.ensure_future(self._traffic.wait()),
+                 asyncio.ensure_future(self._ended.wait())]
+        try:
+            await asyncio.wait(waits, timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            for w in waits:
+                w.cancel()
+        return self._traffic.is_set()
 
     def stop(self) -> None:
         self._stop = True
@@ -147,6 +183,8 @@ class EbusEngine:
         self._recv = recv
         self._dec = EnhDecoder()
         self._buf.clear()
+        self._traffic = asyncio.Event()
+        self._ended.clear()  # the next run() is the live one
         self._fail_active("connection lost")
         self._stop = False
         self.stats.connected = False
@@ -190,7 +228,7 @@ class EbusEngine:
         self._require_addr(msg)
         zz = int(msg.zz, 16)
         slave = await self._submit(lambda: ReadDriver(zz, msg.pbsb, msg.msgid, self.qq),
-                                   msg, timeout)
+                                   msg, timeout, answer_tries=NO_ANSWER_TRIES)
         return msg.decode_labeled(slave=slave)
 
     async def read_raw(self, zz: int, pbsb: str, msgid: str, timeout: float = 6.0) -> bytes:
@@ -199,7 +237,17 @@ class EbusEngine:
         # malformed arguments fail this call, not later inside the bus loop
         if len(pbsb) != 4:
             raise ValueError(f"{pbsb!r}: PBSB must be 4 hex digits")
-        return await self._submit(lambda: ReadDriver(zz, pbsb, msgid, self.qq), None, timeout)
+        return await self._submit(lambda: ReadDriver(zz, pbsb, msgid, self.qq), None, timeout,
+                                  answer_tries=NO_ANSWER_TRIES)
+
+    async def scan(self, zz: int, timeout: float = 6.0) -> ScanResult:
+        """Identify the device at an address (0704: manufacturer, id, SW, HW).
+        Raises ReadError/TimeoutError when nothing answers there."""
+        answer = await self.read_raw(zz, SCAN_PBSB, "", timeout)
+        try:
+            return decode_scan(answer)
+        except ValueError as err:
+            raise ReadError(str(err)) from err
 
     async def read_identification(self, zz: int, timeout: float = 6.0) -> Identification | None:
         """The Vaillant extended identification (article/serial) of a device, read
@@ -231,7 +279,7 @@ class EbusEngine:
             raise ValueError(f"{msg.name}: no destination address")
 
     async def _submit(self, make: Callable[[], _CommandDriver], msg: MessageDef | None,
-                      timeout: float):
+                      timeout: float, answer_tries: int = 1):
         if timeout <= self.ACTIVE_DEADLINE + self.START_MARGIN:
             # it could never start (see _next_request): say so instead of timing out
             raise ValueError(f"timeout {timeout} s is shorter than one transaction "
@@ -240,7 +288,8 @@ class EbusEngine:
         # length) here, so a malformed request fails this call, not the bus loop
         make()
         fut: asyncio.Future = asyncio.get_running_loop().create_future()
-        act = _Active(make, msg, fut, expires=time.monotonic() + timeout)
+        act = _Active(make, msg, fut, expires=time.monotonic() + timeout,
+                      answer_tries=answer_tries)
         self._queue.append(act)
         try:
             return await asyncio.wait_for(fut, timeout)
@@ -407,6 +456,9 @@ class EbusEngine:
         if isinstance(drv, WriteDriver) and drv.may_have_landed:
             retryable = False  # the whole command went out: a resend could apply it twice
         abandoned = act.future is not None and act.future.done()  # caller gave up
+        if isinstance(drv, ReadDriver) and drv.error == NO_ANSWER:
+            act.no_answers += 1
+            retryable = act.no_answers < act.answer_tries
         if retryable and not abandoned and act.attempts < self.MAX_ATTEMPTS:
             self._queue.appendleft(act)  # make() runs again on the next idle
             return
