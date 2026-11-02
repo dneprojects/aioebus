@@ -12,6 +12,7 @@ Validated against real 0704 answers captured from the reference bus:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Final
 
 SCAN_PBSB = "0704"
 VAILLANT = 0xB5  # manufacturer byte of devices that answer the identification reads
@@ -19,8 +20,21 @@ VAILLANT = 0xB5  # manufacturer byte of devices that answer the identification r
 IDENT_PBSB = "b509"
 IDENT_MSGIDS = ("24", "25", "26", "27")
 
-# a few known manufacturer bytes (eBUS); extend as needed
-_MANUFACTURERS = {VAILLANT: "Vaillant", 0xB7: "Kromschroeder", 0x06: "Dungs"}
+# manufacturer byte -> name, as ebusd knows them (data.cpp); the lower-case name
+# is also the manufacturer's folder of ebusd configuration files
+MANUFACTURERS: Final[dict[int, str]] = {
+    0x06: "Dungs", 0x0F: "FH Ostfalia", 0x10: "TEM", 0x11: "Lamberti", 0x14: "CEB",
+    0x15: "Landis-Staefa", 0x16: "FERRO", 0x17: "MONDIAL", 0x18: "Wikon", 0x19: "Wolf",
+    0x20: "RAWE", 0x30: "Satronic", 0x40: "ENCON", 0x50: "Kromschroeder", 0x60: "Eberle",
+    0x65: "EBV", 0x75: "Graesslin", 0x85: "ebm-papst", 0x95: "SIG", 0xA5: "Theben",
+    0xA7: "Thermowatt", VAILLANT: "Vaillant", 0xC0: "Toby", 0xC5: "Weishaupt",
+    0xFD: "ebusd.eu"}
+
+
+def config_folder(mf: int) -> str | None:
+    """The folder of a manufacturer's ebusd configuration files, if it is known."""
+    name = MANUFACTURERS.get(mf)
+    return name.lower() if name else None
 
 
 @dataclass
@@ -50,7 +64,7 @@ def decode_scan(slave: bytes) -> ScanResult:
     ident = slave[1:6].rstrip(b"\x00").decode("latin-1").rstrip()
     sw = _four(slave[6], slave[7])
     hw = _four(slave[8], slave[9])
-    return ScanResult(mf, _MANUFACTURERS.get(mf, f"{mf:#04x}"), ident, sw, hw,
+    return ScanResult(mf, MANUFACTURERS.get(mf, f"{mf:#04x}"), ident, sw, hw,
                       _num(sw), _num(hw))
 
 

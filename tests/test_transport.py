@@ -1,7 +1,6 @@
-"""Phase 3b enh transport, validated offline: encode real telegrams into a
-synthetic adapter byte stream and confirm the passive listener recovers the same
-decoded values -- including when the stream is fragmented across reads. The live
-socket needs ebusd stopped (single-client adapter) and is not exercised here.
+"""Enhanced-adapter transport, validated offline: encode real telegrams into a
+synthetic adapter byte stream and confirm the engine recovers the same decoded
+values -- including when the stream is fragmented across reads.
 """
 from aioebus.frame import SYN
 from aioebus.messages import parse_csv
@@ -9,7 +8,6 @@ from aioebus.passive import MessageRegistry
 from aioebus.transport import (
     RECEIVED,
     EnhDecoder,
-    PassiveListener,
     encode_received_frame,
     encode_symbol,
 )
@@ -39,24 +37,40 @@ def test_symbol_roundtrip():
     assert len(encode_symbol(RECEIVED, 0x37)) == 1
 
 
-def test_passive_listener_decodes_real_frames():
-    listener = PassiveListener(REGISTRY)
-    results = []
-    for raw, _ in FRAMES:
-        results += listener.feed(encode_received_frame(bytes.fromhex(raw)))
-    got = [(d.name, list(v.values())[0]) for d, v in results]
-    assert got == [exp for _, exp in FRAMES]
+def _engine_decodes(chunks: list[bytes]) -> list[tuple[str, object]]:
+    """Feed adapter chunks to an engine (no writes); the values it decoded."""
+    import asyncio
+
+    from aioebus.engine import EbusEngine
+
+    got: list[tuple[str, object]] = []
+
+    async def inner():
+        queue: asyncio.Queue = asyncio.Queue()
+        for chunk in [*chunks, b""]:
+            queue.put_nowait(chunk)
+
+        async def send(_data: bytes) -> None:
+            raise AssertionError("a passive engine sends nothing")
+
+        eng = EbusEngine(send, queue.get, REGISTRY,
+                         on_value=lambda m, v: got.append((m.name, next(iter(v.values())))))
+        await asyncio.wait_for(eng.run(), 2)
+
+    asyncio.run(inner())
+    return got
+
+
+def test_engine_decodes_real_frames():
+    stream = [encode_received_frame(bytes.fromhex(raw)) for raw, _ in FRAMES]
+    assert _engine_decodes(stream) == [exp for _, exp in FRAMES]
 
 
 def test_decoding_survives_fragmentation():
-    # feed the whole stream one byte at a time; stateful decoder must not care
+    # feed the whole stream one byte at a time; the stateful decoder must not care
     stream = b"".join(encode_received_frame(bytes.fromhex(r)) for r, _ in FRAMES)
-    listener = PassiveListener(REGISTRY)
-    results = []
-    for i in range(len(stream)):
-        results += listener.feed(stream[i : i + 1])
-    got = [(d.name, list(v.values())[0]) for d, v in results]
-    assert got == [exp for _, exp in FRAMES]
+    assert _engine_decodes([stream[i:i + 1] for i in range(len(stream))]) == [
+        exp for _, exp in FRAMES]
 
 
 def test_short_form_byte_after_an_orphan_first_half_is_kept():

@@ -47,13 +47,13 @@
     ]
   },
   "climate": {
-    "_comment": "Bundle per-zone registers into a climate entity (one per heating zone). For each zone N, '<prefix>N<target>' is the writable comfort setpoint (target temperature), '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode (off/auto -> HVAC off/auto, others -> heat + preset). A zone is created only if it has data.",
+    "_comment": "Per-zone registers of a heating zone. For each zone N, '<prefix>N<target>' is the writable comfort setpoint, '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode; 'modes' names the mode values that mean off, automatic (time program) and heating at the comfort setpoint.",
     "ctlv3.json": {
-      "name": "Heizkreis {n}",
       "zone_prefix": "Z",
       "target": "DayTemp",
       "current": "RoomTemp",
-      "mode": "OpMode"
+      "mode": "OpMode",
+      "modes": {"off": "off", "auto": "auto", "heat": "day"}
     }
   },
   "number_bounds": {

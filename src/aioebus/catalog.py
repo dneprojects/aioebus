@@ -8,7 +8,7 @@ For each device the catalog takes, in this order:
    scan ident;
 3. the matching ebusd-configuration CSV from the public ebus.github.io CDN,
    chosen the way ebusd does (``ZZ.ident[.circuit][.SWnnnn][.HWnnnn].csv``:
-   bus address, ident prefix, SW/HW variant). It is downloaded on the user's own
+   bus address, ident, SW/HW variant). It is downloaded on the user's own
    machine and kept in a cache directory; the library ships none of it.
 
 Network access goes through a ``fetch`` callable the caller provides (so an
@@ -23,23 +23,21 @@ import logging
 import re
 import time
 from collections.abc import Awaitable, Callable, Iterable, Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
 from typing import Any, Final
 
 from .conditions import ConditionContext, context_from_scan, evaluate_all
 from .convert import attach_translations, from_dicts
+from .frame import BROADCAST
 from .messages import MessageDef, parse_csv
-from .scan import Identification, ScanResult
+from .scan import Identification, ScanResult, config_folder
 
 _LOGGER = logging.getLogger(__name__)
 
 BUNDLED_DIR: Final = Path(__file__).parent / "defs" / "vaillant"
 CDN: Final = "https://ebus.github.io"
-# manufacturer byte -> the CDN folder with its devices
-MANUFACTURER_FOLDERS: Final[dict[int, str]] = {
-    0xB5: "vaillant", 0x19: "wolf", 0x50: "kromschroeder", 0x40: "encon", 0x10: "tem"}
 CACHE_MAX_AGE: Final = 7 * 24 * 3600  # s; older cached files are fetched again
 # the broadcast circuit: telegrams to all (0xfe), resolved like a device
 BROADCAST_SCAN: Final = ScanResult(0, "", "Broadcast", "", "", None, None)
@@ -54,7 +52,8 @@ _SAFE_NAME = re.compile(r"^[\w-]+(?:\.[\w-]+)*$")
 _LISTING: Final = ".listing"  # cache name of a folder listing (no CDN name looks so)
 _MAX_INCLUDE_DEPTH: Final = 3
 # a load instruction with optional conditions in front: [cond][cond]!load,<file>
-_LOAD = re.compile(r"^((?:\[[^\]\n]*\])*)!load,([^,\s]+)", re.MULTILINE)
+# (!load: the first one that applies wins; !include: every one that applies)
+_LOAD = re.compile(r"^((?:\[[^\]\n]*\])*)!(load|include),([^,\s]+)", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -62,7 +61,7 @@ class Definition:
     """Where a device's definition came from. ``file`` is the bundled file name,
     the user file name or the CDN path; ``profile`` is ``IDENT/HW`` when a
     bundled per-HW profile matched; ``text_paths`` are the CDN paths (without
-    ``/<lang>/`` and ``.csv``) that carry its display text."""
+    ``/<lang>/``) of the files that carry its display text."""
     source: str  # "bundled", "user" or "cdn"
     file: str
     profile: str | None = None
@@ -83,10 +82,10 @@ class Texts:
 class ClimateZone:
     """A heating zone: the addressed messages for its target setpoint
     (read/write), room temperature and operating mode (read/write), its
-    user-given short name, and the setpoint range. Missing roles are None."""
+    user-given short name, and the setpoint range. Missing roles are None.
+    ``modes`` names the mode values for the roles "off", "auto" and "heat"."""
     zz: str
     n: int
-    name: str  # fallback name; the zone's own short name wins where set
     target_read: MessageDef | None
     target_write: MessageDef | None
     current: MessageDef | None
@@ -94,6 +93,7 @@ class ClimateZone:
     mode_write: MessageDef | None
     shortname: MessageDef | None
     target_bounds: tuple[float, float, float] | None = None
+    modes: dict[str, str] = field(default_factory=dict)
 
 
 @cache
@@ -136,58 +136,80 @@ def resolve_bundled(scan: ScanResult) -> Definition | None:
     file, key, prof = found
     index = bundled_index()
     return Definition("bundled", file, key, prof.get("model") or index["models"].get(file),
-                      tuple(index["cdn"].get(file, ())))
+                      tuple(f"{p}.csv" for p in index["cdn"].get(file, ())))
 
 
-def _tokens_fit(tokens: Iterable[str], scan: ScanResult) -> tuple[bool, int]:
-    """Whether the variant tokens of a file name fit a device (a ``SWnnnn``/
-    ``HWnnnn`` token must be its version; other tokens name a circuit), and how
-    many such constraints the name has."""
-    specific, ok = 0, True
+def _device_ident(scan: ScanResult) -> str:
+    """The scan ident as ebusd compares it: letters, digits and '_', lower case."""
+    return "".join(c for c in (scan.ident or "").lower() if c.isalnum() or c == "_")
+
+
+def _ident_match(file_ident: str, ident: str) -> int:
+    """How well a file's ident fits a device's (0: not at all), as ebusd judges
+    it: equal to the device ident, or to it with trailing digits removed one at
+    a time; the longer the matched part, the better."""
+    file_ident = file_ident.lower()
+    remain = ident
+    while remain and len(remain) >= len(file_ident):
+        if remain == file_ident:
+            return len(remain) + 1
+        if not remain[-1].isdigit():
+            break
+        remain = remain[:-1]
+    return 0
+
+
+def _variant_fits(tokens: Iterable[str], scan: ScanResult) -> bool:
+    """Whether the variant tokens of a file name fit a device: a ``SWnnnn``/
+    ``HWnnnn`` token must be its version; other tokens name a circuit."""
     for token in tokens:
         token = token.lower()
         if re.fullmatch(r"(sw|hw)\d{4}", token):
             want = scan.sw if token.startswith("sw") else scan.hw
-            ok = ok and token[2:] == (want or "")
-            specific += 1
-    return ok, specific
+            if token[2:] != (want or ""):
+                return False
+    return True
+
+
+def _best_file(candidates: Iterable[tuple[str, str, list[str]]], scan: ScanResult) -> str | None:
+    """Of (name, ident, variant tokens) candidates, the file ebusd would pick:
+    the best ident match whose variant fits, then the longer (more specific)
+    name."""
+    ident = _device_ident(scan)
+    if not ident:
+        return None
+    best: tuple[int, int, str] | None = None
+    for name, file_ident, tokens in candidates:
+        score = _ident_match(file_ident, ident)
+        if score and _variant_fits(tokens, scan) and (
+                best is None or (score, len(name)) > best[:2]):
+            best = (score, len(name), name)
+    return best[2] if best else None
 
 
 def resolve_user_file(scan: ScanResult, user_dir: Path) -> Path | None:
     """A user definition for a device: ``ZZ.ident[.circuit][.SWnnnn][.HWnnnn]``
-    (``.json`` or ``.csv``) whose ident starts the scan ident and whose SW/HW
-    variant (if any) is the device's; the longest ident and the more specific
-    variant win. The address part is not compared: identical devices behind
-    different couplers share one file."""
-    ident = (scan.ident or "").lower()
-    if not ident:
-        return None
-    best: tuple[int, int, Path] | None = None
-    for p in sorted([*user_dir.glob("*.json"), *user_dir.glob("*.csv")]):
+    (``.json`` or ``.csv``) chosen as ebusd chooses its files. The address part
+    is not compared: identical devices behind different couplers share one file."""
+    files = {p.name: p for p in sorted([*user_dir.glob("*.json"), *user_dir.glob("*.csv")])}
+    candidates = []
+    for name, p in files.items():
         parts = p.stem.split(".")  # ZZ . ident [. tokens]
-        if len(parts) < 2 or not parts[1] or not ident.startswith(parts[1].lower()):
-            continue
-        ok, specific = _tokens_fit(parts[2:], scan)
-        if ok and (best is None or (len(parts[1]), specific) > best[:2]):
-            best = (len(parts[1]), specific, p)
-    return best[2] if best else None
+        if len(parts) >= 2 and parts[1]:
+            candidates.append((name, parts[1], parts[2:]))
+    best = _best_file(candidates, scan)
+    return files[best] if best else None
 
 
 def match_cdn_file(names: Iterable[str], address: int, scan: ScanResult) -> str | None:
-    """The CDN file ebusd would load for a device: ``ZZ.ident[.circuit][.SWnnnn]
-    [.HWnnnn].csv`` at the device's address, whose ident starts the scan ident and
-    whose SW/HW variant (if any) is the device's; the longest ident and the more
-    specific variant win."""
-    ident = (scan.ident or "").lower()
-    best: tuple[int, int, str] | None = None
+    """The CDN file ebusd would load for a device at an address (see
+    :func:`resolve_user_file`), among the names of a CDN folder."""
+    candidates = []
     for name in names:
         m = _CDN_NAME.match(name.lower())
-        if m is None or int(m["zz"], 16) != address or not ident.startswith(m["ident"]):
-            continue
-        ok, specific = _tokens_fit(m["rest"].split(".")[1:], scan)
-        if ok and (best is None or (len(m["ident"]), specific) > best[:2]):
-            best = (len(m["ident"]), specific, name)
-    return best[2] if best else None
+        if m is not None and int(m["zz"], 16) == address:
+            candidates.append((name, m["ident"], m["rest"].split(".")[1:]))
+    return _best_file(candidates, scan)
 
 
 def context_for(scan: ScanResult, ident: Identification | None = None) -> ConditionContext:
@@ -200,37 +222,79 @@ def context_for(scan: ScanResult, ident: Identification | None = None) -> Condit
 
 
 def includes(text: str, ctx: ConditionContext) -> list[str]:
-    """The files a CSV's ``!load`` lines ask for: those whose conditions hold for
-    the device; when none of the conditional ones does, the unconditional ones
-    (the file's default)."""
-    chosen, default = [], []
-    for prefix, name in _LOAD.findall(text):
+    """The files a CSV's instructions load for a device, as ebusd executes them
+    in file order: of the ``!load`` lines the first one that applies (no
+    condition, or all its conditions hold), and every ``!include`` that applies."""
+    out: list[str] = []
+    loaded = False
+    for prefix, kind, name in _LOAD.findall(text):
         conditions = re.findall(r"\[([^\]]*)\]", prefix)
-        if not conditions:
-            default.append(name)
-        elif evaluate_all(conditions, ctx) is True:
-            chosen.append(name)
-    return list(dict.fromkeys(chosen or default))
+        if conditions and evaluate_all(conditions, ctx) is not True:
+            continue
+        if kind == "load":
+            if loaded:
+                continue
+            loaded = True
+        out.append(name)
+    return list(dict.fromkeys(out))
+
+
+async def _with_includes(name: str, text: str, ctx: ConditionContext,
+                         read: Callable[[str], Awaitable[str | None]]
+                         ) -> tuple[list[MessageDef], list[str]]:
+    """A CSV's messages and those of the files it loads (and theirs, a few levels
+    at most), read through ``read``; an include that cannot be read is skipped.
+    Returns the messages and the names of the included files read."""
+    messages = await asyncio.to_thread(parse_csv, text)
+    seen, used = {name}, []
+    pending = [(text, 0)]
+    while pending:
+        source, depth = pending.pop()
+        for include in includes(source, ctx):
+            if include in seen or depth >= _MAX_INCLUDE_DEPTH:
+                continue
+            seen.add(include)
+            if not _SAFE_NAME.match(include):
+                _LOGGER.warning("%s: include %r ignored", name, include)
+                continue
+            extra = await read(include)
+            if extra:
+                messages += await asyncio.to_thread(parse_csv, extra)
+                used.append(include)
+                pending.append((extra, depth + 1))
+    return messages, used
+
+
+def _command(m: MessageDef) -> tuple[str, str, bool, bool]:
+    """What identifies a message on a device, as in ebusd: its command (PBSB +
+    id) and its kind -- a read and a write of one register are two messages, and
+    so are an active and a passive one."""
+    return (m.pbsb.lower(), m.msgid.lower(), m.is_write, m.is_passive)
 
 
 def addressed(address: int, scan: ScanResult, messages: Iterable[MessageDef],
-              ctx: ConditionContext | None = None) -> list[MessageDef]:
+              ctx: ConditionContext | None = None, *,
+              keep_row_address: bool = False) -> list[MessageDef]:
     """A device's messages with its address stamped on. Conditions are evaluated
     against this device (``ctx``, by default its scan): a message whose condition
-    is false is dropped, and where several share a command (pbsb+id) the best fit
-    wins (a matched condition over an unconditional base over an undecided one)."""
+    is false is dropped, and where several define one command the best fit wins
+    (a matched condition over an unconditional base over an undecided one).
+    With ``keep_row_address`` a message that names its own destination keeps it
+    (an ebusd CSV row with a ZZ column, e.g. a register of a module at another
+    address); otherwise the device address replaces it."""
     zz = f"{address:02x}"
     ctx = ctx if ctx is not None else context_from_scan(scan)
-    chosen: dict[tuple[str, str], tuple[int, MessageDef]] = {}
+    chosen: dict[tuple[str, str, bool, bool], tuple[int, MessageDef]] = {}
     for m in messages:
         result = evaluate_all(m.conditions, ctx)
         if result is False:
             continue
         rank = (3 if result is True else 1) if m.conditions else 2
-        key = (m.pbsb, m.msgid)
+        key = _command(m)
         if key not in chosen or rank > chosen[key][0]:
             chosen[key] = (rank, m)
-    return [replace(m, zz=zz) for _, m in chosen.values()]
+    return [m if keep_row_address and m.zz else replace(m, zz=zz)
+            for _, m in chosen.values()]
 
 
 class Catalog:
@@ -245,6 +309,7 @@ class Catalog:
         self._scans: dict[int, ScanResult] = {}
         self._defs: dict[int, Definition] = {}
         self._messages: dict[int, list[MessageDef]] = {}
+        self._owner: dict[int, int] = {}  # id(message) -> device address
         self._listings: dict[str, list[str] | None] = {}  # per load: folder -> names
 
     async def load(self, devices: Mapping[int, ScanResult],
@@ -252,8 +317,8 @@ class Catalog:
         """Resolve every device's definition (bundled, user, CDN); devices without
         any keep no messages. The broadcast circuit is always included. ``idents``
         (the Vaillant identifications) let product-specific parts be chosen."""
-        self._scans = {**devices, 0xFE: BROADCAST_SCAN}
-        self._defs, self._messages, self._listings = {}, {}, {}
+        self._scans = {**devices, BROADCAST: BROADCAST_SCAN}
+        self._defs, self._messages, self._owner, self._listings = {}, {}, {}, {}
         await asyncio.to_thread(bundled_index)
         for address, scan in self._scans.items():
             ctx = context_for(scan, (idents or {}).get(address))
@@ -267,7 +332,12 @@ class Catalog:
                 continue
             definition, messages = found
             self._defs[address] = definition
-            self._messages[address] = addressed(address, scan, messages, ctx)
+            # a CSV row may name its own destination; our JSON files carry the
+            # address they were made from, which the device's replaces
+            msgs = addressed(address, scan, messages, ctx,
+                             keep_row_address=definition.file.lower().endswith(".csv"))
+            self._messages[address] = msgs
+            self._owner.update((id(m), address) for m in msgs)
 
     async def _resolve(self, address: int, scan: ScanResult, ctx: ConditionContext
                        ) -> tuple[Definition, list[MessageDef]] | None:
@@ -277,13 +347,13 @@ class Catalog:
             path = await asyncio.to_thread(resolve_user_file, scan, self.user_dir)
             if path is not None:
                 try:
-                    messages = await asyncio.to_thread(_read_user, path, ctx)
+                    messages = await _read_user(path, ctx)
                 except (OSError, ValueError, KeyError, TypeError, AttributeError) as err:
                     # one broken file costs its device, never the whole bus
                     _LOGGER.warning("definition file %s skipped: %s", path.name, err)
                 else:
                     return Definition("user", path.name), messages
-        folder = MANUFACTURER_FOLDERS.get(scan.mf)
+        folder = config_folder(scan.mf)
         if folder is None or (self._fetch is None and self.cache_dir is None):
             return None
         names = await self._listing(folder)
@@ -293,24 +363,13 @@ class Catalog:
         text = await self._text(f"{folder}/{name}")
         if not text:
             return None
-        messages = await asyncio.to_thread(parse_csv, text)
-        seen = {name}
-        pending = [(text, 0)]
-        while pending:  # includes, and theirs (a few levels at most)
-            source, depth = pending.pop()
-            for include in includes(source, ctx):
-                if include in seen or depth >= _MAX_INCLUDE_DEPTH:
-                    continue
-                seen.add(include)
-                if not _SAFE_NAME.match(include):
-                    _LOGGER.warning("%s: include %r ignored", name, include)
-                    continue
-                extra = await self._text(f"{folder}/{include}")
-                if extra:  # best effort: an include the CDN does not serve is skipped
-                    messages += await asyncio.to_thread(parse_csv, extra)
-                    pending.append((extra, depth + 1))
-        path = f"{folder}/{name[:-len('.csv')]}"
-        return Definition("cdn", f"{folder}/{name}", text_paths=(path,)), messages
+
+        async def read(include: str) -> str | None:  # best effort: a missing one is skipped
+            return await self._text(f"{folder}/{include}")
+
+        messages, used = await _with_includes(name, text, ctx, read)
+        paths = tuple(f"{folder}/{n}" for n in (name, *used))
+        return Definition("cdn", f"{folder}/{name}", text_paths=paths), messages
 
     async def _listing(self, folder: str) -> list[str] | None:
         """A CDN folder's file names, fetched once per load (an unreachable CDN
@@ -343,7 +402,11 @@ class Catalog:
                     return stale, True
         if self._fetch is None:
             return stale, False
-        text = await self._fetch(f"{CDN}/{lang}/{rel}")
+        try:
+            text = await self._fetch(f"{CDN}/{lang}/{rel}")
+        except Exception as err:  # a fetch that raises counts as unreachable
+            _LOGGER.debug("%s not fetched: %s", rel, err)
+            text = None
         if not text:  # None: not reachable; "": not there (final)
             return (stale if stale is not None else text), text == ""
         if rel.endswith("/"):  # a folder listing is a JSON string of names
@@ -364,7 +427,7 @@ class Catalog:
 
     @property
     def text_paths(self) -> list[str]:
-        """The CDN paths (without ``/<lang>/`` and ``.csv``) with the display
+        """The CDN paths (without ``/<lang>/``) of the files with the display
         text of the loaded devices."""
         return sorted({p for d in self._defs.values() for p in d.text_paths})
 
@@ -376,7 +439,7 @@ class Catalog:
         paths = self.text_paths
         for lang in dict.fromkeys(langs):
             # one language's files at once: a slow one does not hold up the rest
-            states = await asyncio.gather(*(self._text_state(f"{p}.csv", lang) for p in paths))
+            states = await asyncio.gather(*(self._text_state(p, lang) for p in paths))
             for text, current in states:
                 # not reachable (even if a stale copy stood in): try again later;
                 # "" is final, e.g. a language upstream does not translate
@@ -407,19 +470,31 @@ class Catalog:
     def all_messages(self) -> list[MessageDef]:
         return [m for msgs in self._messages.values() for m in msgs]
 
+    def owner(self, msg: MessageDef) -> int:
+        """The address of the device whose definition holds the message (it may
+        be sent to another address, see :func:`addressed`)."""
+        return self._owner.get(id(msg), int(msg.zz, 16) if msg.zz else BROADCAST)
+
     def device_messages(self, direction: str) -> list[MessageDef]:
-        """Messages of a direction ('r' read incl. passive updates, 'w' write)
-        across all devices, one per (address, name) -- the first definition wins."""
+        """Messages of a direction ('r' read incl. passive updates, 'w' active
+        write) across all devices, one per (address, name) -- the first
+        definition wins."""
         want_read = direction == "r"
         out: list[MessageDef] = []
         seen: set[tuple[str, str]] = set()
         for m in self.all_messages():
-            if want_read != m.is_read or (not want_read and not m.is_write):
+            if want_read != m.is_read or (not want_read and m.direction != "w"):
                 continue
             if (m.zz, m.name) not in seen:
                 seen.add((m.zz, m.name))
                 out.append(m)
         return out
+
+    def read_twin(self, msg: MessageDef) -> MessageDef | None:
+        """The active read of the register a write message sets (to read a
+        written value back), if the device has one."""
+        return next((m for m in self._messages.get(self.owner(msg), ())
+                     if m.name == msg.name and m.zz == msg.zz and m.is_polled_read), None)
 
     def bounds(self, address: int, message: str) -> tuple[float, float, float] | None:
         """(min, max, step) of a writable register as the bundled catalog lists it."""
@@ -442,50 +517,57 @@ class Catalog:
                 continue
             prefix = str(decl.get("zone_prefix", ""))
             target, current, mode = decl["target"], decl["current"], decl["mode"]
+            roles = decl.get("modes", {})
             msgs = self._messages.get(address, [])
             rx = re.compile(rf"^{re.escape(prefix)}(\d+){re.escape(target)}$")
             for n in sorted({int(mt.group(1)) for m in msgs
                              if (mt := rx.match(m.name)) and m.is_write}):
                 tw = _find(msgs, f"{prefix}{n}{target}", write=True)
+                mode_read = _find(msgs, f"{prefix}{n}{mode}", write=False)
+                mode_write = _find(msgs, f"{prefix}{n}{mode}", write=True)
                 out.append(ClimateZone(
-                    zz=f"{address:02x}", n=n, name=str(decl.get("name", "Zone {n}")).format(n=n),
+                    zz=f"{address:02x}", n=n,
                     target_read=_find(msgs, f"{prefix}{n}{target}", write=False),
                     target_write=tw,
                     current=_find(msgs, f"{prefix}{n}{current}", write=False),
-                    mode_read=_find(msgs, f"{prefix}{n}{mode}", write=False),
-                    mode_write=_find(msgs, f"{prefix}{n}{mode}", write=True),
+                    mode_read=mode_read,
+                    mode_write=mode_write,
                     shortname=_find(msgs, f"{prefix}{n}Shortname", write=False),
                     target_bounds=self.bounds(address, tw.name) if tw else None,
+                    modes=_mode_roles(roles, mode_read or mode_write),
                 ))
         return out
 
 
 def _find(msgs: list[MessageDef], name: str, *, write: bool) -> MessageDef | None:
-    for m in msgs:
-        if m.name == name and (m.is_write if write else m.is_read):
-            return m
-    return None
+    """The message of that name and direction, an active one before a passive
+    one (it can be sent)."""
+    hits = [m for m in msgs if m.name == name and (m.is_write if write else m.is_read)]
+    return next((m for m in hits if not m.is_passive), hits[0] if hits else None)
 
 
-def _read_user(path: Path, ctx: ConditionContext | None = None) -> list[MessageDef]:
-    """A user definition; an ebusd CSV with its ``!load`` includes (same folder)."""
-    text = path.read_text(encoding="utf-8")
+def _mode_roles(roles: object, msg: MessageDef | None) -> dict[str, str]:
+    """The declared mode roles whose value the register actually has."""
+    labels = {v for f in (msg.fields if msg else ()) if f.values for v in f.values.values()}
+    if not isinstance(roles, dict):
+        return {}
+    return {role: label for role, label in roles.items()
+            if isinstance(label, str) and label in labels}
+
+
+async def _read_user(path: Path, ctx: ConditionContext) -> list[MessageDef]:
+    """A user definition; an ebusd CSV with its includes (same folder)."""
+    text = await asyncio.to_thread(path.read_text, encoding="utf-8")
     if path.suffix.lower() != ".csv":
         return from_dicts(json.loads(text))
-    messages = parse_csv(text)
-    seen, pending = {path.name}, [(text, 0)]
-    while pending:
-        source, depth = pending.pop()
-        for include in includes(source, ctx or ConditionContext()):
-            if include in seen or depth >= _MAX_INCLUDE_DEPTH or not _SAFE_NAME.match(include):
-                continue
-            seen.add(include)
-            try:
-                extra = (path.parent / include).read_text(encoding="utf-8")
-            except OSError:
-                continue  # an include the folder does not have is skipped
-            messages += parse_csv(extra)
-            pending.append((extra, depth + 1))
+
+    async def read(include: str) -> str | None:  # one the folder lacks is skipped
+        try:
+            return await asyncio.to_thread((path.parent / include).read_text, encoding="utf-8")
+        except OSError:
+            return None
+
+    messages, _used = await _with_includes(path.name, text, ctx, read)
     return messages
 
 

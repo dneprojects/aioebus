@@ -33,3 +33,12 @@ def test_the_control_a_write_allows():
 def test_numeric_types():
     assert has_numeric_value("BCD") and not is_number_type("BCD")
     assert is_number_type("EXP") and is_number_type("UIN") and not has_numeric_value("HEX:2")
+
+
+def test_passive_writes_get_no_control_and_period_totals():
+    from aioebus.values import closes_period, value_key
+    assert control_of(msg("uw", NUM)) is None  # sent by others, not by us
+    assert closes_period(msg("r", NUM, name="PrEnergySumHcLastMonth"))
+    assert not closes_period(msg("r", NUM, name="PrEnergySumHc"))
+    v = values_of(msg("r", NUM, name="FlowTemp"))[0]
+    assert v.cache_key == value_key(v.msg, "FlowTemp") == ("15", "FlowTemp", "FlowTemp")

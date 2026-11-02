@@ -12,6 +12,13 @@ w,elo,,Write,,,38,b509,0e2000,value,,UCH,,,
 MSGS = parse_csv(CSV)
 
 
+def _polled_at(sch: PollScheduler, now: float) -> PollScheduler:
+    """Every register last polled at ``now`` (a scheduler running a while)."""
+    for item in sch._items.values():
+        item.last_update = now
+    return sch
+
+
 def test_only_polled_priorities_scheduled():
     sch = PollScheduler(MSGS, base_interval=10.0)
     # plain r (OnDemand) and w (Write) are not auto-polled by default
@@ -29,7 +36,7 @@ def test_default_priority_polls_plain_reads():
 
 
 def test_priority_sets_interval():
-    sch = PollScheduler(MSGS, base_interval=10.0)
+    sch = _polled_at(PollScheduler(MSGS, base_interval=10.0), 0.0)
     # at t=12: Fast (interval 10) is due, Slow (interval 50) is not
     due = sch.next_due(12.0)
     assert due is not None and due.msg.name == "Fast"
@@ -52,7 +59,7 @@ def test_failed_poll_backoff():
 
 
 def test_passive_update_suppresses_poll():
-    sch = PollScheduler(MSGS, base_interval=10.0)
+    sch = _polled_at(PollScheduler(MSGS, base_interval=10.0), 0.0)
     assert sch.next_due(12.0).msg.name == "Fast"   # Fast would be polled at t=12
     fast = next(m for m in MSGS if m.name == "Fast")
     sch.mark_passive(fast, now=12.0)               # but it was seen on the bus
@@ -68,11 +75,26 @@ def test_rebuild_carries_timing_over():
     new.carry_from(old)
     assert new._items[("38", "Fast")].last_update == 100.0   # not due again at once
     assert new._items[("38", "Slow")].fails == 1              # backoff kept
-    assert new._items[("38", "OnDemand")].last_update == 0.0  # new register: due now
+    assert new.next_due(101.0).msg.name == "OnDemand"         # new register: due now
+
+
+def test_never_polled_is_due_right_after_boot():
+    # the monotonic clock may start near zero: a new register is due at once,
+    # not only after its interval has passed since the clock started
+    sch = PollScheduler(MSGS, base_interval=60.0)
+    assert sch.next_due(5.0) is not None and sch.due_count(5.0) == 2
+
+
+def test_read_needing_arguments_is_not_polled():
+    msgs = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type\n"
+                     "r1,,,Errorhistory,,,08,b509,1100,index,m,UCH,,,,error,,UIN\n"
+                     "r1,,,Plain,,,08,b509,0d00,value,,UCH\n")
+    assert msgs[0].needs_args and not msgs[1].needs_args
+    assert [k[1] for k in PollScheduler(msgs)._items] == ["Plain"]
 
 
 def test_one_at_a_time_and_due_count():
-    sch = PollScheduler(MSGS, base_interval=10.0)
+    sch = _polled_at(PollScheduler(MSGS, base_interval=10.0), 0.0)
     assert sch.due_count(60.0) == 2       # both overdue
     picked = sch.next_due(60.0)           # but only one handed back
     assert picked is not None

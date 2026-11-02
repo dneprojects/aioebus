@@ -1,10 +1,8 @@
-"""Condition prefixes on message rows: parsed off as metadata (not evaluated --
-that needs live scan data in Phase 4), instruction rows skipped, and on a pbsb+id
-tie an unconditional definition is preferred by the registry.
-"""
-from aioebus.frame import parse_telegram
+"""Conditions: prefixes on message rows are parsed off as metadata (instruction
+rows skipped), and evaluated against scan/register data. Choosing a device's
+variant by them is the catalog's (test_catalog.py)."""
+from aioebus.conditions import ConditionContext, evaluate, evaluate_all
 from aioebus.messages import parse_csv
-from aioebus.passive import MessageRegistry
 
 HDR = "type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment"
 
@@ -26,13 +24,51 @@ def test_condition_prefix_stripped():
     assert msgs["Plain"].conditions is None
 
 
-def test_registry_prefers_unconditional_on_tie():
-    rows = "\n".join([
-        HDR,
-        "[id_sw>=200]r,,,VariantA,,,38,b509,0d0500,value,,UCH,,,",
-        "r,,,VariantB,,,38,b509,0d0500,value,,D2C,,,",
-    ])
-    reg = MessageRegistry(parse_csv(rows))
-    tg = parse_telegram("3138b509030d0500740002bd01bb00")  # synthetic frame id 0d0500
-    match = reg.match(tg)
-    assert match is not None and match.name == "VariantB"   # unconditional wins
+CTX = ConditionContext(id_sw=808, id_hw=8004,
+                       values={"Ehp_heatpumptype": 3, "Scan_id_product": "0010002315"})
+
+
+def test_numeric_comparisons():
+    assert evaluate("id_sw>=200", CTX) is True
+    assert evaluate("id_sw<=140", CTX) is False
+    assert evaluate("id_sw>=407", CTX) is True
+    assert evaluate("id_sw<202", CTX) is False
+    assert evaluate("id_sw>807", CTX) is True
+
+
+def test_range_and_equality():
+    assert evaluate("id_sw=350-400", CTX) is False     # 808 outside 350..400
+    assert evaluate("id_sw=800-810", CTX) is True       # inclusive
+    assert evaluate("id_hw=8004", CTX) is True
+    assert evaluate("id_hw=6701", CTX) is False
+
+
+def test_register_and_product_list():
+    assert evaluate("Ehp_heatpumptype=3", CTX) is True
+    assert evaluate("Ehp_heatpumptype=2", CTX) is False
+    assert evaluate("Scan_id_product='0010002315';'0010002316'", CTX) is True
+    assert evaluate("Scan_id_product='9999999999'", CTX) is False
+
+
+def test_unknown_operand_is_none():
+    assert evaluate("Unknownthing=5", CTX) is None
+    assert evaluate("id_sw>=200", ConditionContext()) is None  # id_sw not known
+
+
+def test_evaluate_all_combination():
+    assert evaluate_all(["id_sw>=200", "id_hw=8004"], CTX) is True
+    assert evaluate_all(["id_sw>=200", "id_sw<=140"], CTX) is False   # any False
+    assert evaluate_all(["id_sw>=200", "Unknownthing=5"], CTX) is None  # else unknown
+    assert evaluate_all([], CTX) is True
+    assert evaluate_all(None, CTX) is True
+
+
+def test_divisor_values_and_labels_in_conditions():
+    from aioebus.conditions import ConditionContext, evaluate
+    ctx = ConditionContext(values={"T": 3.0, "H": 2.5, "Mode": "auto"})
+    assert evaluate("T=3", ctx) is True  # a type with a divisor decodes to 3.0
+    assert evaluate("T>2", ctx) is True
+    assert evaluate("H=2-3", ctx) is True
+    assert evaluate("H=2", ctx) is False
+    assert evaluate("Mode=1", ctx) is None  # a label vs a number: undecided
+    assert evaluate("Mode=auto", ctx) is True

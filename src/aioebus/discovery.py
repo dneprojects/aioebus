@@ -15,6 +15,7 @@ from typing import Any, Final
 
 from .active import ReadError
 from .engine import EbusEngine
+from .frame import BROADCAST, is_slave
 from .scan import VAILLANT, Identification, ScanResult
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,14 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 # generator, hot-water unit, controller, a second heat pump behind a coupler,
 # mixer/solar module, eloBlock, ventilation, gateway
 BASE_ADDRESSES: Final[tuple[int, ...]] = (0x08, 0x0A, 0x15, 0x18, 0x26, 0x38, 0x76, 0xF6)
-# the whole device address space a deep scan probes once: the high/low nibble
-# families eBUS slaves use (covers every base address)
-ALL_ADDRESSES: Final[tuple[int, ...]] = tuple(
-    (hi << 4) | lo
-    for hi in (0x0, 0x1, 0x2, 0x3, 0x5, 0x7, 0xF)
-    for lo in (0x3, 0x4, 0x5, 0x6, 0x8, 0xA, 0xC)
-)
-BROADCAST_ADDRESS: Final = 0xFE  # telegrams to all; not a device that answers a scan
+# the whole device address space a deep scan probes once: every slave address,
+# as ebusd's full scan does (an absent device fails at the first SYN)
+ALL_ADDRESSES: Final[tuple[int, ...]] = tuple(a for a in range(0x100) if is_slave(a))
+BROADCAST_ADDRESS: Final = BROADCAST  # telegrams to all; not a device that answers a scan
 
 TRAFFIC_WAIT: Final = 10.0  # s for the first bus symbol before scanning
 PROBE_TIMEOUT: Final = 6.0  # s per address (an absent device fails at once: SYN)
@@ -57,7 +54,7 @@ class Discovery:
     (JSON-ready, keyed by two-digit hex address)."""
     devices: dict[int, Device]
     extra_addresses: list[int]
-    remembered: dict[str, dict[str, Any]] = field(default_factory=dict)
+    remembered: dict[str, Any] = field(default_factory=dict)
     dropped: set[int] = field(default_factory=set)  # duplicate addresses removed
 
 
@@ -112,7 +109,7 @@ async def discover(
         except (ReadError, TimeoutError) as err:
             _check_running(engine)  # a dropped link is no missing device
             _LOGGER.debug("scan %#04x: %s", zz, err)
-    out = dict(stored)
+    out: dict[str, Any] = dict(stored)
     for zz, device in devices.items():
         if device.scan.mf != VAILLANT:
             continue

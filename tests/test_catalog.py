@@ -8,7 +8,7 @@ import pytest
 
 from aioebus import catalog as cat
 from aioebus.catalog import Catalog, bundled_file, match_cdn_file, resolve_bundled
-from aioebus.scan import ScanResult
+from aioebus.scan import Identification, ScanResult
 
 
 def _scan(ident, hw="0000", sw="0000", mf=0xB5):
@@ -26,7 +26,7 @@ def test_bundled_by_ident_and_hw():
     assert (hp2.file, hp2.profile, hp2.model) == ("hmu.json", "V32/6004", "aroTHERM plus")
     assert resolve_bundled(_scan("HMU00", "5103")).profile is None
     assert resolve_bundled(_scan("CTLV3", "8004")).model == "VRC 720"
-    assert resolve_bundled(_scan("CTLV3")).text_paths == ("vaillant/15.ctlv3",)
+    assert resolve_bundled(_scan("CTLV3")).text_paths == ("vaillant/15.ctlv3.csv",)
     assert resolve_bundled(_scan("V32", "1111")) is None  # unknown HW variant
     assert resolve_bundled(_scan("UNKNOWN")) is None
 
@@ -45,7 +45,9 @@ def test_broadcasts_are_reads_of_the_broadcast_circuit():
     run(c.load({}))
     reads, writes = c.device_messages("r"), c.device_messages("w")
     assert "Outsidetemp" in {m.name for m in reads} and all(m.zz == "fe" for m in reads)
-    assert not writes
+    # setting the bus date/time shares its command with the broadcast update:
+    # both are kept (a read and a write are two messages)
+    assert [m.name for m in writes] == ["Vdatetime"]
     assert c.definition(0xFE).file == "broadcast.json"
 
 
@@ -124,8 +126,9 @@ def test_unknown_device_comes_from_the_cdn_and_is_cached(tmp_path):
     run(c.load({0x52: _scan("VR_70")}))
     assert {m.name for m in c.messages(0x52)} == {"MixerTemp", "PumpState"}  # with the include
     d = c.definition(0x52)
-    assert (d.source, d.file, d.text_paths) == ("cdn", "vaillant/52.vr_70.csv",
-                                                ("vaillant/52.vr_70",))
+    # the texts of the include count too
+    assert (d.source, d.file, d.text_paths) == (
+        "cdn", "vaillant/52.vr_70.csv", ("vaillant/52.vr_70.csv", "vaillant/vr70.inc"))
     assert (tmp_path / "en" / "vaillant" / "52.vr_70.csv").read_text(encoding="utf-8") == VR70_CSV
     fetched = len(fetch.calls)
     c2 = Catalog(cache_dir=tmp_path, fetch=fetch)  # the next start: from the cache
@@ -161,8 +164,10 @@ def test_zones_and_bounds_from_the_bundled_catalog():
     zones = {z.n: z for z in c.zones()}
     assert set(zones) == {1, 2, 3}
     z1 = zones[1]
-    assert (z1.name, z1.zz, z1.target_write.name, z1.current.name, z1.mode_read.name) == (
-        "Heizkreis 1", "15", "Z1DayTemp", "Z1RoomTemp", "Z1OpMode")
+    assert (z1.zz, z1.target_write.name, z1.current.name, z1.mode_read.name) == (
+        "15", "Z1DayTemp", "Z1RoomTemp", "Z1OpMode")
+    assert z1.mode_write.direction == "w"
+    assert z1.modes == {"off": "off", "auto": "auto", "heat": "day"}
     assert z1.target_bounds == (5.0, 30.0, 0.5)
     assert c.bounds(0x15, "HwcLockTime") == (0.0, 120.0, 10.0)
     assert c.bounds(0x08, "Z1DayTemp") is None
@@ -326,7 +331,7 @@ def test_display_texts_per_language_are_cached(tmp_path):
     fetch = TextCdn(files)
     c = Catalog(cache_dir=tmp_path, fetch=fetch)
     run(c.load({0x15: _scan("CTLV3", "8004", "808")}))
-    assert "vaillant/15.ctlv3" in c.text_paths
+    assert "vaillant/15.ctlv3.csv" in c.text_paths
     texts = run(c.load_texts(["en", "de", "fr"]))
     curve = next(m for m in texts.messages if m.name == "Hc1HeatCurve" and m.is_read)
     assert curve.tr == {"en": "heat curve", "de": "Heizkurve"}
@@ -384,3 +389,93 @@ def test_texts_of_one_language_are_fetched_together():
     elapsed, calls = run(timed())
     assert len(c.text_paths) >= 3 and calls == len(c.text_paths)
     assert elapsed < 0.3  # together, not 3 x 0.15 s one after another
+
+
+def test_a_read_and_a_write_of_one_register_are_both_kept():
+    # ebusd keys a message by its command AND its kind: the bundled heat pump has
+    # a passive SetMode update and an active SetMode write with one command
+    c = Catalog()
+    run(c.load({0x08: _scan("HMU00", "5103")}))
+    setmode = sorted(m.direction for m in c.messages(0x08) if m.name == "SetMode")
+    assert setmode == ["uw", "w"]
+    assert "SetMode" in {m.name for m in c.device_messages("w")}
+    rows = HDR + ("r,,,Temp,,,,b509,0d0100,value,,D2C,,,\n"
+                  "w,,,Temp,,,,b509,0d0100,value,,D2C,,,\n"
+                  "u,,,Temp,,,,b509,0d0100,value,,D2C,,,\n")
+    kinds = sorted(m.direction for m in cat.addressed(0x08, _scan("X"), cat.parse_csv(rows)))
+    assert kinds == ["r", "u", "w"]
+
+
+def test_a_row_with_its_own_destination_keeps_it(tmp_path):
+    # an ebusd CSV row may address a module elsewhere (08.ehp: PowerCutPreloading
+    # to 25): writing it to the device's own address would set another register
+    rows = HDR + ("r,,,Own,,,,b509,0d0100,value,,UCH,,,\n"
+                  "w,,,PowerCutPreloading,,,25,b509,0ef400,value,,UCH,0=off;1=on,,\n")
+    base = "https://ebus.github.io/en/vaillant/"
+    c = Catalog(cache_dir=tmp_path, fetch=FakeCdn({base: json.dumps("08.ehp.csv"),
+                                                   base + "08.ehp.csv": rows}))
+    run(c.load({0x08: _scan("EHP00")}))
+    by_name = {m.name: m for m in c.messages(0x08)}
+    assert (by_name["Own"].zz, by_name["PowerCutPreloading"].zz) == ("08", "25")
+    assert c.owner(by_name["PowerCutPreloading"]) == 0x08  # still the heat pump's
+    # our own JSON files carry the address they were made from: the device's wins
+    c = Catalog()
+    run(c.load({0x18: _scan("V32", "6004")}))
+    assert {m.zz for m in c.messages(0x18)} == {"18"}
+
+
+def test_the_first_load_that_applies_wins():
+    ctx = cat.context_for(_scan("BAI00", "7401"), Identification("0010043897", "x", 2020, 1))
+    # product and HW both match: ebusd loads only the first, in file order
+    assert cat.includes(BAI, ctx) == ["bai.a.inc"]
+    # an unconditional load before the conditional ones ends the search
+    first = HDR + "!load,dflt.inc,,,\n[id_hw=7401]!load,bai.b.inc,,,\n"
+    assert cat.includes(first, ctx) == ["dflt.inc"]
+    # every !include that applies is read, besides the one !load
+    inc = HDR + "!include,x.inc,,,\n[id_hw=1]!include,y.inc,,,\n!load,z.inc,,,\n"
+    assert cat.includes(inc, ctx) == ["x.inc", "z.inc"]
+
+
+def test_ident_matches_like_ebusd():
+    names = ["15.ui.csv", "08.bai.csv", "08.hmu.csv", "08.hmu0.csv", "52.vr_70.csv"]
+    # only trailing digits are given up: UIX00 is no "ui", BAIX0 no "bai"
+    assert match_cdn_file(names, 0x15, _scan("UIX00")) is None
+    assert match_cdn_file(names, 0x08, _scan("BAIX0")) is None
+    assert match_cdn_file(names, 0x08, _scan("BAI00")) == "08.bai.csv"
+    assert match_cdn_file(names, 0x08, _scan("HMU00")) == "08.hmu0.csv"  # the longer match
+    assert match_cdn_file(names, 0x52, _scan("VR_70")) == "52.vr_70.csv"
+    assert match_cdn_file(["52.vr70.csv"], 0x52, _scan("VR-70")) == "52.vr70.csv"  # '-' dropped
+
+
+def test_text_paths_cover_the_includes(tmp_path):
+    c = Catalog(cache_dir=tmp_path, fetch=_bai_cdn())
+    run(c.load({0x08: _scan("BAI00", "7603")}))
+    assert c.definition(0x08).text_paths == (
+        "vaillant/08.bai.csv", "vaillant/bai.a.inc", "vaillant/common.inc")
+
+
+class Raising(FakeCdn):
+    async def __call__(self, url):
+        self.calls.append(url)
+        raise RuntimeError("session closed")
+
+
+def test_a_raising_fetch_counts_as_unreachable(tmp_path):
+    run(Catalog(cache_dir=tmp_path, fetch=_cdn()).load({0x52: _scan("VR_70")}))
+    old = time.time() - cat.CACHE_MAX_AGE - 10
+    for p in (tmp_path / "en" / "vaillant").iterdir():
+        os.utime(p, (old, old))
+    c = Catalog(cache_dir=tmp_path, fetch=Raising({}))
+    run(c.load({0x52: _scan("VR_70")}))  # the stale copy stands in
+    assert {m.name for m in c.messages(0x52)} == {"MixerTemp", "PumpState"}
+    texts = run(c.load_texts(["en", "de"]))  # no language aborts the others
+    assert not texts.complete and texts.messages
+
+
+def test_read_twin_and_unknown_manufacturer_folder():
+    c = Catalog()
+    run(c.load({0x15: _scan("CTLV3", "8004", "808")}))
+    write = next(m for m in c.device_messages("w") if m.name == "Z1DayTemp")
+    twin = c.read_twin(write)
+    assert twin is not None and twin.is_polled_read and twin.zz == "15"
+    assert cat.config_folder(0x50) == "kromschroeder" and cat.config_folder(0x77) is None

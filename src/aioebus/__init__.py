@@ -1,41 +1,53 @@
-"""aioebus -- standalone async eBUS library (work in progress).
+"""aioebus -- standalone async eBUS library (no ebusd daemon).
 
-Pure, offline eBUS decoding validated against real captured telegrams:
-  - codecs: datatype decoding (ebusd datatype.cpp port)
-  - messages: structured definitions + ebusd-CSV ingest + decode
-  - frame: on-the-wire telegram parsing, escaping, eBUS CRC-8
-  - passive: raw wire bytes -> matched message -> named values (read-only)
-  - transport/active/engine: enhanced-adapter I/O, active read/write, and a
-    passive-first engine that caches decoded values and interleaves reads.
-  - discovery: which devices are on the bus and what they are (scan, identification).
-  - catalog: each device's definitions (bundled, user files, ebusd CSVs from the CDN).
+  - link: the TCP connection to an enhanced adapter, and a liveness probe
+  - engine: one connection, passive decoding plus interleaved active reads and
+    writes, a value cache and a poll scheduler (poll)
+  - discovery: which devices are on the bus and what they are (scan, identification)
+  - catalog: each device's definitions (bundled, user files, ebusd CSVs from the CDN)
+  - values: what a message's values are (keys, labels, numeric, the control a write allows)
+  - messages / codecs: message definitions, ebusd-CSV ingest, datatype decoding
+  - frame / passive / transport / active: telegrams, CRC, the adapter protocol and
+    the transaction state machine
+  - translations: stable keys for display texts
 """
 from .active import (
-    ActiveReader,
-    ActiveWriter,
+    DEFAULT_SOURCE,
     ReadDriver,
     ReadError,
     WriteDriver,
-    build_read,
+    WriteUncertain,
     build_read_frame,
     build_write_frame,
 )
-from .catalog import Catalog, ClimateZone, Definition, Texts
+from .catalog import BROADCAST_SCAN, Catalog, ClimateZone, Definition, Texts
 from .codecs import Codec, decode, encode, make_codec
 from .conditions import ConditionContext, context_from_scan, evaluate, evaluate_all
-from .discovery import BusSilent, Device, Discovery, discover, identify_later
-from .engine import EbusEngine, EngineStats, value_key
-from .frame import Telegram, crc8, escape, parse_telegram, unescape
-from .messages import FieldDef, MessageDef, parse_csv
+from .discovery import BusSilent, Device, Discovery, discover, identify_later, remember
+from .engine import EbusEngine, EngineStats
+from .frame import BROADCAST, Telegram, crc8, escape, is_master, is_slave, parse_telegram, unescape
+from .link import Link, connect, probe
+from .messages import FieldDef, MessageDef, label_of, parse_csv
 from .passive import MessageRegistry, decode_raw
 from .poll import PollScheduler
-from .scan import Identification, ScanResult, decode_identification, decode_scan
-from .transport import EnhDecoder, PassiveListener, listen
-from .values import Value, control_of, values_of
+from .scan import MANUFACTURERS, Identification, ScanResult, decode_identification, decode_scan
+from .translations import slug, translation_key
+from .values import (
+    Value,
+    closes_period,
+    control_of,
+    has_numeric_value,
+    is_float_type,
+    is_number_type,
+    value_key,
+    values_of,
+)
 
 __all__ = [
-    "ActiveReader",
-    "ActiveWriter",
+    "BROADCAST",
+    "BROADCAST_SCAN",
+    "DEFAULT_SOURCE",
+    "MANUFACTURERS",
     "BusSilent",
     "Catalog",
     "ClimateZone",
@@ -46,12 +58,11 @@ __all__ = [
     "Discovery",
     "EbusEngine",
     "EngineStats",
-    "EnhDecoder",
     "FieldDef",
     "Identification",
+    "Link",
     "MessageDef",
     "MessageRegistry",
-    "PassiveListener",
     "PollScheduler",
     "ReadDriver",
     "ReadError",
@@ -60,9 +71,11 @@ __all__ = [
     "Texts",
     "Value",
     "WriteDriver",
-    "build_read",
+    "WriteUncertain",
     "build_read_frame",
     "build_write_frame",
+    "closes_period",
+    "connect",
     "context_from_scan",
     "control_of",
     "crc8",
@@ -75,13 +88,22 @@ __all__ = [
     "escape",
     "evaluate",
     "evaluate_all",
+    "has_numeric_value",
     "identify_later",
-    "listen",
+    "is_float_type",
+    "is_master",
+    "is_number_type",
+    "is_slave",
+    "label_of",
     "make_codec",
     "parse_csv",
     "parse_telegram",
+    "probe",
+    "remember",
+    "slug",
+    "translation_key",
     "unescape",
     "value_key",
     "values_of",
 ]
-__version__ = "0.7.2"
+__version__ = "0.7.3"

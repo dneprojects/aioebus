@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import math
 import struct
+from typing import Literal
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
@@ -73,7 +74,7 @@ class _Numeric(Codec):
             return None
         if self.signed and raw >= 1 << (8 * self.length - 1):
             raw -= 1 << (8 * self.length)
-        value = raw
+        value: float = raw
         if self.base_div != 1:
             value = value / self.base_div
         if self.extra_div:  # ebusd: positive divides, negative multiplies
@@ -83,7 +84,7 @@ class _Numeric(Codec):
     def encode(self, value) -> bytes:
         """Inverse of decode: a Python value -> the raw little/big-endian bytes.
         None encodes the replacement (invalid) sentinel."""
-        order = "big" if self.big else "little"
+        order: Literal["big", "little"] = "big" if self.big else "little"
         if value is None:
             if self.repl is None:
                 raise ValueError(f"{self.name}: no replacement value to encode None")
@@ -126,23 +127,24 @@ class _Bcd(Codec):
 
 
 class _Ign(Codec):
-    """Consumes `n` bytes and yields no value (ebusd IGN:n)."""
+    """Consumes `n` bytes (n < 0: the rest) and yields no value (ebusd IGN:n)."""
 
     def __init__(self, n=1):
-        super().__init__(f"IGN:{n}", n)
+        super().__init__("IGN:*" if n < 0 else f"IGN:{n}", n)
 
     def decode(self, data: bytes):
         return None
 
 
 class _Hex(Codec):
-    def __init__(self, n=1):
-        super().__init__(f"HEX:{n}", n)
+    def __init__(self, n=1):  # n < 0 -> remainder
+        super().__init__("HEX:*" if n < 0 else f"HEX:{n}", n)
 
     def decode(self, data: bytes):
-        if len(data) < self.length:
+        if self.length >= 0 and len(data) < self.length:
             return None
-        return " ".join(f"{b:02x}" for b in data[: self.length])
+        chunk = data if self.length < 0 else data[: self.length]
+        return " ".join(f"{b:02x}" for b in chunk)
 
 
 class _Str(Codec):
@@ -153,7 +155,11 @@ class _Str(Codec):
         if self.length >= 0 and len(data) < self.length:
             return None
         chunk = data if self.length < 0 else data[: self.length]
-        return chunk.rstrip(b"\x00").decode("latin-1").rstrip()
+        # as ebusd: the text ends at the first NUL, a control character reads as
+        # a space and another unprintable one as '?' (Latin-1 letters are kept)
+        text = chunk.split(b"\x00", 1)[0].decode("latin-1")
+        return "".join(" " if c < " " else "?" if "\x7f" <= c < "\xa0" else c
+                       for c in text).rstrip()
 
 
 class _TruncTime(Codec):
@@ -190,8 +196,8 @@ class _ClockTime(Codec):
             return None
         raw = list(data[: self.length])
         comps = raw[::-1] if self.reversed_ else raw  # -> hour, minute[, second]
-        vals = [_bcd(b) if self.bcd else b for b in comps]
-        if any(v is None for v in vals):
+        vals = [v for v in (_bcd(b) if self.bcd else b for b in comps) if v is not None]
+        if len(vals) != len(comps):
             return None
         h, m = vals[0], vals[1]
         s = vals[2] if self.parts == 3 else 0
@@ -216,7 +222,9 @@ class _Date(Codec):
         conv = (lambda b: _bcd(b)) if self.bcd else (lambda b: b)
         day, month = conv(raw[0]), conv(raw[1])
         year = conv(raw[3]) if self.length == 4 else conv(raw[2])  # skip weekday
-        if None in (day, month, year) or not (1 <= day <= 31 and 1 <= month <= 12):
+        if day is None or month is None or year is None:
+            return None
+        if not (1 <= day <= 31 and 1 <= month <= 12):
             return None
         return f"{day:02d}.{month:02d}.{2000 + year:04d}"
 
@@ -364,9 +372,9 @@ def make_codec(spec: str) -> Codec:
     base, _, suffix = spec.partition(":")
     n = -1 if suffix == "*" else (int(suffix) if suffix else None)
     if base == "IGN":
-        return _Ign(n if n and n > 0 else 1)
+        return _Ign(n if n and (n > 0 or n == -1) else 1)
     if base == "HEX":
-        return _Hex(n if n and n > 0 else 1)
+        return _Hex(n if n and (n > 0 or n == -1) else 1)
     if base == "STR":
         return _Str(n if n is not None else 1)
     if base == "BCD":

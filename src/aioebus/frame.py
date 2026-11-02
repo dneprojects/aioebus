@@ -1,4 +1,4 @@
-"""eBUS frame layer -- Python port of ebusd's symbol handling (Phase 3).
+"""eBUS frame layer -- Python port of ebusd's symbol handling.
 
 Turns the raw bytes on the wire (as captured between two SYN) into a structured
 `Telegram`: addresses, the two PBSB command bytes, the master data, and -- for a
@@ -6,8 +6,8 @@ master/slave exchange -- the slave's answer. Pure and offline: the escaping, the
 eBUS CRC-8 and the frame structure are all validated against real captures in
 `tests/test_frame.py` and `tools/validate_frame_db.py`.
 
-The enhanced adapter does bus arbitration and timing in hardware, so the live
-transport (Phase 3, transport.py) only has to hand whole frames to this parser.
+The enhanced adapter does bus arbitration and timing in hardware, so the engine
+only has to hand whole frames to this parser.
 """
 from __future__ import annotations
 
@@ -16,6 +16,18 @@ from dataclasses import dataclass
 SYN = 0xAA  # bus idle / frame separator
 ESC = 0xA9  # escape prefix
 BROADCAST = 0xFE  # destination address for broadcasts
+
+_MASTER_NIBBLES = frozenset((0x0, 0x1, 0x3, 0x7, 0xF))
+
+
+def is_master(addr: int) -> bool:
+    """eBUS master addresses have both nibbles from {0, 1, 3, 7, F}."""
+    return (addr >> 4) in _MASTER_NIBBLES and (addr & 0x0F) in _MASTER_NIBBLES
+
+
+def is_slave(addr: int) -> bool:
+    """A slave (device) address: neither a master, SYN, ESC nor broadcast."""
+    return 0 <= addr <= 0xFF and addr not in (SYN, ESC, BROADCAST) and not is_master(addr)
 
 
 def crc8(data: bytes) -> int:

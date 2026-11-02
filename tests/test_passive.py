@@ -1,4 +1,4 @@
-"""Phase 3 closed loop: real wire frames captured from the eloBlock, fed through
+"""Passive decoding: real wire frames captured from the eloBlock, fed through
 the frame parser + message registry, decode to the same named values ebusd gives.
 No bus access -- pure replay of captured telegrams.
 """
@@ -44,3 +44,42 @@ def test_unanswered_read_has_no_value():
 def test_unknown_command_returns_none():
     # a valid frame whose command/id isn't in the registry decodes to None
     assert decode_raw(REGISTRY, "31fe07fe0035") is None
+
+
+RW = parse_csv("""\
+type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
+r,,,FlowTempDesired,,,38,b509,0d1800,value,,D2C,,,
+w,,,FlowTempDesired,,,38,b509,0d1800,value,,D2C,,,
+w,,,SetMode,,,08,b510,00,mode,,UCH,,,,flow,,D1C,,,
+uw,,,SetMode,,,08,b510,00,mode,,UCH,,,
+""")
+RW_REG = MessageRegistry(RW)
+
+
+def _frame(qq: int, zz: int, pbsb: str, data: str, slave: str | None = None) -> bytes:
+    from aioebus.frame import crc8, escape
+    master = bytes((qq, zz)) + bytes.fromhex(pbsb) + bytes((len(bytes.fromhex(data)),))
+    master += bytes.fromhex(data)
+    raw = escape(master) + bytes((crc8(escape(master)),))
+    if slave is not None:
+        s = bytes((len(bytes.fromhex(slave)),)) + bytes.fromhex(slave)
+        raw += b"\x00" + escape(s) + bytes((crc8(escape(s)),)) + b"\x00"
+    return raw
+
+
+def test_a_read_and_a_write_with_one_id_decode_by_shape():
+    # the answered read (only the id in the request) is the read ...
+    read = decode_raw(RW_REG, _frame(0x31, 0x38, "b509", "0d1800", "bd01"))
+    assert read is not None and read[0].direction == "r" and read[1] == {
+        "FlowTempDesired": 27.8125}
+    # ... the request carrying a value is the write
+    write = decode_raw(RW_REG, _frame(0x31, 0x38, "b509", "0d1800bd01", ""))
+    assert write is not None and write[0].direction == "w" and write[1] == {
+        "FlowTempDesired": 27.8125}
+    # an unanswered read decodes through no definition (not the write's: None)
+    assert decode_raw(RW_REG, _frame(0x31, 0x38, "b509", "0d1800")) is None
+
+
+def test_another_masters_update_prefers_the_passive_definition():
+    seen = decode_raw(RW_REG, _frame(0x10, 0x08, "b510", "0005", ""))
+    assert seen is not None and seen[0].direction == "uw" and seen[1] == {"SetMode mode": 5}

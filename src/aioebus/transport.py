@@ -1,9 +1,9 @@
-"""Enhanced-adapter transport (Phase 3b) -- the host<->adapter byte protocol.
+"""Enhanced-adapter transport -- the host<->adapter byte protocol.
 
 The enhanced adapter (ebusd's `enh:` device) does bus arbitration and timing in
-hardware and speaks a small framed protocol over TCP/serial. This module decodes the
-adapter->host direction and collects the received eBUS symbols into telegrams,
-split on SYN; it never sends (active transactions live in active.py/engine.py).
+hardware and speaks a small framed protocol over TCP/serial. This module decodes
+the adapter->host direction into (code, data) events; the engine assembles the
+received eBUS symbols into telegrams and sends the host->adapter symbols.
 
 Wire framing (adapter->host):
   * a plain byte < 0x80 is a received eBUS byte (short form)
@@ -11,22 +11,14 @@ Wire framing (adapter->host):
     the 4-bit code, the data byte is ``(dd << 6) | dddddd``
 Code 0x1 = RECEIVED (a bus byte); 0xAA among received bytes is SYN, the frame
 separator. Other codes (RESETTED/STARTED/INFO/FAILED/errors) are surfaced as
-events but ignored by the passive listener.
+events.
 
-NOTE: the enhanced adapter allows a single client. On the reference system ebusd
-holds it, so live listening needs ebusd stopped first (a maintenance window).
-The protocol logic below is validated offline by round-tripping real telegrams
-through a synthetic enh stream (tests/test_transport.py).
+The enhanced adapter allows a single client: while ebusd holds it, nobody else
+can listen.
 """
 from __future__ import annotations
 
-import asyncio
-import contextlib
-from collections.abc import AsyncIterator
-
-from .frame import SYN, FrameError, parse_telegram
-from .messages import MessageDef
-from .passive import MessageRegistry
+from .frame import SYN
 
 # adapter -> host codes (cccc)
 RESETTED = 0x0
@@ -88,56 +80,3 @@ class EnhDecoder:
                     events.append((RECEIVED, b))
                     self._first = None
         return events
-
-
-class PassiveListener:
-    """Feeds adapter bytes, assembles telegrams on SYN, decodes known ones."""
-
-    def __init__(self, registry: MessageRegistry) -> None:
-        self.registry = registry
-        self._dec = EnhDecoder()
-        self._buf = bytearray()
-
-    def feed(self, chunk: bytes) -> list[tuple[MessageDef, dict]]:
-        out: list[tuple[MessageDef, dict]] = []
-        for code, data in self._dec.feed(chunk):
-            if code != RECEIVED:
-                continue
-            if data == SYN:
-                if self._buf:
-                    decoded = self._finish(bytes(self._buf))
-                    if decoded is not None:
-                        out.append(decoded)
-                    self._buf.clear()
-            else:
-                self._buf.append(data)
-        return out
-
-    def _finish(self, raw: bytes) -> tuple[MessageDef, dict] | None:
-        try:
-            tg = parse_telegram(raw)
-        except FrameError:
-            return None
-        if not tg.crc_ok:
-            return None
-        return self.registry.decode(tg)
-
-
-async def listen(
-    host: str, port: int, registry: MessageRegistry
-) -> AsyncIterator[tuple[MessageDef, dict]]:
-    """Connect to an enhanced adapter and yield decoded messages as they arrive.
-    Read-only: nothing is ever written to the adapter or the bus."""
-    reader, writer = await asyncio.open_connection(host, port)
-    listener = PassiveListener(registry)
-    try:
-        while True:
-            chunk = await reader.read(4096)
-            if not chunk:
-                return
-            for result in listener.feed(chunk):
-                yield result
-    finally:
-        writer.close()
-        with contextlib.suppress(Exception):
-            await writer.wait_closed()

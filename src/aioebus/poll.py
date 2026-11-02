@@ -1,4 +1,4 @@
-"""Poll scheduling under limited bus bandwidth (Phase 4).
+"""Poll scheduling under limited bus bandwidth.
 
 eBUS runs at 2400 baud -- a read transaction is ~25 bytes, so only a handful fit
 per second. The scheduler follows three rules, the same shape ebusd uses:
@@ -6,7 +6,8 @@ per second. The scheduler follows three rules, the same shape ebusd uses:
 1. Which reads are polled, and how often, follows the priority. An ``r1``..``r9``
    message carries its own digit (``r1`` most frequent); a plain ``r`` has no
    digit and is polled only if a ``default_priority`` is given (otherwise it is
-   read on demand, as in ebusd). ``w``/``u`` are never polled. The effective
+   read on demand, as in ebusd). ``w``/``u`` are never polled, nor is a read
+   whose request needs arguments (e.g. an error history index). The effective
    interval is ``priority * base_interval``, so a larger digit means rarer -- a
    plain read given a high default priority is the rarest, which suits the mostly
    static registers it covers.
@@ -26,12 +27,8 @@ unit-testable without a bus or wall-clock.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
 from .messages import MessageDef
-
-if TYPE_CHECKING:
-    from .passive import MessageRegistry
 
 
 def _is_hex(text: str) -> bool:
@@ -46,7 +43,9 @@ def _is_hex(text: str) -> bool:
 class PollItem:
     msg: MessageDef
     priority: int
-    last_update: float = field(default=0.0)  # last attempt time (value OR failed poll)
+    # last attempt time (value OR failed poll); never so far: due at once, also
+    # on a monotonic clock that starts near zero (right after boot)
+    last_update: float = field(default=float("-inf"))
     fails: int = 0  # consecutive unanswered polls; backs the interval off
 
 
@@ -63,22 +62,13 @@ class PollScheduler:
         self.default_priority = default_priority
         self._items: dict[tuple[str, str], PollItem] = {}
         for m in messages:
-            if not m.is_polled_read:  # only true reads are polled (not w/u)
+            if not m.is_polled_read or m.needs_args:  # true reads without arguments
                 continue
             if not (len(m.zz) == 2 and _is_hex(m.zz)):  # no address to read from
                 continue
             priority = m.poll_priority or default_priority
             if priority > 0:
                 self._items[(m.zz, m.name)] = PollItem(m, priority)
-
-    @classmethod
-    def for_registry(cls, registry: MessageRegistry, base_interval: float = 60.0,
-                     default_priority: int = 0) -> PollScheduler:
-        """Build a scheduler over every readable message a registry knows -- the
-        library's own 'poll what is readable' policy, so a consumer need not
-        assemble the list itself."""
-        return cls(registry.messages, base_interval=base_interval,
-                   default_priority=default_priority)
 
     def carry_from(self, old: PollScheduler) -> None:
         """Take over the timing (last update, backoff) of registers ``old`` also

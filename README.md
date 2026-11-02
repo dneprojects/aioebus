@@ -1,163 +1,86 @@
 # aioebus
 
-A **standalone, async, pure-Python eBUS library** — the goal is to talk to an
-eBUS adapter (enhanced protocol) and decode Vaillant/eBUS messages **without a
-separate ebusd daemon**, so a Home Assistant integration can embed it directly
-(lib in PyPI, thin integration in HA Core).
+A **standalone, async, pure-Python eBUS library**: it talks to an eBUS adapter
+(enhanced protocol over TCP) and decodes Vaillant/eBUS messages **without an
+ebusd daemon**. The [ebus Home Assistant integration](https://github.com/dneprojects/ebus)
+is built on it and runs it in the field.
 
-This is an incremental port of [ebusd](https://github.com/john30/ebusd)'s
-behaviour to Python — **not** a line-by-line transpile. Each layer is ported by
-spec and checked against real captured telegrams (a conformance harness), so the
-long tail of real-world quirks is caught automatically.
+It ports [ebusd](https://github.com/john30/ebusd)'s behaviour to Python by spec
+(not line by line) and checks every layer against real captured telegrams.
 
-## Status
+## What it does
 
-| Phase | Scope | State |
-|---|---|---|
-| 0 | Scaffold + conformance harness (real captures as golden data) | ✅ |
-| 1 | **Datatype codecs** (`datatype.cpp` port) + CSV type specs | ✅ |
-| 2 | **Message model + CSV ingest + decode** (default rows, IGN, value tables) | ✅ |
-| 2.5 | **Full datatypes** (date/time/float/bit), **conditions** as metadata | ✅ |
-| 3 | **eBUS frame/CRC + passive decode** (wire bytes → named values) | ✅ |
-| 3b | **Enhanced-adapter transport** (protocol ✅; live socket needs a window) | ◐ |
-| 4 | Active read: build + scheduler + **send FSM ✅ (offline)**; live send, scan, write | ◐ |
-| 5 | Thin HA integration swaps its ebusd-HTTP client for this lib | ⏳ |
+| Module | |
+|---|---|
+| `link` | TCP connection to the adapter (`connect`), liveness `probe` |
+| `engine` | One connection: decodes what other masters put on the bus (free), slips its own reads/writes in when the bus is idle, keeps a value cache, polls by priority (`poll`) |
+| `discovery` | Which devices are on the bus: scan, Vaillant identification (article, serial), deep scan of every slave address, phantom addresses |
+| `catalog` | Each device's definitions: our bundled ones, else a user file, else the matching ebusd-configuration CSV from ebus.github.io (chosen as ebusd chooses it, with its `!load` includes), cached; display texts per language |
+| `values` | What a message's values are: labels, stable keys, cache keys, numeric or not, the control a write allows |
+| `messages`, `codecs` | Message model, ebusd-CSV ingest (default rows, conditions, value tables), every ebusd datatype |
+| `frame`, `passive`, `transport`, `active` | Telegrams and CRC, matching telegrams to definitions, the adapter's byte protocol, the transaction state machine |
 
-The enhanced adapter does bus arbitration in hardware, so the timing-critical
-part is offloaded — Phase 3 ports a documented host↔adapter byte protocol, not
-microsecond timing.
-
-## Phase 1 — what works now
-
-Pure, offline decoding of eBUS field types, validated against telegrams captured
-from a real Vaillant cascade (2× aroTHERM, sensoCOMFORT, eloBlock, VR 71):
+## Example
 
 ```python
-from aioebus import decode
+import asyncio
 
-decode("D2C", "bd01")            # 27.8125  (flow temp)
-decode("UCH", "0f")             # 15
-decode("STR:5", "4e45545833")   # "NETX3"
-decode("HEX:6", "090264186418") # "09 02 64 18 64 18"
-decode("SIN", "f401", divisor=10)  # 50.0  (CSV divisor column)
-decode("UCH", "ff")             # None  (invalid/replacement sentinel)
+from aioebus import Catalog, EbusEngine, MessageRegistry, PollScheduler, connect, discover
+
+
+async def main() -> None:
+    link = await connect("192.168.1.50", 9999)
+    engine = EbusEngine(link.send, link.recv, MessageRegistry([]))
+    run = asyncio.create_task(engine.run())
+
+    found = await discover(engine)                    # which devices answer
+    catalog = Catalog()                               # bundled definitions only
+    await catalog.load({a: d.scan for a, d in found.devices.items()},
+                       {a: d.ident for a, d in found.devices.items() if d.ident})
+    engine.registry = MessageRegistry(catalog.all_messages())
+    engine.scheduler = PollScheduler(catalog.device_messages("r"), base_interval=60)
+
+    await asyncio.sleep(120)
+    print(engine.cache)                               # (device, message, label) -> value
+    engine.stop()
+    link.close()
+    await run
+
+
+asyncio.run(main())
 ```
 
-Supported types: the integers (UCH SCH UIN SIN ULG U2L U4L, reversed UIR SIR),
-fixed-point D1B D1C D2B D2C FLT, floats EXP/EXR, BCD[:n] PIN, HEX:n, STR:n/STR:*,
-IGN:n, bit fields BI0..BI7[:n], and the date/time family (TTM TTH TTQ, HTM BTM
-VTM, HTI BTI VTI, HDA BDA[:3], BDY HDY, DTM DAY) -- with the CSV divisor column
-and ebusd's replacement (invalid) handling. This resolves every field type used
-across the 104 stock Vaillant configs.
+To load ebusd-configuration CSVs for devices without a bundled definition, give
+the catalog a cache directory and a `fetch(url) -> str | None` coroutine
+(`""` when the server says the file does not exist, `None` when unreachable).
 
-## Phase 2 — structured messages + CSV ingest
+Writing is opt-in (`EbusEngine(..., allow_write=True)`). A write that went out
+completely but was not acknowledged raises `WriteUncertain` and is never sent
+twice; read the value back instead.
 
-The in-memory model is structured dataclasses (`MessageDef` / `FieldDef`), never
-CSV-shaped. The community ebusd-CSV library is read *into* the model with Python's
-`csv` module (so quoted commas no longer abort a file). Our own curated
-definitions can instead live in the native JSON format (`convert.py`) — both
-become the same objects.
+Decoding a captured telegram needs no bus:
 
 ```python
-from aioebus.messages import parse_csv
-
-msgs = {m.name: m for m in parse_csv(open("38.v32.csv").read())}
-msgs["Statenumber"].decode_labeled(slave="1f")   # {'Statenumber': 'sommer'}
-msgs["PositionValveSet"].decode_labeled(slave="64")  # {'PositionValveSet': 'dhw'}
-```
-
-`tools/demo_live.py <csv> <telegrams.db>` parses a real config and decodes the
-newest live telegram for every message — pure Python, no ebusd decoding.
-`python -m aioebus.convert <csv> [out.json]` converts curated CSVs to the native
-structured format.
-
-## Phase 3 — frame layer + passive decode
-
-The wire format is parsed end to end: escaping (`A9 01`→`AA`, `A9 00`→`A9`), the
-eBUS CRC-8 (polynomial `0x9B`, computed over the *escaped* stream), and the full
-frame structure incl. NAK-retransmission. Combined with the message model this
-turns raw bytes seen on the bus into named values, read-only:
-
-```python
-from aioebus import parse_csv, MessageRegistry, decode_raw
+from aioebus import MessageRegistry, decode_raw, parse_csv
 
 reg = MessageRegistry(parse_csv(open("38.v32.csv").read()))
 decode_raw(reg, "3138b509030d1800740003910100bb00")   # (FlowTemp def, {'FlowTemp': 25.0625})
 ```
 
-Validated bit-exact against **285 358** complete telegrams captured from the live
-bus: every one parses, matches ebusd's own decoded columns and verifies CRC
-(`tools/validate_frame_db.py`).
+## Definitions and licensing
 
-## Phase 3b — enhanced-adapter transport
-
-`transport.py` decodes the adapter's framed byte stream (`11ccccdd 10dddddd`
-symbols, short form for bytes < 0x80), assembles telegrams on SYN and decodes
-them — all read-only, nothing is ever written to the bus:
-
-```python
-from aioebus import parse_csv, MessageRegistry, listen
-
-reg = MessageRegistry(parse_csv(open("38.v32.csv").read()))
-async for msgdef, values in listen("192.168.178.179", 9999, reg):
-    print(values)
-```
-
-The protocol logic is validated offline by round-tripping real telegrams through
-a synthetic adapter stream, including arbitrary read fragmentation
-(`tests/test_transport.py`). Live listening is gated on hardware: the enhanced
-adapter is single-client, so ebusd must be stopped first (a maintenance window).
-It has been run live against the reference adapter — passive decode works
-end-to-end without ebusd.
-
-## Phase 4 — active reads under limited bandwidth
-
-`active.build_read()` constructs the on-wire master request; its CRC matches
-ebusd for every real read in the log. `poll.PollScheduler` decides *what* to read
-and *when*, because eBUS is ~2400 baud and only a handful of reads fit per second:
-
-- only `r1`..`r9` are polled; the priority digit scales the interval (`r1` most
-  frequent), plain `r` is on-demand, `w`/`u` never;
-- **passive-first** — a value seen on the bus refreshes that register's timer, so
-  broadcasts are never re-polled (on the live bus this is most of the traffic);
-- one request at a time — the scheduler hands back only the most-overdue message.
-
-The bus *send* FSM (`active.ReadDriver`/`ActiveReader`) is ported from ebusd's
-`protocol_direct.cpp`: arbitrate (START with QQ) → send `ZZ PB SB NN DD` + CRC,
-each byte echoed back and **verified for collision** → master ACK → read the
-slave frame and check its CRC → ACK → SYN. The pure `ReadDriver` is driven in
-tests by a simulated adapter through a full round-trip (arbitration-won, echoes,
-answer, decode) plus the arbitration-lost and collision paths — all offline.
-
-Active reads and writes use master address **0x31** by default, the address
-ebusd itself uses on the reference bus: known-good, and free exactly while ebusd
-is stopped (which the single-client adapter requires anyway). They run in the
-field through the ebus Home Assistant integration.
-
-## Native config format + converter
-
-The library ships no device definitions. Our own, independently-created
-Vaillant definitions (Apache-2.0) live with their consumer, the
-[ebus integration](https://github.com/dneprojects/ebus) (`configs/vaillant/`,
-provenance in its `docs/PROVENANCE.md`). `aioebus.convert` turns any ebusd CSV
-into the native JSON format:
-
-```bash
-python -m aioebus.convert path/to/15.ctlv3.csv ctlv3.json
-```
-
-The ebusd-configuration CSVs are GPL-3.0, so a file converted from them is a
-GPL-3.0 derivative: convert those **locally, against your own copy** — this
-Apache-2.0 library ships only our own definitions, never a derivative of that
-GPL data.
-
-Names are **not** baked in: `aioebus.translations.translation_key()` derives a
-stable key per field; the consumer builds its translation files from these keys.
+The library ships only its own Vaillant definitions (`aioebus/defs/vaillant`,
+Apache-2.0, provenance in its `PROVENANCE.md`): re-engineered from observed
+telegrams or hand-written, facts only. The ebusd-configuration CSVs are GPL-3.0;
+the catalog downloads them on the user's own machine and keeps them in the
+caller's cache directory, never in this package. `python -m aioebus.convert`
+turns an ebusd CSV into the native JSON format, for local use.
 
 ## Dev
 
 ```bash
-python -m pytest            # conformance tests (real captures)
-python tools/validate_frame_db.py /path/to/telegrams.db   # frames vs ebusd (100%)
-python tools/validate_against_db.py /path/to/telegrams.db  # optional field decode
+python -m pytest            # tests, incl. real captures
+ruff check src tests tools
+mypy
+python tools/validate_frame_db.py /path/to/telegrams.db   # frames vs ebusd
 ```

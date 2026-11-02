@@ -53,3 +53,9 @@ def test_identification_matches_manual_and_app():
 
     # not a Vaillant identification -> None
     assert decode_identification(b"\x00garbage", b"x", b"y", b"z") is None
+
+
+def test_manufacturer_names_follow_ebusd():
+    assert decode_scan(bytes.fromhex("50" + "4142430000" + "0102" + "0304")).manufacturer == (
+        "Kromschroeder")
+    assert decode_scan(bytes.fromhex("b7" + "4142430000" + "0102" + "0304")).manufacturer == "0xb7"

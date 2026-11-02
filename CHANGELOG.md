@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.3
+
+- Catalog: a read and a write (or an active and a passive message) sharing one command are both kept, as in ebusd; before, one was dropped (e.g. the bus date/time write, the heat pump's SetMode write, timer writes)
+- Catalog: an ebusd CSV row that names its own destination keeps it instead of being sent to the device's address
+- Catalog: `!load` follows ebusd (the first that applies wins, `!include` supported); device idents match as in ebusd (only trailing digits dropped); display texts include the included files; a raising `fetch` counts as unreachable
+- Catalog: `read_twin()`, `owner()`; heating zones name their mode values per role (`ClimateZone.modes`), the display name is the application's
+- Passive decoding prefers the definition whose shape fits the telegram (read, write, passive); variant choice by conditions is the catalog's alone (`MessageRegistry` takes no context)
+- ebusd CSV default rows as in ebusd: per message type, PBSB with ID prefix, default fields first, `*` in a default
+- Deep scan probes every slave address (228), e.g. VR 70 at 0x52
+- Reads that need request values (`MessageDef.needs_args`) are not polled; `EbusEngine.read(args=...)` sends them
+- Engine: queued requests fail at once when the link ends, and new ones while it is down
+- Poll: a register never polled is due at once, also right after boot
+- `STR` ends at the first NUL as in ebusd; `HEX:*`/`IGN:*` take the rest
+- Manufacturer names and config folders from one table (ebusd's)
+- New `link` module: `connect()` and `probe()` for the adapter connection
+- `values`: `value_key()` and `Value.cache_key`, `closes_period()`; `messages.label_of()` is the one label rule; `control_of()` only for active writes
+- Removed the second transaction path (`ActiveReader`, `ActiveWriter`, `build_read`, `PassiveListener`, `listen`) and unused helpers (`translations.localized`, `_slug`, `PollScheduler.for_registry`, `convert.merge_languages*`, `convert_langs_dir`, `reengineer.py --tr`)
+- `__all__` lists the public API; mypy runs in CI; README, provenance and docstrings brought up to date
+
 ## 0.7.2
 
 - New `values` module: `values_of()` (each named field with its label and stable `key`), `control_of()` (the number/select a write allows), `is_number_type()`, `has_numeric_value()`

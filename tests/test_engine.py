@@ -138,6 +138,7 @@ def test_stats_track_connection_and_bus_activity():
 
         class _FailedDriver:
             error = "timeout waiting for slave"
+            retryable = False
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
         act.driver = _FailedDriver()
@@ -185,10 +186,11 @@ def test_failed_poll_is_recorded_not_restuck():
         sched = PollScheduler([msg], base_interval=10.0)
         eng = EbusEngine(link.send, link.recv, REG, scheduler=sched)
         key = (msg.zz, msg.name)
-        assert sched._items[key].last_update == 0.0  # due immediately
+        assert sched._items[key].last_update == float("-inf")  # due immediately
 
         class _FailedDriver:
             error = "timeout waiting for slave"
+            retryable = False
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
         act.driver = _FailedDriver()
@@ -883,6 +885,70 @@ def test_explicit_read_tries_again_when_the_answer_is_skipped():
         link.inject(b"".join(encode_symbol(RECEIVED, b) for b in _slave_wire("00414243")))
         assert await asyncio.wait_for(rtask, 4) == bytes.fromhex("00414243")
         assert adapter.starts == 2
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_engine_accepted_write_without_answer_is_sent_once():
+    sim, eng, err = _engine_write({"idle_after_ack": True})
+    assert err is None and sim.commands == 1
+
+
+def test_engine_write_is_never_resent_after_a_timeout():
+    # the whole command went out, then silence (no ACK): it may have landed, so
+    # the engine says so and never sends it again (unlike a lost arbitration)
+    sim, _eng, err = _engine_write({"cmd_replies": ()})
+    assert isinstance(err, WriteUncertain)
+    assert sim.commands == 1
+
+
+def test_link_end_fails_the_queued_requests_at_once():
+    async def inner():
+        link = _Link()
+        link.adapter = _EchoOnly()
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        first = asyncio.create_task(eng.read_raw(0x38, "b509", "24", timeout=5))
+        second = asyncio.create_task(eng.read_raw(0x38, "b509", "25", timeout=5))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))  # the first starts, the second waits
+        await asyncio.sleep(0.02)
+        link.inject(b"")  # the link ends
+        for req in (first, second):
+            with pytest.raises(ReadError):
+                await asyncio.wait_for(req, 0.5)  # not the full 5 s
+        await asyncio.wait_for(task, 1)
+        # while it is down, a new request fails at once instead of queueing
+        with pytest.raises(ReadError, match="not connected"):
+            await asyncio.wait_for(eng.read_raw(0x38, "b509", "24", timeout=5), 0.5)
+        eng.attach(link.send, link.recv)  # reconnected: requests queue again
+        task = asyncio.create_task(eng.run())
+        req = asyncio.create_task(eng.read_raw(0x38, "b509", "24", timeout=5))
+        await asyncio.sleep(0.02)
+        assert not req.done()
+        req.cancel()
+        await _stop(eng, link, task)
+
+    asyncio.run(inner())
+
+
+def test_read_with_arguments_sends_and_decodes_them():
+    msg = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type\n"
+                    "r,,,Errorhistory,,,38,b509,11,index,m,UCH,,,,error,,UIN\n")[0]
+    request = msg.encode({"index": 3})
+    cmd = build_read_frame(0x38, "b509", "", QQ, request)[1:]
+
+    async def inner():
+        link = _Link()
+        link.adapter = _Adapter(cmd, _slave_wire("2a00"))
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        rtask = asyncio.create_task(eng.read(msg, args={"index": 3}))
+        await asyncio.sleep(0)
+        link.inject(encode_symbol(RECEIVED, SYN))
+        values = await asyncio.wait_for(rtask, 2)
+        assert values == {"Errorhistory index": 3, "Errorhistory error": 42}
         await _stop(eng, link, task)
 
     asyncio.run(inner())

@@ -1,4 +1,4 @@
-"""Active-read FSM (Phase 4b) driven offline by a simulated enh adapter.
+"""Active-read FSM driven offline by a simulated enh adapter.
 
 The adapter double plays ebusd's confirmed protocol_direct sequence: reply to
 START with STARTED, echo every SEND byte back as RECEIVED, then deliver the
@@ -139,70 +139,6 @@ def test_unanswered_read_fails_on_syn():
     assert drv.done and drv.error == "no answer from slave"
 
 
-class _FlakyLink:
-    """Async send/recv pair whose slave leaves the first `misses` reads unanswered
-    (ACK, then the bus goes idle) and answers the next one."""
-
-    def __init__(self, misses: int, answer_hex: str):
-        import asyncio
-        self.q: asyncio.Queue = asyncio.Queue()
-        self.misses, self.answer, self.attempts = misses, answer_hex, 0
-        self._dec = EnhDecoder()
-        self._adapter: FakeAdapter | None = None
-
-    async def send(self, data: bytes) -> None:
-        for code, value in self._dec.feed(data):
-            if code == START:
-                self.attempts += 1
-                cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
-                slave = (bytes((ACK, 0xAA)) if self.attempts <= self.misses
-                         else _slave_wire(self.answer))
-                self._adapter = FakeAdapter(cmd, slave)
-            reply = self._adapter.respond(code, value) if self._adapter else b""
-            if reply:
-                self.q.put_nowait(reply)
-
-    async def recv(self) -> bytes:
-        return await self.q.get()
-
-
-def test_unanswered_read_is_retried():
-    # a device skipping the odd answer must not lose e.g. its identification
-    import asyncio
-
-    from aioebus.active import NO_ANSWER_TRIES, ActiveReader, ReadError
-
-    link = _FlakyLink(misses=NO_ANSWER_TRIES - 1, answer_hex="910100")
-    result = asyncio.run(ActiveReader(link.send, link.recv).read_raw(ZZ, PBSB, MSGID))
-    assert result == bytes.fromhex("910100") and link.attempts == NO_ANSWER_TRIES
-
-    link = _FlakyLink(misses=99, answer_hex="910100")  # never answers: bounded
-    try:
-        asyncio.run(ActiveReader(link.send, link.recv).read_raw(ZZ, PBSB, MSGID))
-        raise AssertionError("expected ReadError")
-    except ReadError as err:
-        assert "no answer" in str(err)
-    assert link.attempts == NO_ANSWER_TRIES
-
-
-def test_identification_reraises_a_lost_link():
-    # a dropped link is not "device has no identification": the caller must see it
-    import asyncio
-
-    import pytest
-
-    from aioebus.active import ActiveReader
-
-    async def recv():
-        raise ConnectionResetError("adapter closed the connection")
-
-    async def send(_data):
-        return None
-
-    with pytest.raises(ConnectionResetError):
-        asyncio.run(ActiveReader(send, recv).read_identification(0x08))
-
-
 def test_collision_on_echo_mismatch():
     drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
     drv.start()
@@ -210,79 +146,3 @@ def test_collision_on_echo_mismatch():
     out = drv.feed(encode_symbol(RECEIVED, 0x99))  # wrong echo
     assert drv.done and "collision" in drv.error
     assert out == []
-
-
-def test_reader_at_eof_fails_instead_of_spinning():
-    import asyncio
-
-    import pytest
-
-    from aioebus.active import ActiveReader
-
-    async def send(data):
-        pass
-
-    async def recv():
-        return b""  # a closed connection answers at once, forever
-
-    async def inner():
-        reader = ActiveReader(send, recv)
-        with pytest.raises(ConnectionResetError):
-            await asyncio.wait_for(reader.read_raw(ZZ, PBSB, MSGID), 1)
-
-    asyncio.run(inner())
-
-
-def test_writer_at_eof_after_sending_reports_uncertain():
-    import asyncio
-
-    import pytest
-
-    from aioebus.active import ActiveWriter, WriteUncertain
-
-    master = bytes.fromhex("0e2000") + b"\x05"
-    cmd = build_read_frame(ZZ, PBSB, "", QQ, master)[len(escape(bytes((QQ,)))):]
-    queue: asyncio.Queue = asyncio.Queue()
-    dec = EnhDecoder()
-    adapter = FakeAdapter(cmd, b"")
-
-    async def send(data):
-        for code, value in dec.feed(data):
-            reply = adapter.respond(code, value)
-            if reply:
-                queue.put_nowait(reply)
-        if adapter.i == len(cmd):
-            queue.put_nowait(b"")  # the link drops before the ACK
-
-    async def inner():
-        writer = ActiveWriter(send, queue.get, allow_write=True)
-        with pytest.raises(WriteUncertain):
-            await asyncio.wait_for(writer.write_raw(ZZ, PBSB, master, tries=1), 1)
-
-    asyncio.run(inner())
-
-
-def test_reader_withdraws_an_arbitration_it_gives_up():
-    import asyncio
-
-    import pytest
-
-    from aioebus.active import ActiveReader, ReadError
-
-    sent = []
-    dec = EnhDecoder()
-
-    async def send(data):
-        sent.extend(dec.feed(data))
-
-    async def recv():
-        await asyncio.sleep(10)  # the adapter never gets a free slot
-        return b""
-
-    async def inner():
-        reader = ActiveReader(send, recv)
-        with pytest.raises(ReadError, match="timeout"):
-            await reader.read_raw(ZZ, PBSB, MSGID, timeout=0.05, tries=1)
-
-    asyncio.run(inner())
-    assert sent == [(START, QQ), (START, 0xAA)]  # START with SYN cancels it

@@ -1,10 +1,15 @@
-"""Phase 2: parse real 38.v32.csv rows into the structured model, decode real
+"""Messages: parse real 38.v32.csv rows into the structured model, decode real
 captured telegrams into {field: value}, and round-trip through the native JSON.
 """
 import json
+import struct
+
+import pytest
 
 from aioebus.convert import csv_to_json, from_dicts
 from aioebus.messages import parse_csv
+
+HDR = "type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment"
 
 # Real rows from our contrib/ebusd-config/38.v32.csv (eloBlock) + defaults.
 # The default rows carry the device address (zz=38), as our configs do once the
@@ -90,3 +95,84 @@ def test_renamed_field_never_takes_another_fields_name():
     msg = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
                     "r,hmu,,S,,,08,b511,01,temp,,UCH,,,,temp,,UCH,,,,temp_1,,UCH,,,\n")[0]
     assert [f.name for f in msg.fields] == ["temp", "temp_2", "temp_1"]
+
+
+def test_message_encode_builds_master_data():
+    msg = parse_csv(HDR + "\n"
+                    "w,,,FlowTempDesired,,,38,b509,0e1800,value,,D1C,,°C,\n")[0]
+    assert msg.encode({"FlowTempDesired": 30.0}).hex() == "0e18003c"  # id + D1C(30)
+
+
+def test_message_encode_enum_label():
+    msg = parse_csv(HDR + "\n"
+                    "w,,,Mode,,,38,b510,00,value,,UCH,0=auto;1=off;2=heat,,\n")[0]
+    assert msg.encode({"Mode": "heat"}).hex() == "0002"       # id 00 + UCH 2
+    assert msg.encode({"Mode": 1}).hex() == "0001"             # raw int also ok
+
+
+def test_message_encode_rejects_no_value():
+    msg = parse_csv(HDR + "\n"
+                    "w,,,Z1DayTemp,,,15,b524,02,temp,,EXP,,°C,\n")[0]
+    with pytest.raises(ValueError):
+        msg.encode({"Z1DayTemp": None})  # would send the "no value" marker (NaN)
+
+
+def test_message_encode_accepts_message_name_for_a_lone_field():
+    # user definitions name their single field anything, not just "value"
+    msg = parse_csv(HDR + "\n"
+                    "w,,,Z1DayTemp,,,15,b524,02,temp,,EXP,,°C,\n")[0]
+    assert msg.encode({"Z1DayTemp": 21.5}) == bytes.fromhex("02") + struct.pack("<f", 21.5)
+
+
+DEFAULTS = HDR + """
+*r,ehp,,,,,08,B509,0D
+*w,ehp,,,,,08,B509,0E,ign,,IGN:1
+*uw,bc,,,,,fe,B516,
+*u,bc,,,,,fe,B516,01
+r,,,FlowTemp,,,,,1800,value,,D2C
+w,,,FlowTempDesired,,,,,1800,value,,D1C
+r,,,Other,,,,b511,01,value,,UCH
+uw,,,Vdatetime,,,,,,time,,BTI
+u,,,Outsidetemp,,,,,,value,,D2B
+[name]*r,,,,,,,,
+r,,,,,,,,0001,value,,UCH
+"""
+
+
+def test_default_rows_apply_as_in_ebusd():
+    by = {(m.direction, m.name): m for m in parse_csv(DEFAULTS)}
+    flow = by[("r", "FlowTemp")]
+    # no PBSB in the row: the default's command, its id as the prefix
+    assert (flow.circuit, flow.zz, flow.pbsb, flow.msgid) == ("ehp", "08", "B509", "0D1800")
+    # a row with its own PBSB takes no id prefix
+    assert (by[("r", "Other")].pbsb, by[("r", "Other")].msgid) == ("b511", "01")
+    # the default's fields come first
+    desired = by[("w", "FlowTempDesired")]
+    assert [f.name for f in desired.fields] == ["ign", "value"]
+    assert desired.encode({"value": 30.0}).hex() == "0e1800003c"
+    # *u and *uw are two defaults
+    assert (by[("uw", "Vdatetime")].pbsb, by[("uw", "Vdatetime")].msgid) == ("B516", "")
+    assert (by[("u", "Outsidetemp")].pbsb, by[("u", "Outsidetemp")].msgid) == ("B516", "01")
+    assert not any(m.name == "" for m in parse_csv(DEFAULTS))  # nameless rows dropped
+
+
+def test_default_star_takes_the_value():
+    rows = HDR + "\n*r,hc*,,,,,15,b524,\nr,1,,Temp,,,,,02,value,,UCH\nr,,,Bare,,,,,03,value,,UCH\n"
+    by = {m.name: m for m in parse_csv(rows)}
+    assert (by["Temp"].circuit, by["Bare"].circuit) == ("hc1", "hc")
+
+
+def test_read_with_arguments_encodes_its_request():
+    msg = parse_csv(HDR + "\nr,,,Errorhistory,,,08,b509,11,index,m,UCH,,,,error,,UIN\n")[0]
+    assert msg.needs_args and msg.default_part == "s"
+    assert msg.encode({"index": 3}).hex() == "1103"
+    assert msg.decode_labeled(master="03", slave="2a00") == {
+        "Errorhistory index": 3, "Errorhistory error": 42}
+    wild = parse_csv(HDR + "\nw,,,X,,,08,b509,11,ign,,IGN:*,,,,value,,UCH\n")[0]
+    assert wild.encode({"value": 1}).hex() == "1101"  # IGN:* adds nothing
+
+
+def test_label_of():
+    from aioebus.messages import label_of
+    assert label_of("FlowTemp", "value") == "FlowTemp"
+    assert label_of("Status01", "temp") == "Status01 temp"

@@ -1,4 +1,4 @@
-"""Evaluating ebusd message conditions against scan/register data (Phase 4).
+"""Evaluating ebusd message conditions against scan/register data.
 
 Conditions gate firmware- or model-specific messages. On the reference configs
 they are inline prefixes referencing the device scan -- `id_sw` / `id_hw` from

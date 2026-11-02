@@ -8,8 +8,9 @@ own curated definitions can instead come from the native JSON format in
 
 Supported: the common Vaillant row shape
     type,circuit,level,name,comment,qq,zz,pbsb,id,[ name,part,type,divisor/values,unit,comment ]*
-with default rows (*r / *w), IGN fields, value tables, the divisor column and
-condition prefixes (evaluated by conditions.py); templates/chains are not.
+with default rows (as ebusd applies them), IGN fields, value tables, the divisor
+column and condition prefixes (evaluated by conditions.py); templates and chained
+ids are not.
 """
 from __future__ import annotations
 
@@ -80,9 +81,27 @@ class MessageDef:
         return "w" in self.direction
 
     @property
+    def is_passive(self) -> bool:
+        """A telegram other masters send (u, uw): decoded, never sent by us."""
+        return self.direction[:1] == "u"
+
+    @property
     def poll_priority(self) -> int:
         tail = self.direction[1:]
         return int(tail) if self.direction[:1] == "r" and tail.isdigit() else 0
+
+    @property
+    def default_part(self) -> str:
+        """Where a field without an explicit part lives: a pure read's in the
+        slave answer, any other's (write, passive) in the master data."""
+        return "s" if self.direction[:1] == "r" else "m"
+
+    @property
+    def needs_args(self) -> bool:
+        """A read whose request carries values (named master fields, e.g. an
+        index): it cannot be polled without them."""
+        return self.is_polled_read and any(
+            f.part == "m" for f in self.value_fields)
 
     def decode(self, master: bytes | str = b"", slave: bytes | str = b"") -> dict:
         """Decode a telegram's data into {field_name: value}."""
@@ -92,9 +111,7 @@ class MessageDef:
             slave = bytes.fromhex(slave)
         bufs = {"m": master, "s": slave}
         pos = {"m": 0, "s": 0}
-        # Only a pure read puts its payload in the slave answer; writes, updates
-        # (u) and uw commands carry their fields in the master part.
-        default_part = "s" if self.direction[:1] == "r" else "m"
+        default_part = self.default_part
         out: dict = {}
         bit_part: str | None = None  # part whose byte an open bit group sits in
         last_start = -1
@@ -143,24 +160,25 @@ class MessageDef:
         return out
 
     def encode(self, values: dict) -> bytes:
-        """Build the master data (message id + encoded master fields) for a write.
+        """Build the master data (message id + encoded master fields): a write's
+        payload, or the arguments of a read that takes some (``needs_args``).
 
         `values` is keyed by field name; a message with a single value field also
         accepts the message name (as its decoded label is). Enum labels are mapped
         back to their numbers. Numeric and float types only -- bit-field and
         string writes are not supported yet and raise."""
         data = bytearray(bytes.fromhex(self.msgid))
+        default = self.default_part
         named = [f for f in self.fields
                  if f.name and not f.type.upper().startswith("IGN")
-                 and (f.part if f.part in ("m", "s") else "m") == "m"]
+                 and (f.part if f.part in ("m", "s") else default) == "m"]
         lone = named[0].name if len(named) == 1 else None
         for f in self.fields:
-            part = f.part if f.part in ("m", "s") else "m"  # writes carry fields in master
+            part = f.part if f.part in ("m", "s") else default
             if part != "m":
                 continue
             if f.type.upper().startswith("IGN"):
-                n = int(f.type.split(":")[1]) if ":" in f.type else 1
-                data += bytes(n)
+                data += bytes(max(make_codec(f.type).length, 0))  # IGN:* -> nothing
                 continue
             if f.name in values:
                 val = values[f.name]
@@ -179,13 +197,15 @@ class MessageDef:
         return bytes(data)
 
     def decode_labeled(self, master: bytes | str = b"", slave: bytes | str = b"") -> dict:
-        """Decode into HA-style labels: a lone generic ``value`` field becomes the
-        message name; any other field is prefixed with it (as HA entities are named,
-        e.g. ``Currenterror error`` or ``SensorData1 s1``)."""
-        raw = self.decode(master, slave)
-        if list(raw) == ["value"]:
-            return {self.name: raw["value"]}
-        return {(self.name if k == "value" else f"{self.name} {k}"): v for k, v in raw.items()}
+        """Decode into labels (see :func:`label_of`), e.g. ``Currenterror error``
+        or ``SensorData1 s1``."""
+        return {label_of(self.name, k): v for k, v in self.decode(master, slave).items()}
+
+
+def label_of(message: str, field: str) -> str:
+    """The label a field's value is known by: a generic ``value`` field is the
+    message itself, any other is prefixed with the message name."""
+    return message if field == "value" else f"{message} {field}"
 
 
 def _split_divisor_values(text: str):
@@ -231,8 +251,37 @@ def usable_fields(name: str, fields: list[FieldDef]) -> list[FieldDef] | None:
     return out
 
 
+def _row_fields(row: list[str]) -> list[FieldDef]:
+    """The field columns of a CSV row (six per field, from column 9)."""
+    fields: list[FieldDef] = []
+    for i in range(9, len(row), 6):
+        name, part, typ, div_values, unit, cmt = (
+            (row[j].strip() if j < len(row) else "") for j in range(i, i + 6))
+        if typ:
+            div, vals = _split_divisor_values(div_values)
+            fields.append(FieldDef(name, part, typ, div, vals, unit, cmt))
+    return fields
+
+
+def _with_default(value: str, default: str, *, star: bool = False,
+                  required: bool = False) -> str:
+    """ebusd's default rule for a column: an empty value takes the default; with
+    ``star`` a '*' in the default is replaced by the value (``required``: an
+    empty value stays empty)."""
+    if not default or (star and required and not value):
+        return value
+    if star and "*" in default:
+        i = default.index("*")
+        return default[:i] + value + default[i + 1:]
+    return value or default
+
+
 def parse_csv(text: str) -> list[MessageDef]:
-    defaults: dict[str, list[str]] = {}
+    """The messages of an ebusd CSV. Default rows (``*r``, ``*w``, ``*u``,
+    ``*uw``) apply as in ebusd: per message type (a poll digit ignored), empty
+    columns take the default, a message without PBSB gets the default's PBSB
+    and ID prefix, and the default's fields come first."""
+    defaults: dict[str, tuple[list[str], list[FieldDef]]] = {}
     out: list[MessageDef] = []
     for row in csv.reader(io.StringIO(text)):  # csv handles quoted commas
         if not row:
@@ -241,39 +290,36 @@ def parse_csv(text: str) -> list[MessageDef]:
         if not t or t.startswith("#"):
             continue
         if t.startswith("*"):  # default row, e.g. *r,elo
-            defaults[t[1:2]] = row
+            defaults[t[1:].lower()] = ([c.strip() for c in row[:9]], _row_fields(row))
             continue
-        # strip any leading condition prefixes ([id_sw>=200], possibly stacked);
-        # they are kept as metadata and evaluated against scan data in Phase 4.
+        # leading condition prefixes ([id_sw>=200], possibly stacked) are kept as
+        # metadata; the catalog evaluates them for each device
         conditions = re.findall(r"\[([^]]*)\]", t) if t.startswith("[") else []
         core = re.sub(r"^(?:\[[^]]*\])+", "", t)
         if not _DIRECTION.match(core):  # header, !load/!include instruction, etc.
             continue
-
-        def c(i, _row=row):
-            return _row[i].strip() if i < len(_row) else ""
-
-        d = defaults.get(core[:1], [])
-
-        def g(i, _d=d):  # fixed column with default fallback
-            return c(i) or (_d[i].strip() if i < len(_d) else "")
-
-        fields: list[FieldDef] = []
-        i = 9
-        while i < len(row):
-            name, part, typ = c(i), c(i + 1), c(i + 2)
-            div, vals = _split_divisor_values(c(i + 3))
-            unit, cmt = c(i + 4), c(i + 5)
-            i += 6
-            if typ:
-                fields.append(FieldDef(name, part, typ, div, vals, unit, cmt))
-        if (usable := usable_fields(c(3), fields)) is None:
+        cols = [(row[i].strip() if i < len(row) else "") for i in range(9)]
+        key = core[:1] if core[:1] == "r" else core  # r1..r9 use the r default
+        dcols, dfields = defaults.get(key, ([], []))
+        d = dcols + [""] * (9 - len(dcols))
+        pbsb, msgid = cols[7], cols[8]
+        if not pbsb:  # the default's command, with its ID as the prefix
+            pbsb, msgid = d[7], d[8] + msgid
+        name = _with_default(cols[3], d[3], star=True, required=True)
+        if not name:  # ebusd rejects a nameless message
             continue
-        fields = usable
+        fields = usable_fields(name, [replace(f) for f in dfields] + _row_fields(row))
+        if fields is None:
+            continue
         out.append(
             MessageDef(
-                direction=core, circuit=g(1), level=g(2), name=c(3), comment=c(4),
-                qq=g(5), zz=g(6), pbsb=g(7), msgid=g(8), fields=fields,
+                direction=core,
+                circuit=_with_default(cols[1], d[1], star=True),
+                level=_with_default(cols[2], d[2], star=True),
+                name=name,
+                comment=_with_default(cols[4], d[4], star=True),
+                qq=_with_default(cols[5], d[5]), zz=_with_default(cols[6], d[6]),
+                pbsb=pbsb, msgid=msgid, fields=fields,
                 conditions=conditions or None,
             )
         )

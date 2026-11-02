@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from .messages import FieldDef, MessageDef, parse_csv, usable_fields
 
@@ -23,7 +24,7 @@ def to_dicts(msgs: list[MessageDef]) -> list[dict]:
     for m in msgs:
         fields = []
         for f in m.fields:
-            fd = {"name": f.name, "type": f.type}
+            fd: dict[str, Any] = {"name": f.name, "type": f.type}
             if f.part:
                 fd["part"] = f.part
             if f.divisor is not None:
@@ -114,42 +115,6 @@ def attach_translations(
             }
             f.tr = f_tr or None
     return defs
-
-
-def merge_languages(by_lang_text: dict[str, str], base_lang: str = "en") -> list[MessageDef]:
-    """Merge one device's CSV in several languages into a single definition list
-    carrying per-language display text in ``tr``. ``by_lang_text`` maps a language
-    code to that language's CSV text (e.g. the ``/en/`` and ``/de/`` files from the
-    ebus.github.io CDN). The base language defines the structure (English, else the
-    first given); every language's comments land in ``tr``."""
-    parsed = {lang: parse_csv(text) for lang, text in by_lang_text.items()}
-    base = base_lang if base_lang in parsed else next(iter(parsed))
-    return attach_translations(parsed[base], parsed)
-
-
-def merge_languages_to_json(by_lang_text: dict[str, str], base_lang: str = "en") -> str:
-    return json.dumps(
-        to_dicts(merge_languages(by_lang_text, base_lang)), indent=2, ensure_ascii=False)
-
-
-def convert_langs_dir(src_dir: Path, out_dir: Path, langs: tuple[str, ...] = ("en", "de")) -> int:
-    """Batch-merge per-language CSV mirrors into native JSON. Expects
-    ``<src_dir>/<lang>/<name>.csv`` for each language (a local mirror of the
-    ebus.github.io layout). The first language present is the structural base; the
-    GPL-3.0 derivative stays on your machine."""
-    out_dir.mkdir(parents=True, exist_ok=True)
-    base = langs[0]
-    n = 0
-    for csv_file in sorted((src_dir / base).glob("*.csv")):
-        by_lang = {
-            lang: (src_dir / lang / csv_file.name).read_text(encoding="utf-8", errors="replace")
-            for lang in langs
-            if (src_dir / lang / csv_file.name).exists()
-        }
-        (out_dir / (csv_file.stem + ".json")).write_text(
-            merge_languages_to_json(by_lang, base_lang=base) + "\n", encoding="utf-8")
-        n += 1
-    return n
 
 
 def convert_dir(src_dir: Path, out_dir: Path) -> int:

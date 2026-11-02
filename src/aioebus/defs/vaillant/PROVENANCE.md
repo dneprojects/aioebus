@@ -1,13 +1,14 @@
 # Provenance of the Vaillant device definitions
 
-All definitions in `custom_components/ebus/configs/vaillant/` are our own Apache-2.0 work. None is a copy of the
-GPL-3.0 `ebusd-configuration` database.
+All definitions in this folder (`aioebus/defs/vaillant/`) are our own Apache-2.0 work. None is a copy of
+the GPL-3.0 `ebusd-configuration` database.
 
 Two kinds live here:
 
 - **Authored defs** — `38.v32` (eloBlock) and `f6.netx3`. Hand-written from
-  observation of the reference installation, kept as CSV under `configs/vaillant/src/`
-  and converted to JSON with aioebus `convert.csv_to_json` (`38.v32` became `eloblock.json`).
+  observation of the reference installation, kept as CSV in the aioebus repository
+  (`src/aioebus/defs/vaillant/src/`, not part of the package) and converted to JSON with
+  `convert.csv_to_json` (`38.v32` became `eloblock.json`).
 
 - **Re-engineered device types** — `ctlv3`, `pmw`, `vr_71`, `hmu` and
   `broadcast`. Produced by aioebus `tools/reengineer.py` from a captured telegram log of
@@ -26,6 +27,7 @@ What is a fact vs. an expression:
   selection and arrangement of the whole database. We do not reproduce it; each
   device's def is the subset observed on our own bus, chosen by our own capture.
 
-`vwzio` (0x76) yields no file: its upstream CSV defines only service-test
-registers, and its operational data travels over an undocumented low-level
-memory protocol that neither ebusd nor this library decodes into named values.
+`vwzio.json` (0x76) is empty on purpose: the device is recognised and named, but
+its upstream CSV defines only service-test registers, and its operational data
+travels over an undocumented low-level memory protocol that neither ebusd nor
+this library decodes into named values.

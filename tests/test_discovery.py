@@ -119,7 +119,10 @@ def test_identification_read_later():
 
 def test_deep_scan_space_covers_the_base_addresses():
     assert set(BASE_ADDRESSES) <= set(ALL_ADDRESSES)
-    assert len(ALL_ADDRESSES) == 49  # 7 high x 7 low nibble families
+    # every slave address, as ebusd's full scan: no master, SYN, ESC or broadcast
+    assert len(ALL_ADDRESSES) == 228
+    assert {0x50, 0x51, 0x52, 0x64, 0x84, 0xA0, 0xE0, 0xEC} <= set(ALL_ADDRESSES)
+    assert not {0x00, 0x10, 0x31, 0xA9, 0xAA, 0xFE, 0xFF} & set(ALL_ADDRESSES)
 
 
 def test_traffic_wait_ends_when_the_link_drops():

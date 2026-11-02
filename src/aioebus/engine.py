@@ -6,8 +6,8 @@ free of charge) and, only when the bus is idle, slips in its own active
 transactions -- scheduled polls, explicit reads, or writes. A value seen
 passively refreshes the poll scheduler, so broadcast data is never re-polled.
 
-This is the piece that lets a thin Home Assistant integration get most values for
-free and spend the scarce 2400-baud bandwidth only on the rest.
+This lets an application get most values for free and spend the scarce
+2400-baud bandwidth only on the rest.
 """
 from __future__ import annotations
 
@@ -28,7 +28,6 @@ from .active import (
     ReadError,
     WriteDriver,
     WriteUncertain,
-    _CommandDriver,
 )
 from .frame import SYN, FrameError, parse_telegram
 from .messages import MessageDef
@@ -44,22 +43,20 @@ from .scan import (
     decode_scan,
 )
 from .transport import RECEIVED, STARTED, EnhDecoder
+from .values import value_key
 
 _LOGGER = logging.getLogger(__name__)
 
-def value_key(msg: MessageDef, field: str) -> tuple[str, str, str]:
-    """Cache key for one decoded field: the device (address if known, else
-    circuit), the message name and the field label."""
-    return (msg.zz or msg.circuit, msg.name, field)
+_Driver = ReadDriver | WriteDriver
 
 
 @dataclass(eq=False)  # compared by identity (queue removal)
 class _Active:
-    make: Callable[[], _CommandDriver]  # builds a fresh driver (they are single-shot)
+    make: Callable[[], _Driver]  # builds a fresh driver (they are single-shot)
     msg: MessageDef | None  # message being read/polled (for storing the result)
     future: asyncio.Future | None  # set for explicit read/write requests
     attempts: int = 0
-    driver: _CommandDriver | None = None
+    driver: _Driver | None = None
     started: float = 0.0  # monotonic time the current attempt began
     # a read the slave ACKs but leaves unanswered is tried this often in all
     # (some devices skip the odd answer; a read has no side effect)
@@ -155,8 +152,10 @@ class EbusEngine:
             self.running = False
             self._ended.set()
             self.stats.connected = False
-            # the caller of a transaction in flight learns now, not at its timeout
+            # the callers of the transaction in flight and of every queued request
+            # learn now, not at their timeouts (the queued ones were never sent)
             self._fail_active("connection lost")
+            self._fail_queued("connection lost")
 
     async def wait_for_traffic(self, timeout: float) -> bool:
         """Whether the bus delivers a symbol within ``timeout`` s (a live bus
@@ -188,6 +187,12 @@ class EbusEngine:
         self._fail_active("connection lost")
         self._stop = False
         self.stats.connected = False
+
+    def _fail_queued(self, reason: str) -> None:
+        while self._queue:
+            act = self._queue.popleft()
+            if act.future is not None and not act.future.done():
+                act.future.set_exception(ReadError(reason))
 
     def _fail_active(self, reason: str) -> None:
         """Drop the transaction in flight and fail its caller, telling whether a
@@ -221,15 +226,18 @@ class EbusEngine:
             await self._send(CANCEL_ARBITRATION)
         self._fail_active(reason)
 
-    async def read(self, msg: MessageDef, timeout: float = 6.0) -> dict:
-        """Actively read a message as soon as the bus is idle; return its values."""
+    async def read(self, msg: MessageDef, timeout: float = 6.0,
+                   args: dict | None = None) -> dict:
+        """Actively read a message as soon as the bus is idle; return its values.
+        ``args`` are the values of its request fields, for a read that takes
+        some (:attr:`MessageDef.needs_args`, e.g. an index)."""
         if not msg.is_polled_read:
             raise ValueError(f"{msg.name}: not a readable message")
         self._require_addr(msg)
-        zz = int(msg.zz, 16)
-        slave = await self._submit(lambda: ReadDriver(zz, msg.pbsb, msg.msgid, self.qq),
-                                   msg, timeout, answer_tries=NO_ANSWER_TRIES)
-        return msg.decode_labeled(slave=slave)
+        request = msg.encode(args or {})
+        slave = await self._submit(self._read_driver(msg, request), msg, timeout,
+                                   answer_tries=NO_ANSWER_TRIES)
+        return _decode_answer(msg, request, slave)
 
     async def read_raw(self, zz: int, pbsb: str, msgid: str, timeout: float = 6.0) -> bytes:
         """Actively read a register without a definition; return the slave's raw
@@ -273,13 +281,21 @@ class EbusEngine:
 
     # -- internals ----------------------------------------------------------
 
+    def _read_driver(self, msg: MessageDef, request: bytes) -> Callable[[], ReadDriver]:
+        """A builder of read drivers for a message (``request``: id + arguments)."""
+        zz = int(msg.zz, 16)
+        return lambda: ReadDriver(zz, msg.pbsb, "", self.qq, request)
+
     @staticmethod
     def _require_addr(msg: MessageDef) -> None:
         if not (msg.zz and len(msg.zz) == 2):
             raise ValueError(f"{msg.name}: no destination address")
 
-    async def _submit(self, make: Callable[[], _CommandDriver], msg: MessageDef | None,
+    async def _submit(self, make: Callable[[], _Driver], msg: MessageDef | None,
                       timeout: float, answer_tries: int = 1):
+        if self._ended.is_set():
+            # the link is down (until attach() binds a new one): fail at once
+            raise ReadError("not connected")
         if timeout <= self.ACTIVE_DEADLINE + self.START_MARGIN:
             # it could never start (see _next_request): say so instead of timing out
             raise ValueError(f"timeout {timeout} s is shorter than one transaction "
@@ -302,6 +318,7 @@ class EbusEngine:
     async def _on_event(self, code: int, data: int) -> None:
         if self._active is not None:
             drv = self._active.driver
+            assert drv is not None  # set before it became the active one
             if drv.arbitrating and code == RECEIVED:
                 # the adapter arbitrates only at a later SYN: another master's
                 # telegram passing meanwhile is still worth decoding
@@ -315,7 +332,7 @@ class EbusEngine:
             if not drv.done and time.monotonic() - self._active.started > self.ACTIVE_DEADLINE:
                 if drv.arbitrating:
                     await self._send(CANCEL_ARBITRATION)
-                drv._fail("timeout")
+                drv.abort("timeout")
             if drv.done:
                 await self._finish_active()
             return
@@ -379,9 +396,8 @@ class EbusEngine:
             if item is None:
                 return
             msg = item.msg
-            zz = int(msg.zz, 16)
-            act = _Active(lambda: ReadDriver(zz, msg.pbsb, msg.msgid, self.qq), msg, None)
             try:
+                act = _Active(self._read_driver(msg, msg.encode({})), msg, None)
                 act.driver = act.make()
             except ValueError:  # a malformed definition: back it off, never crash
                 _LOGGER.warning("eBUS engine: cannot poll %s (bad PBSB/id)", msg.name)
@@ -415,6 +431,7 @@ class EbusEngine:
     async def _finish_active(self) -> None:
         act = self._active
         self._active = None
+        assert act is not None and act.driver is not None
         drv = act.driver
         if (drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None
                 and not drv.result and expects_slave(act.msg)):
@@ -428,7 +445,8 @@ class EbusEngine:
         values = None
         if drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None:
             try:
-                values = act.msg.decode_labeled(slave=drv.result)
+                answer = drv.result if isinstance(drv.result, bytes) else b""
+                values = _decode_answer(act.msg, drv.request, answer)
             except Exception as err:  # fail this read, not the bus loop
                 _LOGGER.exception("eBUS engine: cannot decode the answer to %s", act.msg.name)
                 drv.error = f"cannot decode the answer: {err}"
@@ -452,7 +470,7 @@ class EbusEngine:
         if isinstance(lost_to, int) and not self._buf:
             self._buf.append(lost_to)
         # error: retry a lost/contended bus (rebuild a fresh driver), else give up
-        retryable = "arbitration lost" in drv.error or "collision" in drv.error
+        retryable = drv.retryable
         if isinstance(drv, WriteDriver) and drv.may_have_landed:
             retryable = False  # the whole command went out: a resend could apply it twice
         abandoned = act.future is not None and act.future.done()  # caller gave up
@@ -473,3 +491,8 @@ class EbusEngine:
             # persistently unanswered register out of the rotation entirely.
             self.scheduler.mark_failure(act.msg, time.monotonic())
             self.stats.polls_failed += 1
+
+
+def _decode_answer(msg: MessageDef, request: bytes, answer: bytes) -> dict:
+    """A read's values: its answer, and the arguments it was asked with."""
+    return msg.decode_labeled(master=request[len(bytes.fromhex(msg.msgid)):], slave=answer)
