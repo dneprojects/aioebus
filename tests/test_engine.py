@@ -750,7 +750,10 @@ def test_poll_failing_internally_is_backed_off(monkeypatch):
     async def inner():
         link = _Link()
         link.adapter = _EchoOnly()
-        sched = PollScheduler([BY["Statenumber"]])
+        import time
+        sched = PollScheduler([BY["Statenumber"]], base_interval=1.0)
+        for item in sched._items.values():  # due now (monotonic starts near 0 on CI)
+            item.last_update = time.monotonic() - 10
         eng = EbusEngine(link.send, link.recv, REG, scheduler=sched)
         task = asyncio.create_task(eng.run())
 
@@ -763,7 +766,6 @@ def test_poll_failing_internally_is_backed_off(monkeypatch):
         for _ in range(5):
             link.inject(encode_symbol(RECEIVED, SYN))
             await asyncio.sleep(0.01)
-        import time
         assert eng.stats.polls_failed == 1  # failed once, then backed off:
         assert sched.next_due(time.monotonic()) is None  # not restarted at every idle bus
         await _stop(eng, link, task)
