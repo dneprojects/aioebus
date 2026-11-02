@@ -20,7 +20,7 @@ from .active import (
     build_read_frame,
     build_write_frame,
 )
-from .catalog import Catalog, ClimateZone, Definition
+from .catalog import Catalog, ClimateZone, Definition, Texts
 from .codecs import Codec, decode, encode, make_codec
 from .conditions import ConditionContext, context_from_scan, evaluate, evaluate_all
 from .discovery import BusSilent, Device, Discovery, discover, identify_later
@@ -31,6 +31,7 @@ from .passive import MessageRegistry, decode_raw
 from .poll import PollScheduler
 from .scan import Identification, ScanResult, decode_identification, decode_scan
 from .transport import EnhDecoder, PassiveListener, listen
+from .values import Value, control_of, values_of
 
 __all__ = [
     "ActiveReader",
@@ -56,11 +57,14 @@ __all__ = [
     "ReadError",
     "ScanResult",
     "Telegram",
+    "Texts",
+    "Value",
     "WriteDriver",
     "build_read",
     "build_read_frame",
     "build_write_frame",
     "context_from_scan",
+    "control_of",
     "crc8",
     "decode",
     "decode_identification",
@@ -78,5 +82,6 @@ __all__ = [
     "parse_telegram",
     "unescape",
     "value_key",
+    "values_of",
 ]
-__version__ = "0.7.1"
+__version__ = "0.7.2"

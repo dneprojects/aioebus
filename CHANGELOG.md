@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.2
+
+- New `values` module: `values_of()` (each named field with its label and stable `key`), `control_of()` (the number/select a write allows), `is_number_type()`, `has_numeric_value()`
+- `Catalog.load_texts()` gives copies of the loaded messages with their display texts per language from the CDN, cached like the definitions; `Catalog.text_paths`; the caller's `fetch` returns `""` for a file the CDN does not have (final) and None when unreachable
+
 ## 0.7.1
 
 - New `catalog` module: `Catalog.load()` gives each discovered device its definitions -- our bundled ones (now package data, with the device index, models, heating-zone roles and register ranges), else a user file (JSON or ebusd CSV), else the matching ebusd-configuration CSV downloaded from ebus.github.io (ebusd's address/ident/variant rule, `!load` includes) and cached; network through a caller-given `fetch`, disk in a thread

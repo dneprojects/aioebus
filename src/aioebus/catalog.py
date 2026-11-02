@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from .conditions import ConditionContext, context_from_scan, evaluate_all
-from .convert import from_dicts
+from .convert import attach_translations, from_dicts
 from .messages import MessageDef, parse_csv
 from .scan import Identification, ScanResult
 
@@ -44,7 +44,8 @@ CACHE_MAX_AGE: Final = 7 * 24 * 3600  # s; older cached files are fetched again
 # the broadcast circuit: telegrams to all (0xfe), resolved like a device
 BROADCAST_SCAN: Final = ScanResult(0, "", "Broadcast", "", "", None, None)
 
-# returns the text at a URL, or None when it is not there / not reachable
+# returns the text at a URL; "" when the server says it is not there, None when
+# it cannot be reached (only then is a later try worth it)
 Fetch = Callable[[str], Awaitable[str | None]]
 
 _CDN_NAME = re.compile(r"^(?P<zz>[0-9a-f]{2})\.(?P<ident>[\w-]+)(?P<rest>(?:\.[\w-]+)*)\.csv$")
@@ -67,6 +68,15 @@ class Definition:
     profile: str | None = None
     model: str | None = None
     text_paths: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class Texts:
+    """Messages with display texts: ``complete`` is False when some text file
+    could not be reached (try again later); ``languages`` had any text."""
+    messages: list[MessageDef]
+    complete: bool
+    languages: frozenset[str]
 
 
 @dataclass
@@ -280,8 +290,8 @@ class Catalog:
         name = match_cdn_file(names or (), address, scan)
         if name is None:
             return None
-        text = await self._text(f"{folder}/{name}", name)
-        if text is None:
+        text = await self._text(f"{folder}/{name}")
+        if not text:
             return None
         messages = await asyncio.to_thread(parse_csv, text)
         seen = {name}
@@ -295,7 +305,7 @@ class Catalog:
                 if not _SAFE_NAME.match(include):
                     _LOGGER.warning("%s: include %r ignored", name, include)
                     continue
-                extra = await self._text(f"{folder}/{include}", include)
+                extra = await self._text(f"{folder}/{include}")
                 if extra:  # best effort: an include the CDN does not serve is skipped
                     messages += await asyncio.to_thread(parse_csv, extra)
                     pending.append((extra, depth + 1))
@@ -306,43 +316,77 @@ class Catalog:
         """A CDN folder's file names, fetched once per load (an unreachable CDN
         then costs one timeout, not one per device)."""
         if folder not in self._listings:
-            text = await self._text(f"{folder}/", _LISTING)
-            self._listings[folder] = text.split("\n") if text is not None else None
+            text = await self._text(f"{folder}/")
+            self._listings[folder] = text.split("\n") if text else None
         return self._listings[folder]
 
-    async def _text(self, rel: str, cache_name: str) -> str | None:
+    async def _text(self, rel: str, lang: str | None = None) -> str | None:
         """A CDN file (a folder listing for a path ending in '/'), from the cache
         while it is fresh, else fetched (and cached); a stale copy stands in when
-        the CDN cannot be reached or answers with something else."""
-        folder = rel.split("/", 1)[0]
-        cached = (self.cache_dir / self.lang / folder / cache_name) if self.cache_dir else None
+        the CDN cannot be reached or answers with something else. "" when the CDN
+        says it has no such file (and nothing is cached)."""
+        return (await self._text_state(rel, lang))[0]
+
+    async def _text_state(self, rel: str, lang: str | None = None) -> tuple[str | None, bool]:
+        """:meth:`_text` and whether that is the current state (a fresh copy, a
+        fetched file, or the CDN's final "not there") rather than a stand-in."""
+        lang = lang or self.lang
+        cached = None
+        if self.cache_dir is not None:
+            cached = self.cache_dir / lang / (rel + _LISTING if rel.endswith("/") else rel)
         stale: str | None = None
         if cached is not None:
             age_text = await asyncio.to_thread(_read_cached, cached)
             if age_text is not None:
                 age, stale = age_text
                 if age < CACHE_MAX_AGE:
-                    return stale
+                    return stale, True
         if self._fetch is None:
-            return stale
-        text = await self._fetch(f"{CDN}/{self.lang}/{rel}")
-        if text is None:
-            return stale
+            return stale, False
+        text = await self._fetch(f"{CDN}/{lang}/{rel}")
+        if not text:  # None: not reachable; "": not there (final)
+            return (stale if stale is not None else text), text == ""
         if rel.endswith("/"):  # a folder listing is a JSON string of names
             try:
                 listing = json.loads(text)
             except ValueError:
                 listing = None
             if not isinstance(listing, str):
-                return stale
+                return stale, False
             text = listing
         elif not text.lstrip().startswith("type,"):
             # not an ebusd CSV (e.g. a captive portal's page): never cache that
             _LOGGER.warning("%s: unexpected content, ignored", rel)
-            return stale
+            return stale, False
         if cached is not None:
             await asyncio.to_thread(_write_cached, cached, text)
-        return text
+        return text, True
+
+    @property
+    def text_paths(self) -> list[str]:
+        """The CDN paths (without ``/<lang>/`` and ``.csv``) with the display
+        text of the loaded devices."""
+        return sorted({p for d in self._defs.values() for p in d.text_paths})
+
+    async def load_texts(self, langs: Iterable[str]) -> Texts:
+        """The loaded messages, as copies carrying their display texts (``tr``)
+        in the given languages, from the CDN (cached like the definitions)."""
+        by_lang: dict[str, list[MessageDef]] = {}
+        complete = True
+        paths = self.text_paths
+        for lang in dict.fromkeys(langs):
+            # one language's files at once: a slow one does not hold up the rest
+            states = await asyncio.gather(*(self._text_state(f"{p}.csv", lang) for p in paths))
+            for text, current in states:
+                # not reachable (even if a stale copy stood in): try again later;
+                # "" is final, e.g. a language upstream does not translate
+                complete = complete and current
+                if text:
+                    by_lang.setdefault(lang, []).extend(await asyncio.to_thread(parse_csv, text))
+        msgs = [replace(m, fields=[replace(f) for f in m.fields]) for m in self.all_messages()]
+        if by_lang:
+            attach_translations(msgs, by_lang)
+        return Texts(msgs, complete, frozenset(by_lang))
 
     # -- answers from memory ------------------------------------------------
 
