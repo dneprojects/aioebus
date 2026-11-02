@@ -63,7 +63,7 @@ class PollScheduler:
         self.default_priority = default_priority
         self._items: dict[tuple[str, str], PollItem] = {}
         for m in messages:
-            if m.direction[:1] != "r":  # only true reads are polled (not w/u)
+            if not m.is_polled_read:  # only true reads are polled (not w/u)
                 continue
             if not (len(m.zz) == 2 and _is_hex(m.zz)):  # no address to read from
                 continue

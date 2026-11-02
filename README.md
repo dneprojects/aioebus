@@ -129,16 +129,18 @@ slave frame and check its CRC → ACK → SYN. The pure `ReadDriver` is driven i
 tests by a simulated adapter through a full round-trip (arbitration-won, echoes,
 answer, decode) plus the arbitration-lost and collision paths — all offline.
 
-The live send (`tools/active_read.py`, reads only) uses master address **0x31**,
-the address ebusd itself uses on the reference bus: known-good, and free exactly
-while ebusd is stopped (which the single-client adapter requires anyway). It has
-not been run on hardware yet — that is the next maintenance window.
+Active reads and writes use master address **0x31** by default, the address
+ebusd itself uses on the reference bus: known-good, and free exactly while ebusd
+is stopped (which the single-client adapter requires anyway). They run in the
+field through the ebus Home Assistant integration.
 
 ## Native config format + converter
 
-`configs/vaillant/*.json` are native-format device definitions (eloBlock, netx3)
-— **our own, independently-created** definitions, Apache-2.0. `aioebus.convert`
-turns any ebusd CSV into this format:
+The library ships no device definitions. Our own, independently-created
+Vaillant definitions (Apache-2.0) live with their consumer, the
+[ebus integration](https://github.com/dneprojects/ebus) (`configs/vaillant/`,
+provenance in its `docs/PROVENANCE.md`). `aioebus.convert` turns any ebusd CSV
+into the native JSON format:
 
 ```bash
 python -m aioebus.convert path/to/15.ctlv3.csv ctlv3.json
@@ -147,12 +149,10 @@ python -m aioebus.convert path/to/15.ctlv3.csv ctlv3.json
 The ebusd-configuration CSVs are GPL-3.0, so a file converted from them is a
 GPL-3.0 derivative: convert those **locally, against your own copy** — this
 Apache-2.0 library ships only our own definitions, never a derivative of that
-GPL data. `tools/convert_configs.py` regenerates our own set and the HA
-translations base.
+GPL data.
 
-Names are **not** baked in: `aioebus.translations.ha_strings()` derives a stable
-`translation_key` per field and emits `configs/vaillant/translations/strings.json`
-(the English base); a `de.json` is a translated copy with the same keys.
+Names are **not** baked in: `aioebus.translations.translation_key()` derives a
+stable key per field; the consumer builds its translation files from these keys.
 
 ## Dev
 

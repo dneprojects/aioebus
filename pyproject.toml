@@ -1,6 +1,6 @@
 [project]
 name = "aioebus"
-version = "0.6.2"
+dynamic = ["version"]
 description = "Standalone async eBUS library (decode-first). No ebusd daemon required."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -32,6 +32,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "aioebus.__version__" }
 
 [tool.setuptools.package-data]
 aioebus = ["py.typed"]

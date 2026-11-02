@@ -1,6 +1,6 @@
 """Translation-key derivation: stable slugs for HA, state maps from value tables."""
 from aioebus.messages import parse_csv
-from aioebus.translations import ha_strings, translation_key
+from aioebus.translations import slug, translation_key
 
 CSV = """\
 type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
@@ -21,11 +21,7 @@ def test_translation_key():
     assert translation_key(pump, value_field) == "pumpstate"
 
 
-def test_ha_strings_shape():
-    strings = ha_strings(MSGS)
-    sensors = strings["entity"]["sensor"]
-    assert sensors["flowtemp"]["name"] == "FlowTemp"
-    # value table becomes a HA state map (slugged keys, label values to translate)
-    assert sensors["pumpstate"]["state"] == {"off": "off", "on": "on", "overrun": "overrun"}
-    # IGN fields produce no entity
-    assert all("ign" not in k for k in sensors)
+def test_value_fields_skip_ignored_and_nameless():
+    pump = BY_NAME["PumpState"]
+    assert [f.name for f in pump.value_fields] == ["value"]
+    assert slug("Mode: Auto/2") == "mode_auto_2"

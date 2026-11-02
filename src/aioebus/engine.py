@@ -32,6 +32,7 @@ from .frame import SYN, FrameError, parse_telegram
 from .messages import MessageDef
 from .passive import MessageRegistry, expects_slave
 from .poll import PollScheduler
+from .scan import IDENT_MSGIDS, IDENT_PBSB, Identification, decode_identification
 from .transport import RECEIVED, STARTED, EnhDecoder
 
 _LOGGER = logging.getLogger(__name__)
@@ -184,7 +185,7 @@ class EbusEngine:
 
     async def read(self, msg: MessageDef, timeout: float = 6.0) -> dict:
         """Actively read a message as soon as the bus is idle; return its values."""
-        if msg.direction[:1] != "r":
+        if not msg.is_polled_read:
             raise ValueError(f"{msg.name}: not a readable message")
         self._require_addr(msg)
         zz = int(msg.zz, 16)
@@ -199,6 +200,17 @@ class EbusEngine:
         if len(pbsb) != 4:
             raise ValueError(f"{pbsb!r}: PBSB must be 4 hex digits")
         return await self._submit(lambda: ReadDriver(zz, pbsb, msgid, self.qq), None, timeout)
+
+    async def read_identification(self, zz: int, timeout: float = 6.0) -> Identification | None:
+        """The Vaillant extended identification (article/serial) of a device, read
+        through the running engine; None when it does not answer these reads (or
+        the link dropped meanwhile), so the caller may simply try again later."""
+        try:
+            parts = [await self.read_raw(zz, IDENT_PBSB, msgid, timeout)
+                     for msgid in IDENT_MSGIDS]
+        except (ReadError, TimeoutError):
+            return None
+        return decode_identification(*parts)
 
     async def write(self, msg: MessageDef, values: dict, timeout: float = 6.0) -> None:
         """Actively write a message (requires allow_write=True)."""

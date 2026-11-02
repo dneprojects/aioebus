@@ -805,3 +805,25 @@ def test_stray_started_releases_the_bus():
         await _stop(eng, link, task)
 
     asyncio.run(inner())
+
+
+def test_read_identification_through_the_engine(monkeypatch):
+    # the four b509 reads concatenate to the serial (see scan.decode_identification)
+    parts = {"24": b"\x0021261300", "25": b"\x0010045478", "26": b"\x00<<0101234", "27": b"\x00N5"}
+    calls = []
+
+    async def read_raw(zz, pbsb, msgid, timeout=6.0):
+        calls.append((zz, pbsb, msgid))
+        return parts[msgid]
+
+    eng = EbusEngine(None, None, REG)
+    monkeypatch.setattr(eng, "read_raw", read_raw)
+    ident = asyncio.run(eng.read_identification(0x15))
+    assert ident is not None and ident.article == "0010045478" and ident.year == 2026
+    assert calls == [(0x15, "b509", m) for m in ("24", "25", "26", "27")]
+
+    async def silent(zz, pbsb, msgid, timeout=6.0):
+        raise ReadError("no answer from slave")
+
+    monkeypatch.setattr(eng, "read_raw", silent)
+    assert asyncio.run(eng.read_identification(0x15)) is None

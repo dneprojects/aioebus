@@ -6,10 +6,10 @@ module, so quoted commas no longer abort a file the way they did in ebusd). Our
 own curated definitions can instead come from the native JSON format in
 `convert.py`; both end up as the same `MessageDef` objects.
 
-Scope (Phase 2 core): the common Vaillant row shape
+Supported: the common Vaillant row shape
     type,circuit,level,name,comment,qq,zz,pbsb,id,[ name,part,type,divisor/values,unit,comment ]*
-with default rows (*r / *w), IGN fields, value tables and the divisor column.
-Conditions/templates/chains are TODO.
+with default rows (*r / *w), IGN fields, value tables, the divisor column and
+condition prefixes (evaluated by conditions.py); templates/chains are not.
 """
 from __future__ import annotations
 
@@ -57,9 +57,19 @@ class MessageDef:
     pbsb: str  # e.g. "b509"
     msgid: str  # hex after pbsb, e.g. "0d1800"
     fields: list[FieldDef]
-    conditions: list[str] | None = None  # e.g. ["id_sw>=200"]; evaluated in P4
+    conditions: list[str] | None = None  # e.g. ["id_sw>=200"] (see conditions.py)
     # display-text translations by language code for the message-level name
     tr: dict[str, str] | None = None
+
+    @property
+    def value_fields(self) -> list[FieldDef]:
+        """The fields that yield a value (named, not IGN): one entity each."""
+        return [f for f in self.fields if f.name and not f.type.upper().startswith("IGN")]
+
+    @property
+    def is_polled_read(self) -> bool:
+        """A true read (r, r1..r9), not a passive update or a write."""
+        return self.direction[:1] == "r"
 
     @property
     def is_read(self) -> bool:

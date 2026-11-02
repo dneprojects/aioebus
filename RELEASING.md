@@ -22,7 +22,8 @@ to PyPI via **Trusted Publishing** (OIDC — no API token is stored anywhere).
 
 ## Each release
 
-1. Bump `version` in `pyproject.toml` and add a `CHANGELOG.md` entry.
+1. Bump `__version__` in `src/aioebus/__init__.py` (the only place; `pyproject.toml`
+   reads it) and add a `CHANGELOG.md` entry.
 2. Commit, then create a GitHub release whose tag is `vX.Y.Z` (e.g. `v0.1.0`).
 3. The workflow builds and publishes; check the Actions run and the PyPI page.
 

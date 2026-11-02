@@ -1,4 +1,4 @@
-"""Active reading over the enhanced adapter (Phase 4, read side).
+"""Active reads and writes over the enhanced adapter.
 
 Builds the master request and drives the read transaction. The transaction FSM
 is ported from ebusd's protocol_direct.cpp (active-get path):
@@ -25,7 +25,15 @@ from collections.abc import Awaitable, Callable
 
 from .frame import BROADCAST, ESC, SYN, crc8, escape
 from .messages import MessageDef
-from .scan import SCAN_PBSB, Identification, ScanResult, decode_identification, decode_scan
+from .scan import (
+    IDENT_MSGIDS,
+    IDENT_PBSB,
+    SCAN_PBSB,
+    Identification,
+    ScanResult,
+    decode_identification,
+    decode_scan,
+)
 from .transport import FAILED, RECEIVED, STARTED, EnhDecoder
 
 DEFAULT_SOURCE = 0x31  # ebusd's own master address on the reference bus (free when ebusd is down)
@@ -378,15 +386,13 @@ class ActiveReader:
         """Read the Vaillant extended identification (article/serial) from b509
         24/25/26. Returns None if the device does not answer these reads."""
         try:
-            f24 = await self.read_raw(zz, "b509", "24", timeout=timeout, tries=3)
-            f25 = await self.read_raw(zz, "b509", "25", timeout=timeout, tries=3)
-            f26 = await self.read_raw(zz, "b509", "26", timeout=timeout, tries=3)
-            f27 = await self.read_raw(zz, "b509", "27", timeout=timeout, tries=3)
+            parts = [await self.read_raw(zz, IDENT_PBSB, msgid, timeout=timeout, tries=3)
+                     for msgid in IDENT_MSGIDS]
         except ConnectionError:
             raise  # the link itself is gone: the caller must reconnect, not skip
         except (ReadError, TimeoutError, OSError):
             return None
-        return decode_identification(f24, f25, f26, f27)
+        return decode_identification(*parts)
 
 
 class ActiveWriter:

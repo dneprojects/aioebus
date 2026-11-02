@@ -14,9 +14,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 SCAN_PBSB = "0704"
+VAILLANT = 0xB5  # manufacturer byte of devices that answer the identification reads
+# the Vaillant identification is spread over these b509 reads (see below)
+IDENT_PBSB = "b509"
+IDENT_MSGIDS = ("24", "25", "26", "27")
 
 # a few known manufacturer bytes (eBUS); extend as needed
-_MANUFACTURERS = {0xB5: "Vaillant", 0xB7: "Kromschroeder", 0x06: "Dungs"}
+_MANUFACTURERS = {VAILLANT: "Vaillant", 0xB7: "Kromschroeder", 0x06: "Dungs"}
 
 
 @dataclass

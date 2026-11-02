@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.3
+
+- `EbusEngine.read_identification()` reads the Vaillant identification through the running engine; `scan.VAILLANT`, `IDENT_PBSB`, `IDENT_MSGIDS` are its single home
+- `MessageDef.value_fields` and `MessageDef.is_polled_read`; `translations.slug()` is public (`_slug` kept as alias)
+- Removed `translations.ha_strings()` (superseded by the integration's generator) and the stale `configs/` copy with the tools bound to it (`active_read`, `active_write`, `live_listen`, `convert_configs`); the definitions live in the ebus integration
+- Version single-sourced from `aioebus.__version__`; stale docstrings corrected
+
 ## 0.6.2
 
 - Engine: a failure while handling one telegram, answer or callback fails only the transaction in flight, never the bus loop; a send error ends the loop like a receive error

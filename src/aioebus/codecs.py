@@ -1,9 +1,9 @@
-"""eBUS datatype codecs -- Python port of ebusd's datatype.cpp (decode side).
+"""eBUS datatype codecs -- Python port of ebusd's datatype.cpp.
 
 Each codec turns the raw field bytes (as on the bus, little-endian for multi-byte
 numbers) into a Python value, honouring ebusd's "replacement"/invalid sentinels
--> None. Phase 1 of the standalone eBUS lib: pure, offline, testable against real
-captures. No bus, no I/O.
+-> None, and encodes numeric values for writes. Pure, offline, testable against
+real captures. No bus, no I/O.
 """
 from __future__ import annotations
 
