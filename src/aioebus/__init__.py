@@ -8,6 +8,7 @@ Pure, offline eBUS decoding validated against real captured telegrams:
   - transport/active/engine: enhanced-adapter I/O, active read/write, and a
     passive-first engine that caches decoded values and interleaves reads.
   - discovery: which devices are on the bus and what they are (scan, identification).
+  - catalog: each device's definitions (bundled, user files, ebusd CSVs from the CDN).
 """
 from .active import (
     ActiveReader,
@@ -19,6 +20,7 @@ from .active import (
     build_read_frame,
     build_write_frame,
 )
+from .catalog import Catalog, ClimateZone, Definition
 from .codecs import Codec, decode, encode, make_codec
 from .conditions import ConditionContext, context_from_scan, evaluate, evaluate_all
 from .discovery import BusSilent, Device, Discovery, discover, identify_later
@@ -34,8 +36,11 @@ __all__ = [
     "ActiveReader",
     "ActiveWriter",
     "BusSilent",
+    "Catalog",
+    "ClimateZone",
     "Codec",
     "ConditionContext",
+    "Definition",
     "Device",
     "Discovery",
     "EbusEngine",
@@ -74,4 +79,4 @@ __all__ = [
     "unescape",
     "value_key",
 ]
-__version__ = "0.7.0"
+__version__ = "0.7.1"

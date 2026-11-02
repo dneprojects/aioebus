@@ -1,0 +1,32 @@
+[
+  {
+    "direction": "r",
+    "circuit": "netx",
+    "name": "Currenterror",
+    "pbsb": "b503",
+    "id": "0001",
+    "zz": "f6",
+    "fields": [
+      {
+        "name": "error",
+        "type": "UIN"
+      },
+      {
+        "name": "error_1",
+        "type": "UIN"
+      },
+      {
+        "name": "error_2",
+        "type": "UIN"
+      },
+      {
+        "name": "error_3",
+        "type": "UIN"
+      },
+      {
+        "name": "error_4",
+        "type": "UIN"
+      }
+    ]
+  }
+]

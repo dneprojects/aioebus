@@ -1,0 +1,1406 @@
+[
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SingleStorageCharge",
+    "pbsb": "b509",
+    "id": "0d4400",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=38"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "OperatingHours",
+    "pbsb": "b509",
+    "id": "0d4500",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=38"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN",
+        "unit": "h"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "FlowTemp",
+    "pbsb": "b509",
+    "id": "0d4600",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=39"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "VPMWMode",
+    "pbsb": "b509",
+    "id": "0d4b00",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=112"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HexMonitoringCounter",
+    "pbsb": "b509",
+    "id": "0d4700",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=40"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HExThreshold",
+    "pbsb": "b509",
+    "id": "0d4800",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=40"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 100
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HExIndex",
+    "pbsb": "b509",
+    "id": "0d4a00",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=40"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 100
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "KrmFaktorSmall",
+    "pbsb": "b509",
+    "id": "0d4e00",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "KrmFaktorMiddl",
+    "pbsb": "b509",
+    "id": "0d4f00",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TnmFaktorSmall",
+    "pbsb": "b509",
+    "id": "0d5000",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TnmFaktorMiddl",
+    "pbsb": "b509",
+    "id": "0d5100",
+    "zz": "0a",
+    "conditions": [
+      "id_sw>=114"
+    ],
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Ntc1Sensor",
+    "pbsb": "b509",
+    "id": "0d0000",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D2C",
+        "unit": "°C"
+      },
+      {
+        "name": "sensor",
+        "type": "UCH",
+        "values": {
+          "0": "ok",
+          "85": "circuit",
+          "170": "cutoff"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Ntc2Sensor",
+    "pbsb": "b509",
+    "id": "0d0100",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D2C",
+        "unit": "°C"
+      },
+      {
+        "name": "sensor",
+        "type": "UCH",
+        "values": {
+          "0": "ok",
+          "85": "circuit",
+          "170": "cutoff"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Ntc3Sensor",
+    "pbsb": "b509",
+    "id": "0d0200",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "D2C",
+        "unit": "°C"
+      },
+      {
+        "name": "sensor",
+        "type": "UCH",
+        "values": {
+          "0": "ok",
+          "85": "circuit",
+          "170": "cutoff"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CircoPump",
+    "pbsb": "b509",
+    "id": "0d0400",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PumpED",
+    "pbsb": "b509",
+    "id": "0d0500",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "CalculatedMixerPosition",
+    "pbsb": "b509",
+    "id": "0d0600",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ElectricalHeater",
+    "pbsb": "b509",
+    "id": "0d0800",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HeatDemand",
+    "pbsb": "b509",
+    "id": "0d0900",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "OperatingMode",
+    "pbsb": "b509",
+    "id": "0d0a00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on",
+          "2": "auto",
+          "3": "manual"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "OperatingMode",
+    "pbsb": "b509",
+    "id": "0e0a00",
+    "zz": "0a",
+    "level": "install",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on",
+          "2": "auto",
+          "3": "manual"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ManualTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0d0b00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "ManualTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0e0b00",
+    "zz": "0a",
+    "level": "install",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "AutoTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0d0c00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "QuickVetoTempDesired",
+    "pbsb": "b509",
+    "id": "0d0d00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ActualTappingTempDesired",
+    "pbsb": "b509",
+    "id": "0d0e00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "D2C",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "QuickVetoStart",
+    "pbsb": "b509",
+    "id": "0d0f00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "LegioStartDay",
+    "pbsb": "b509",
+    "id": "0d1000",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "LegioStartTime",
+    "pbsb": "b509",
+    "id": "0d1100",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "VTI"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "PartyStart",
+    "pbsb": "b509",
+    "id": "0d1200",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "HolidayStart",
+    "pbsb": "b509",
+    "id": "0d1300",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "ActorFernsteuerung",
+    "pbsb": "b509",
+    "id": "0d1b00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Time",
+    "pbsb": "b509",
+    "id": "0d2c00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "VTI"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Date",
+    "pbsb": "b509",
+    "id": "0d2d00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "HDA:3"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Weekday",
+    "pbsb": "b509",
+    "id": "0d2e00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "BDY"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TeleSwitch",
+    "pbsb": "b509",
+    "id": "0d3900",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TeleSwitchState",
+    "pbsb": "b509",
+    "id": "0d3a00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "EnableHwcOperation",
+    "pbsb": "b509",
+    "id": "0d4300",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Krm",
+    "pbsb": "b509",
+    "id": "0d1400",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tm",
+    "pbsb": "b509",
+    "id": "0d1500",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tnm",
+    "pbsb": "b509",
+    "id": "0d1600",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tvm",
+    "pbsb": "b509",
+    "id": "0d1700",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Krp",
+    "pbsb": "b509",
+    "id": "0d1800",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tvp",
+    "pbsb": "b509",
+    "id": "0d1900",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Tp",
+    "pbsb": "b509",
+    "id": "0d1a00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "SIN",
+        "divisor": 1000
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateMainControl",
+    "pbsb": "b509",
+    "id": "0d2f00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateMixerPumpControl",
+    "pbsb": "b509",
+    "id": "0d3000",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateCircoKick",
+    "pbsb": "b509",
+    "id": "0d3100",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StateHExMonitoring",
+    "pbsb": "b509",
+    "id": "0d3200",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "TimeTicker",
+    "pbsb": "b509",
+    "id": "0d3300",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "s"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StLegioStopTimeCounter",
+    "pbsb": "b509",
+    "id": "0d3e00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "StLegioStopTimeCounter",
+    "pbsb": "b509",
+    "id": "0e3e00",
+    "zz": "0a",
+    "level": "service",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StLegioAbortTimeCounter",
+    "pbsb": "b509",
+    "id": "0d3f00",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "StLegioAbortTimeCounter",
+    "pbsb": "b509",
+    "id": "0e3f00",
+    "zz": "0a",
+    "level": "service",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "StFrostProtCounter",
+    "pbsb": "b509",
+    "id": "0d4000",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "StFrostProtCounter",
+    "pbsb": "b509",
+    "id": "0e4000",
+    "zz": "0a",
+    "level": "service",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UIN"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Mode",
+    "pbsb": "b504",
+    "id": "01",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "UCH",
+        "unit": "°C"
+      },
+      {
+        "name": "hwcmode",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        }
+      },
+      {
+        "name": "ign",
+        "type": "IGN:2"
+      },
+      {
+        "name": "hwcmode_1",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        }
+      },
+      {
+        "name": "mctype",
+        "type": "BI0:7",
+        "values": {
+          "0": "inactive",
+          "1": "mixer",
+          "2": "fixed",
+          "3": "hwc",
+          "4": "returnincr",
+          "5": "pool",
+          "6": "circulation"
+        }
+      },
+      {
+        "name": "hex",
+        "type": "HEX"
+      },
+      {
+        "name": "daynight",
+        "type": "UCH",
+        "values": {
+          "0": "night",
+          "1": "day",
+          "4": "load",
+          "7": "floorpaving"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SetTempDesired",
+    "pbsb": "b505",
+    "id": "01",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "SetMode",
+    "pbsb": "b505",
+    "id": "02",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "disabled",
+          "1": "on",
+          "2": "off",
+          "3": "auto"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Status",
+    "pbsb": "b504",
+    "id": "0d",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "temp",
+        "type": "UCH",
+        "unit": "°C"
+      },
+      {
+        "name": "onoff",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "temp_1",
+        "type": "D2C",
+        "unit": "°C"
+      },
+      {
+        "name": "temp_2",
+        "type": "UCH",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Monday",
+    "pbsb": "b505",
+    "id": "0901",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Tuesday",
+    "pbsb": "b505",
+    "id": "0902",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Wednesday",
+    "pbsb": "b505",
+    "id": "0903",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Thursday",
+    "pbsb": "b505",
+    "id": "0904",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Friday",
+    "pbsb": "b505",
+    "id": "0905",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Saturday",
+    "pbsb": "b505",
+    "id": "0906",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Timer_Sunday",
+    "pbsb": "b505",
+    "id": "0907",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "from",
+        "type": "TTM"
+      },
+      {
+        "name": "to",
+        "type": "TTM"
+      },
+      {
+        "name": "daysel",
+        "type": "UCH",
+        "values": {
+          "0": "selected",
+          "1": "Mo_Fr",
+          "2": "Sa_Su",
+          "3": "Mo_Su"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Party",
+    "pbsb": "b505",
+    "id": "05",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "w",
+    "circuit": "",
+    "name": "Load",
+    "pbsb": "b505",
+    "id": "06",
+    "zz": "0a",
+    "fields": [
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      }
+    ]
+  }
+]

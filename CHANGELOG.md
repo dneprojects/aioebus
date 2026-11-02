@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+- New `catalog` module: `Catalog.load()` gives each discovered device its definitions -- our bundled ones (now package data, with the device index, models, heating-zone roles and register ranges), else a user file (JSON or ebusd CSV), else the matching ebusd-configuration CSV downloaded from ebus.github.io (ebusd's address/ident/variant rule, `!load` includes) and cached; network through a caller-given `fetch`, disk in a thread
+- CDN details: conditional `!load` includes chosen by HW version or product number (also in user CSVs and nested), one listing per folder and load, non-CSV answers never cached, a broken definition costs only its device
+- `Catalog` answers from memory: messages per device with conditions resolved, read/write lists, `zones()`, `bounds()`, each device's `Definition` (source, file, profile, model, text paths)
+
 ## 0.7.0
 
 - New `discovery` module: `discover()` scans the bus through the running engine (waits for traffic, base or deep address space, Vaillant identification, remembered identifications of the same unit, phantom addresses dropped by serial) and `identify_later()` reads missed identifications at runtime; `BusSilent` when the bus stays quiet

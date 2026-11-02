@@ -1,0 +1,301 @@
+{
+  "_comment": "Bundled device catalog. 'devices': scan ident -> definition file, or a table by HW variant whose entry may be a profile {file, model} (the same device type behind a bus coupler reuses one file). The bus address is not part of it; it is stamped on at runtime. 'models': file -> appliance model. 'cdn': file -> upstream ebus.github.io paths carrying its display text. 'climate': per-zone registers of a heating zone. 'number_bounds': [min, max, step] of writable registers. All definition files are our own Apache-2.0 work (see PROVENANCE.md).",
+  "devices": {
+    "V32": {
+      "hw": {
+        "9802": "eloblock.json",
+        "6004": {
+          "file": "hmu.json",
+          "model": "aroTHERM plus"
+        }
+      }
+    },
+    "NETX3": "f6.netx3.json",
+    "HMU00": "hmu.json",
+    "CTLV3": "ctlv3.json",
+    "PMW01": "pmw.json",
+    "VR_71": "vr_71.json",
+    "VWZIO": "vwzio.json",
+    "Broadcast": "broadcast.json"
+  },
+  "models": {
+    "_comment": "Model shown in HA, keyed by definition file. For devices behind a bus coupler the scan ident is the coupler (both the heat pump and the eloBlock scan as 'V32'); this shows the actual appliance instead.",
+    "eloblock.json": "eloBlock",
+    "vr_71.json": "Mischer- und Solarmodul",
+    "ctlv3.json": "VRC 720",
+    "f6.netx3.json": "Internet-Gateway",
+    "vwzio.json": "Regelungsmodul"
+  },
+  "cdn": {
+    "_comment": "Definition file -> upstream ebus.github.io source path(s) (without the /<lang>/ prefix and .csv suffix). Used at runtime, on the user's own machine, to fetch the per-language display text and generate local translation files -- the GPL-3.0 upstream text is never stored in this repo. eloblock/netx3 are our own definitions with no upstream source.",
+    "ctlv3.json": [
+      "vaillant/15.ctlv3"
+    ],
+    "hmu.json": [
+      "vaillant/08.hmu",
+      "vaillant/08.hmu.HW5103"
+    ],
+    "pmw.json": [
+      "vaillant/0a.pmw.hwc"
+    ],
+    "vr_71.json": [
+      "vaillant/26.vr_71"
+    ],
+    "broadcast.json": [
+      "broadcast",
+      "vaillant/broadcast"
+    ]
+  },
+  "climate": {
+    "_comment": "Bundle per-zone registers into a climate entity (one per heating zone). For each zone N, '<prefix>N<target>' is the writable comfort setpoint (target temperature), '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode (off/auto -> HVAC off/auto, others -> heat + preset). A zone is created only if it has data.",
+    "ctlv3.json": {
+      "name": "Heizkreis {n}",
+      "zone_prefix": "Z",
+      "target": "DayTemp",
+      "current": "RoomTemp",
+      "mode": "OpMode"
+    }
+  },
+  "number_bounds": {
+    "_comment": "[min, max, step] for number controls; float registers need them.",
+    "ctlv3.json": {
+      "ContinuousHeating": [
+        -26,
+        10,
+        1
+      ],
+      "CylinderChargeHyst": [
+        1,
+        20,
+        0.5
+      ],
+      "CylinderChargeOffset": [
+        1,
+        40,
+        0.5
+      ],
+      "Hc1ExcessTemp": [
+        0,
+        30,
+        1
+      ],
+      "Hc1HeatCurve": [
+        0.1,
+        4,
+        0.05
+      ],
+      "Hc1MaxFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc1MinCoolingTempDesired": [
+        7,
+        24,
+        1
+      ],
+      "Hc1MinFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc1SummerTempLimit": [
+        10,
+        99,
+        1
+      ],
+      "Hc2ExcessTemp": [
+        0,
+        30,
+        1
+      ],
+      "Hc2HeatCurve": [
+        0.1,
+        4,
+        0.05
+      ],
+      "Hc2MaxFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc2MinCoolingTempDesired": [
+        7,
+        24,
+        1
+      ],
+      "Hc2MinFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc2SummerTempLimit": [
+        10,
+        99,
+        1
+      ],
+      "Hc3ExcessTemp": [
+        0,
+        30,
+        1
+      ],
+      "Hc3HeatCurve": [
+        0.1,
+        4,
+        0.05
+      ],
+      "Hc3MaxFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc3MinCoolingTempDesired": [
+        7,
+        24,
+        1
+      ],
+      "Hc3MinFlowTempDesired": [
+        15,
+        90,
+        1
+      ],
+      "Hc3SummerTempLimit": [
+        10,
+        99,
+        1
+      ],
+      "HwcLockTime": [
+        0,
+        120,
+        10
+      ],
+      "HwcMaxFlowTempDesired": [
+        40,
+        90,
+        1
+      ],
+      "HwcTempDesired": [
+        35,
+        70,
+        1
+      ],
+      "MaxCylinderChargeTime": [
+        20,
+        120,
+        10
+      ],
+      "Z1ActualRoomTempDesired": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1CoolingTemp": [
+        15,
+        30,
+        0.5
+      ],
+      "Z1DayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1HolidayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1NightTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z1QuickVetoDuration": [
+        0.5,
+        12,
+        0.5
+      ],
+      "Z1QuickVetoTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2ActualRoomTempDesired": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2CoolingTemp": [
+        15,
+        30,
+        0.5
+      ],
+      "Z2DayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2HolidayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2NightTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z2QuickVetoDuration": [
+        0.5,
+        12,
+        0.5
+      ],
+      "Z2QuickVetoTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3ActualRoomTempDesired": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3DayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3HolidayTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3NightTemp": [
+        5,
+        30,
+        0.5
+      ],
+      "Z3QuickVetoDuration": [
+        0.5,
+        12,
+        0.5
+      ],
+      "Z3QuickVetoTemp": [
+        5,
+        30,
+        0.5
+      ]
+    },
+    "pmw.json": {
+      "ManualTappingTempDesired": [
+        35,
+        70,
+        1
+      ],
+      "SetTempDesired": [
+        35,
+        70,
+        1
+      ]
+    }
+  }
+}

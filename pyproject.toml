@@ -37,7 +37,7 @@ where = ["src"]
 version = { attr = "aioebus.__version__" }
 
 [tool.setuptools.package-data]
-aioebus = ["py.typed"]
+aioebus = ["py.typed", "defs/vaillant/*.json", "defs/vaillant/PROVENANCE.md"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
