@@ -36,6 +36,10 @@ class MessageRegistry:
     def __init__(self, defs: list[MessageDef]):
         self._by_pbsb: dict[str, list[MessageDef]] = {}
         for d in defs:
+            try:  # a definition whose id is no hex can match nothing (and must not
+                bytes.fromhex(d.pbsb + d.msgid)  # fail every telegram of its command)
+            except ValueError:
+                continue
             self._by_pbsb.setdefault(d.pbsb.lower(), []).append(d)
 
     @property

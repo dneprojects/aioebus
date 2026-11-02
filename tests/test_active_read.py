@@ -146,3 +146,14 @@ def test_collision_on_echo_mismatch():
     out = drv.feed(encode_symbol(RECEIVED, 0x99))  # wrong echo
     assert drv.done and "collision" in drv.error
     assert out == []
+
+
+def test_garbled_nak_echo_is_a_retryable_collision():
+    # we NAK a bad answer, its echo comes back wrong: contended bus, try again
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    bad = bytes((ACK, 1, 0x05, 0x00))  # wrong CRC
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, bad))
+    assert not drv.done and drv._state == "nak_echo"
+    drv.feed(encode_symbol(RECEIVED, 0x12))  # not our NAK
+    assert drv.done and "collision" in drv.error and drv.retryable

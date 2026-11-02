@@ -194,7 +194,7 @@ class _CommandDriver:
             if code == RECEIVED and data == NAK:
                 self._state = "res"
                 return []
-            return self._fail("collision: echo mismatch while sending NAK")
+            return self._fail("collision: echo mismatch while sending NAK", retryable=True)
 
         if self._state == "res" and code == RECEIVED:
             return self._answer_byte(data)

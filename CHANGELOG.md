@@ -12,6 +12,7 @@
 - Reads that need request values (`MessageDef.needs_args`) are not polled; `EbusEngine.read(args=...)` sends them
 - Engine: queued requests fail at once when the link ends, and new ones while it is down
 - Poll: a register never polled is due at once, also right after boot
+- A definition with a chained id (unsupported) is skipped instead of failing every telegram of its command
 - `STR` ends at the first NUL as in ebusd; `HEX:*`/`IGN:*` take the rest
 - Manufacturer names and config folders from one table (ebusd's)
 - New `link` module: `connect()` and `probe()` for the adapter connection

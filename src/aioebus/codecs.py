@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import math
 import struct
-from typing import Literal
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
+from typing import Literal
 
 # base numeric types: name -> (size_bytes, signed, base_divisor, replacement_raw)
 # replacement_raw None means "no replacement" (whole range valid, e.g. U2L).

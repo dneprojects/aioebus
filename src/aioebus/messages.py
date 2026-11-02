@@ -263,6 +263,10 @@ def _row_fields(row: list[str]) -> list[FieldDef]:
     return fields
 
 
+def _is_hex(text: str) -> bool:
+    return len(text) % 2 == 0 and all(c in "0123456789abcdefABCDEF" for c in text)
+
+
 def _with_default(value: str, default: str, *, star: bool = False,
                   required: bool = False) -> str:
     """ebusd's default rule for a column: an empty value takes the default; with
@@ -307,6 +311,9 @@ def parse_csv(text: str) -> list[MessageDef]:
             pbsb, msgid = d[7], d[8] + msgid
         name = _with_default(cols[3], d[3], star=True, required=True)
         if not name:  # ebusd rejects a nameless message
+            continue
+        if not _is_hex(pbsb + msgid):  # e.g. a chained id (0d4300:2;0d4308:2): unsupported
+            _LOGGER.debug("eBUS definition %s skipped: id %s %s", name, pbsb, msgid)
             continue
         fields = usable_fields(name, [replace(f) for f in dfields] + _row_fields(row))
         if fields is None:

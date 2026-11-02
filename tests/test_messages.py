@@ -176,3 +176,14 @@ def test_label_of():
     from aioebus.messages import label_of
     assert label_of("FlowTemp", "value") == "FlowTemp"
     assert label_of("Status01", "temp") == "Status01 temp"
+
+
+def test_chained_id_is_skipped_not_fatal():
+    from aioebus.passive import MessageRegistry
+    rows = HDR + ("\nr,,,YieldLastYear,,,15,b509,0d4300:2;0d4308:2,value,,UIN"
+                  "\nr,,,FlowTemp,,,15,b509,0d1800,value,,D2C\n")
+    msgs = parse_csv(rows)
+    assert [m.name for m in msgs] == ["FlowTemp"]
+    bad = msgs[0].__class__(**{**msgs[0].__dict__, "name": "Chain", "msgid": "0d4300:2"})
+    reg = MessageRegistry([bad, *msgs])  # e.g. from a JSON file: ignored, not raising
+    assert [m.name for m in reg.messages] == ["FlowTemp"]
