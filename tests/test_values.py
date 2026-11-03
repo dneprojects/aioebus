@@ -1,6 +1,7 @@
 ﻿"""Values of a message: labels, keys, numeric types, the control a write allows."""
+from aioebus.codecs import has_numeric_value, is_float, is_number
 from aioebus.messages import FieldDef, MessageDef
-from aioebus.values import control_of, has_numeric_value, is_number_type, values_of
+from aioebus.values import control_of, values_of
 
 
 def msg(direction, *fields, name="M"):
@@ -31,8 +32,10 @@ def test_the_control_a_write_allows():
 
 
 def test_numeric_types():
-    assert has_numeric_value("BCD") and not is_number_type("BCD")
-    assert is_number_type("EXP") and is_number_type("UIN") and not has_numeric_value("HEX:2")
+    assert has_numeric_value("BCD") and not is_number("BCD")
+    assert is_number("EXP") and is_number("UIN") and not has_numeric_value("HEX:2")
+    assert is_float("EXR") and not is_float("D2C") and not is_number("PIN")
+    assert not is_number("XYZ") and not has_numeric_value("XYZ")  # unknown type
 
 
 def test_passive_writes_get_no_control_and_period_totals():

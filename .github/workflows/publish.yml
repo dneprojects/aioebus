@@ -1,8 +1,8 @@
 name: Publish to PyPI
 
-# Builds and publishes aioebus when a GitHub release is published.
-# Uses PyPI Trusted Publishing (OIDC) -- no API token stored in the repo.
-# One-time setup on PyPI: add a trusted publisher for project "aioebus",
+# Builds aioebus when a GitHub release is published, tests the built wheel and
+# publishes it. Uses PyPI Trusted Publishing (OIDC) -- no API token stored in the
+# repo. One-time setup on PyPI: add a trusted publisher for project "aioebus",
 # owner "dneprojects", repository "aioebus", workflow "publish.yml".
 
 on:
@@ -20,9 +20,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: python -m pip install --upgrade build
+          python-version: "3.14"
+      - run: python -m pip install --upgrade build pytest
       - run: python -m build
+      # the wheel users get, not the source tree: its package data must be in it
+      - run: python -m pip install dist/*.whl
+      - run: python -c "from aioebus.catalog import bundled_files, bundled_index; assert bundled_files() and bundled_index()['devices']"
+      - run: python -m pytest -q -p no:cacheprovider -o pythonpath=
       - uses: actions/upload-artifact@v4
         with:
           name: dist

@@ -1,9 +1,10 @@
 """Enhanced-adapter transport -- the host<->adapter byte protocol.
 
 The enhanced adapter (ebusd's `enh:` device) does bus arbitration and timing in
-hardware and speaks a small framed protocol over TCP/serial. This module decodes
-the adapter->host direction into (code, data) events; the engine assembles the
-received eBUS symbols into telegrams and sends the host->adapter symbols.
+hardware and speaks a small framed protocol over TCP/serial. This module holds both
+directions: it decodes the adapter->host stream into (code, data) events and
+encodes the host->adapter commands; the engine assembles the received eBUS
+symbols into telegrams.
 
 Wire framing (adapter->host):
   * a plain byte < 0x80 is a received eBUS byte (short form)
@@ -29,23 +30,31 @@ FAILED = 0xA
 ERROR_EBUS = 0xB
 ERROR_HOST = 0xC
 
+# host -> adapter codes
+SEND = 0x1  # put a byte on the bus
+START = 0x2  # arbitrate with the given master address (SYN: withdraw)
+
 Event = tuple[int, int]  # (code, data)
 
 
+def encode_command(code: int, data: int) -> bytes:
+    """A host->adapter symbol, always in the two-byte form: ebusd never
+    short-forms SEND/START and the adapter firmware drops short-form sends."""
+    return bytes((0xC0 | ((code & 0x0F) << 2) | ((data >> 6) & 0x03), 0x80 | (data & 0x3F)))
+
+
 def encode_symbol(code: int, data: int) -> bytes:
-    """Encode one (code, data) symbol as the adapter/host would put it on the
-    wire. Used by tests to build a synthetic stream; the short form is only
-    valid for RECEIVED/SEND data below 0x80."""
-    if code in (RECEIVED, 0x1) and data < 0x80:
+    """One adapter->host symbol as the adapter puts it on the wire (a received
+    byte below 0x80 in the short form), e.g. to feed a recorded or synthetic
+    stream to the engine."""
+    if code == RECEIVED and data < 0x80:
         return bytes((data,))
-    first = 0xC0 | ((code & 0x0F) << 2) | ((data >> 6) & 0x03)
-    second = 0x80 | (data & 0x3F)
-    return bytes((first, second))
+    return encode_command(code, data)
 
 
 def encode_received_frame(raw: bytes) -> bytes:
-    """Build the enh byte stream an adapter would emit for one on-wire telegram:
-    a leading and trailing SYN with the frame's bytes received in between."""
+    """The adapter stream for one on-wire telegram (a capture, a test): a
+    leading and trailing SYN with the frame's bytes received in between."""
     out = bytearray(encode_symbol(RECEIVED, SYN))
     for b in raw:
         out += encode_symbol(RECEIVED, b)

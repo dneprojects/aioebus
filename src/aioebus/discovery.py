@@ -15,7 +15,7 @@ from typing import Any, Final
 
 from .active import ReadError
 from .engine import EbusEngine
-from .frame import BROADCAST, is_slave
+from .frame import is_slave
 from .scan import VAILLANT, Identification, ScanResult
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,10 +27,9 @@ BASE_ADDRESSES: Final[tuple[int, ...]] = (0x08, 0x0A, 0x15, 0x18, 0x26, 0x38, 0x
 # the whole device address space a deep scan probes once: every slave address,
 # as ebusd's full scan does (an absent device fails at the first SYN)
 ALL_ADDRESSES: Final[tuple[int, ...]] = tuple(a for a in range(0x100) if is_slave(a))
-BROADCAST_ADDRESS: Final = BROADCAST  # telegrams to all; not a device that answers a scan
 
 TRAFFIC_WAIT: Final = 10.0  # s for the first bus symbol before scanning
-PROBE_TIMEOUT: Final = 6.0  # s per address (an absent device fails at once: SYN)
+ADDRESS_TIMEOUT: Final = 6.0  # s per address (an absent device fails at once: SYN)
 
 
 class BusSilent(ConnectionError):
@@ -112,7 +111,7 @@ async def discover(
     for zz in targets:
         _check_running(engine)
         try:
-            devices[zz] = Device(zz, await engine.scan(zz, PROBE_TIMEOUT))
+            devices[zz] = Device(zz, await engine.scan(zz, ADDRESS_TIMEOUT))
         except (ReadError, TimeoutError) as err:
             _check_running(engine)  # a dropped link is no missing device
             _LOGGER.debug("scan %#04x: %s", zz, err)
@@ -121,7 +120,7 @@ async def discover(
         if device.scan.mf != VAILLANT:
             continue
         _check_running(engine)
-        device.ident = await engine.read_identification(zz, PROBE_TIMEOUT)
+        device.ident = await engine.read_identification(zz, ADDRESS_TIMEOUT)
         key = f"{zz:02x}"
         if device.ident is not None:
             out[key] = remember(device)

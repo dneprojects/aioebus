@@ -8,6 +8,7 @@ import pytest
 
 from aioebus import catalog as cat
 from aioebus.catalog import Catalog, bundled_file, match_cdn_file, resolve_bundled
+from aioebus.cdn import CACHE_MAX_AGE
 from aioebus.scan import Identification, ScanResult
 
 
@@ -139,7 +140,7 @@ def test_unknown_device_comes_from_the_cdn_and_is_cached(tmp_path):
 
 def test_stale_cache_is_refreshed_and_stands_in_offline(tmp_path):
     run(Catalog(cache_dir=tmp_path, fetch=_cdn()).load({0x52: _scan("VR_70")}))
-    old = time.time() - cat.CACHE_MAX_AGE - 10
+    old = time.time() - CACHE_MAX_AGE - 10
     for p in (tmp_path / "en" / "vaillant").iterdir():
         os.utime(p, (old, old))
     offline = FakeCdn({})
@@ -357,7 +358,7 @@ def test_stale_texts_offline_are_not_complete(tmp_path):
     c = Catalog(cache_dir=tmp_path, fetch=TextCdn(files))
     run(c.load({0x15: _scan("CTLV3", "8004", "808")}))
     assert run(c.load_texts(["en"])).complete
-    old = time.time() - cat.CACHE_MAX_AGE - 10
+    old = time.time() - CACHE_MAX_AGE - 10
     for p in (tmp_path / "en").rglob("*.csv"):
         os.utime(p, (old, old))
     c2 = Catalog(cache_dir=tmp_path, fetch=FakeCdn({}))  # offline now
@@ -462,7 +463,7 @@ class Raising(FakeCdn):
 
 def test_a_raising_fetch_counts_as_unreachable(tmp_path):
     run(Catalog(cache_dir=tmp_path, fetch=_cdn()).load({0x52: _scan("VR_70")}))
-    old = time.time() - cat.CACHE_MAX_AGE - 10
+    old = time.time() - CACHE_MAX_AGE - 10
     for p in (tmp_path / "en" / "vaillant").iterdir():
         os.utime(p, (old, old))
     c = Catalog(cache_dir=tmp_path, fetch=Raising({}))
@@ -479,3 +480,18 @@ def test_read_twin_and_unknown_manufacturer_folder():
     twin = c.read_twin(write)
     assert twin is not None and twin.is_polled_read and twin.zz == "15"
     assert cat.config_folder(0x50) == "kromschroeder" and cat.config_folder(0x77) is None
+
+
+def test_bundled_file_of_a_definition_key():
+    index = cat.bundled_index()
+    ident, entry = next((i, e) for i, e in index["devices"].items()
+                        if isinstance(e, dict) and e.get("hw"))
+    hw = next(iter(entry["hw"]))
+    key = f"{ident}/{hw}"
+    assert cat.bundled_file_of(key) == resolve_bundled(_scan(ident, hw)).file
+    assert cat.bundled_file_of("hmu.json") == "hmu.json"
+    assert cat.bundled_file_of("nope.json") is None
+    assert cat.bundled_file_of(f"{ident}/0000") is None  # no such HW profile
+    plain = next(i for i, e in index["devices"].items() if isinstance(e, str))
+    assert cat.bundled_file_of(f"{plain}/1234") is None  # a device without profiles
+    assert cat.bundled_file_of("NOPE/1234") is None

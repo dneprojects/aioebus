@@ -70,7 +70,7 @@ def decode_scan(slave: bytes) -> ScanResult:
 
 @dataclass
 class Identification:
-    """Vaillant extended identification (read from b509 24/25/26). The 0704 scan
+    """Vaillant extended identification (read from b509 24-27). The 0704 scan
     only gives the control-board id (e.g. HMU00), which is shared across many
     appliances; this adds the 10-digit article number (Sachnummer) that maps to
     the actual model, the full factory serial, and the manufacture year/week."""

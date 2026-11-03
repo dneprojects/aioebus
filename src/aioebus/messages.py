@@ -20,8 +20,9 @@ import io
 import logging
 import re
 from dataclasses import dataclass, replace
+from functools import cached_property
 
-from .codecs import _Bit, _Numeric, make_codec
+from .codecs import BitCodec, NumericCodec, make_codec
 from .codecs import decode as _decode_field
 from .codecs import encode as _encode_field
 from .frame import BROADCAST, is_master
@@ -77,6 +78,18 @@ class MessageDef:
     # display-text translations by language code for the message-level name
     tr: dict[str, str] | None = None
 
+    @cached_property
+    def id_bytes(self) -> bytes:
+        """The message id (the leading master data after PBSB) as bytes."""
+        return bytes.fromhex(self.msgid)
+
+    @property
+    def address(self) -> int | None:
+        """The destination address (ZZ), None when the message names none."""
+        if len(self.zz) == 2 and _is_hex(self.zz):
+            return int(self.zz, 16)
+        return None
+
     @property
     def value_fields(self) -> list[FieldDef]:
         """The fields that yield a value (named, not IGN, no constant): one entity each."""
@@ -110,10 +123,9 @@ class MessageDef:
         the destination is a broadcast or a master (nobody answers), else its own
         part, else the master data for a write (w, uw) and the slave's answer for
         a read (r, u)."""
-        if len(self.zz) == 2 and _is_hex(self.zz):
-            zz = int(self.zz, 16)
-            if zz == BROADCAST or is_master(zz):
-                return "m"
+        zz = self.address
+        if zz is not None and (zz == BROADCAST or is_master(zz)):
+            return "m"
         part = f.part.lower()
         if part in ("m", "s"):
             return part
@@ -149,9 +161,9 @@ class MessageDef:
 
         for f in self.fields:
             part = self.part_of(f)
-            codec = make_codec(f.type)
+            codec = make_codec(f.type, f.divisor)
 
-            if isinstance(codec, _Bit):
+            if isinstance(codec, BitCodec):
                 # new byte if no group is open, the part changed, or the bit
                 # position did not advance (a fresh flag byte starts)
                 if bit_part != part or codec.start <= last_start:
@@ -167,8 +179,6 @@ class MessageDef:
                 continue
 
             close_bits()  # a non-bit field ends any open bit group
-            if f.divisor is not None and hasattr(codec, "extra_div"):
-                codec.extra_div = f.divisor
             buf, p = bufs[part], pos[part]
             if codec.length < 0:  # remainder
                 chunk, pos[part] = buf[p:], len(buf)
@@ -180,7 +190,7 @@ class MessageDef:
                 if f.verify and not _is_const(f, chunk):
                     raise ValueError(f"{self.name}: {f.name or 'field'} is not {f.const}")
                 continue
-            if f.values and isinstance(codec, _Numeric):
+            if f.values and isinstance(codec, NumericCodec):
                 # as ebusd: the table is looked up by the raw value first, then
                 # the replacement means no value, else the raw number shows
                 raw = codec.raw(chunk)
@@ -209,7 +219,7 @@ class MessageDef:
         string writes are not supported yet and raise. A constant field is
         written by itself; a value for a field of the answer is refused (the
         request could not carry it)."""
-        data = bytearray(bytes.fromhex(self.msgid))
+        data = bytearray(self.id_bytes)
         named = self.request_fields()
         lone = named[0].name if len(named) == 1 else None
         answer_only = {f.name for f in self.value_fields} - {f.name for f in named}
@@ -238,7 +248,7 @@ class MessageDef:
                     raise ValueError(f"{self.name}: {val!r} is not a valid option for {f.name}")
                 val = reverse[val]
             codec = make_codec(f.type)
-            if f.values and isinstance(codec, _Numeric):  # table values are raw
+            if f.values and isinstance(codec, NumericCodec):  # table values are raw
                 data += codec.encode_raw(int(val))
             else:
                 data += _encode_field(f.type, val, f.divisor)
@@ -265,7 +275,7 @@ def _const_bytes(f: FieldDef) -> bytes:
         if codec.length >= 0 and len(raw) != codec.length:
             raise ValueError(f"{f.name}: constant {f.const} does not fit {f.type}")
         return raw
-    if isinstance(codec, _Numeric) and not f.divisor and codec.base_div == 1:
+    if isinstance(codec, NumericCodec) and not f.divisor and codec.base_div == 1:
         value = int(f.const)
         if value >= 0:  # e.g. 65535 for U2L: no replacement check
             return codec.encode_raw(value)

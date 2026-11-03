@@ -128,3 +128,11 @@ def test_a_date_ignores_its_weekday_byte():
     assert decode("BDA", "0101ff26") == "01.01.2026"
     assert decode("HDA", "0101ff1a") == "01.01.2026"
     assert decode("BDA", "ff010326") is None  # the day itself missing
+
+
+def test_codec_takes_the_divisor_column():
+    from aioebus.codecs import make_codec
+    assert make_codec("UIN", 10).decode(bytes.fromhex("e803")) == 100.0
+    assert make_codec("UCH", -2).decode(b"\x05") == 10  # negative multiplies
+    assert make_codec("EXP", 2).decode(bytes.fromhex("0000a040")) == 2.5
+    assert make_codec("HEX:1", 10).decode(b"\x05") == "05"  # no number: ignored

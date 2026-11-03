@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.5
+
+- `EbusEngine.write_confirmed()`: write, read the register back, cache what the device took (`WriteOutcome`)
+- New `runner` module: `EngineRunner` keeps an engine connected and reconnects after a pause
+- `EbusEngine.restore()` seeds the cache and drops registers a known device no longer has; the link is optional at construction
+- `values.message_key()` is the device-and-register key; `catalog.bundled_file_of()` maps a profile key to its file
+- `MessageDef.address` and `MessageDef.id_bytes`: one check of the destination, the id parsed once
+- `codecs`: `is_float()`, `is_number()`, `has_numeric_value()` test the codec class; `make_codec(spec, divisor)`; public `NumericCodec`/`BitCodec`/`FloatCodec`
+- `transport` owns the host commands (`SEND`, `START`, `encode_command()`); `build_master_frame()` replaces `build_write_frame()`
+- New `cdn` module (download and cache, out of `catalog`); `attach_translations()` moved to `translations`
+- `__all__` lists everything the integration uses; removed `values.FLOAT_TYPES`, `is_number_type()`, `is_float_type()`, `PollScheduler.due_count()`, `discovery.BROADCAST_ADDRESS`
+- `tools/replay.py` (from the integration) feeds a capture through the engine; `validate_frame_db.py` runs from any folder
+- Publishing tests the built wheel and its definitions first
+- Tests for broken frames, a silent link and the tools; test files one per module
+
 ## 0.7.4
 
 - A field without a part lives where ebusd puts it: in the answer for a passive read (`u`), in the request for a write; everything in the request when the destination is a broadcast or a master (`MessageDef.part_of()` replaces `default_part`)

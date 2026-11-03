@@ -35,7 +35,8 @@ class MessageRegistry:
         self._by_pbsb: dict[str, list[MessageDef]] = {}
         for d in defs:
             try:  # a definition whose id is no hex can match nothing (and must not
-                bytes.fromhex(d.pbsb + d.msgid)  # fail every telegram of its command)
+                bytes.fromhex(d.pbsb)  # fail every telegram of its command)
+                d.id_bytes  # noqa: B018 -- parsed once here, cached on the message
             except ValueError:
                 continue
             self._by_pbsb.setdefault(d.pbsb.lower(), []).append(d)
@@ -53,10 +54,10 @@ class MessageRegistry:
         best: MessageDef | None = None
         best_rank = (-1, False, False)
         for d in self._by_pbsb.get(tg.pbsb, ()):
-            mid = bytes.fromhex(d.msgid) if d.msgid else b""
+            mid = d.id_bytes
             if not tg.data.startswith(mid):
                 continue
-            if d.zz and len(d.zz) == 2 and int(d.zz, 16) != tg.zz:
+            if d.address is not None and d.address != tg.zz:
                 continue
             fits = _has_master_data(d) == (len(tg.data) > len(mid))
             rank = (len(mid), fits, d.is_passive)
@@ -74,8 +75,7 @@ class MessageRegistry:
             # decode, so do not report one (it would overwrite a good value with
             # None and suppress the poll as if the register had been seen)
             return None
-        mid_len = len(bytes.fromhex(d.msgid)) if d.msgid else 0
-        values = d.decode_labeled(master=tg.data[mid_len:], slave=tg.slave_data)
+        values = d.decode_labeled(master=tg.data[len(d.id_bytes):], slave=tg.slave_data)
         return d, values
 
 

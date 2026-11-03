@@ -9,11 +9,11 @@ For each device the catalog takes, in this order:
 3. the matching ebusd-configuration CSV from the public ebus.github.io CDN,
    chosen the way ebusd does (``ZZ.ident[.circuit][.SWnnnn][.HWnnnn].csv``:
    bus address, ident, SW/HW variant). It is downloaded on the user's own
-   machine and kept in a cache directory; the library ships none of it.
+   machine and kept in a cache directory (see :mod:`aioebus.cdn`); the library
+   ships none of it.
 
-Network access goes through a ``fetch`` callable the caller provides (so an
-application can use its own HTTP session); disk access runs in a thread. After
-:meth:`Catalog.load` everything is answered from memory.
+Disk access runs in a thread. After :meth:`Catalog.load` everything is answered
+from memory.
 """
 from __future__ import annotations
 
@@ -21,35 +21,29 @@ import asyncio
 import json
 import logging
 import re
-import time
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
 from typing import Any, Final
 
+from .cdn import CdnFiles, Fetch
 from .conditions import ConditionContext, context_from_scan, evaluate_all
-from .convert import attach_translations, from_dicts
+from .convert import from_dicts
 from .frame import BROADCAST
 from .messages import MessageDef, parse_csv
 from .scan import Identification, ScanResult, config_folder
+from .translations import attach_translations
 
 _LOGGER = logging.getLogger(__name__)
 
 BUNDLED_DIR: Final = Path(__file__).parent / "defs" / "vaillant"
-CDN: Final = "https://ebus.github.io"
-CACHE_MAX_AGE: Final = 7 * 24 * 3600  # s; older cached files are fetched again
 # the broadcast circuit: telegrams to all (0xfe), resolved like a device
 BROADCAST_SCAN: Final = ScanResult(0, "", "Broadcast", "", "", None, None)
-
-# returns the text at a URL; "" when the server says it is not there, None when
-# it cannot be reached (only then is a later try worth it)
-Fetch = Callable[[str], Awaitable[str | None]]
 
 _CDN_NAME = re.compile(r"^(?P<zz>[0-9a-f]{2})\.(?P<ident>[\w-]+)(?P<rest>(?:\.[\w-]+)*)\.csv$")
 # a file name from the CDN (listing, include): no path, so the cache stays its own
 _SAFE_NAME = re.compile(r"^[\w-]+(?:\.[\w-]+)*$")
-_LISTING: Final = ".listing"  # cache name of a folder listing (no CDN name looks so)
 _MAX_INCLUDE_DEPTH: Final = 3
 # a load instruction with optional conditions in front: [cond][cond]!load,<file>
 # (!load: the first one that applies wins; !include: every one that applies)
@@ -112,14 +106,25 @@ def bundled_files() -> list[str]:
     return sorted(p.name for p in BUNDLED_DIR.glob("*.json") if p.name != "index.json")
 
 
-def _profile(scan: ScanResult) -> tuple[str, str | None, dict[str, Any]] | None:
+def bundled_file_of(key: str) -> str | None:
+    """The bundled file a definition key stands for: a file name itself, or the
+    file of an ``IDENT/HW`` profile (:attr:`Definition.profile`); None if the
+    catalog has no such file or profile."""
+    if "/" not in key:
+        return key if key in bundled_files() else None
+    ident, hw = key.split("/", 1)
+    found = _profile(ident, hw)
+    return found[0] if found is not None and found[1] == key else None
+
+
+def _profile(ident: str, hw: str) -> tuple[str, str | None, dict[str, Any]] | None:
     """(file, profile key, profile) of a bundled device by ident and HW variant."""
-    entry = bundled_index()["devices"].get(scan.ident)
+    entry = bundled_index()["devices"].get(ident)
     key = None
     if isinstance(entry, dict) and "file" not in entry:
         by_hw = entry.get("hw", {})
-        if scan.hw in by_hw:
-            entry, key = by_hw[scan.hw], f"{scan.ident}/{scan.hw}"
+        if hw in by_hw:
+            entry, key = by_hw[hw], f"{ident}/{hw}"
         else:
             entry = entry.get("default")
     if isinstance(entry, str):
@@ -130,7 +135,7 @@ def _profile(scan: ScanResult) -> tuple[str, str | None, dict[str, Any]] | None:
 
 
 def resolve_bundled(scan: ScanResult) -> Definition | None:
-    found = _profile(scan)
+    found = _profile(scan.ident, scan.hw)
     if found is None:
         return None
     file, key, prof = found
@@ -303,14 +308,21 @@ class Catalog:
     def __init__(self, *, user_dir: Path | None = None, cache_dir: Path | None = None,
                  fetch: Fetch | None = None, lang: str = "en") -> None:
         self.user_dir = user_dir
-        self.cache_dir = cache_dir
-        self.lang = lang
-        self._fetch = fetch
+        self._cdn = CdnFiles(cache_dir=cache_dir, fetch=fetch, lang=lang)
         self._scans: dict[int, ScanResult] = {}
         self._defs: dict[int, Definition] = {}
         self._messages: dict[int, list[MessageDef]] = {}
         self._owner: dict[int, int] = {}  # id(message) -> device address
-        self._listings: dict[str, list[str] | None] = {}  # per load: folder -> names
+
+    @property
+    def cache_dir(self) -> Path | None:
+        """Where downloaded definitions are kept (None: not kept)."""
+        return self._cdn.cache_dir
+
+    @property
+    def lang(self) -> str:
+        """The language of the definition files read from the CDN."""
+        return self._cdn.lang
 
     async def load(self, devices: Mapping[int, ScanResult],
                    idents: Mapping[int, Identification] | None = None) -> None:
@@ -318,7 +330,8 @@ class Catalog:
         any keep no messages. The broadcast circuit is always included. ``idents``
         (the Vaillant identifications) let product-specific parts be chosen."""
         self._scans = {**devices, BROADCAST: BROADCAST_SCAN}
-        self._defs, self._messages, self._owner, self._listings = {}, {}, {}, {}
+        self._defs, self._messages, self._owner = {}, {}, {}
+        self._cdn.forget_listings()
         await asyncio.to_thread(bundled_index)
         for address, scan in self._scans.items():
             ctx = context_for(scan, (idents or {}).get(address))
@@ -354,76 +367,22 @@ class Catalog:
                 else:
                     return Definition("user", path.name), messages
         folder = config_folder(scan.mf)
-        if folder is None or (self._fetch is None and self.cache_dir is None):
+        if folder is None or not self._cdn.usable:
             return None
-        names = await self._listing(folder)
+        names = await self._cdn.listing(folder)
         name = match_cdn_file(names or (), address, scan)
         if name is None:
             return None
-        text = await self._text(f"{folder}/{name}")
+        text = await self._cdn.text(f"{folder}/{name}")
         if not text:
             return None
 
         async def read(include: str) -> str | None:  # best effort: a missing one is skipped
-            return await self._text(f"{folder}/{include}")
+            return await self._cdn.text(f"{folder}/{include}")
 
         messages, used = await _with_includes(name, text, ctx, read)
         paths = tuple(f"{folder}/{n}" for n in (name, *used))
         return Definition("cdn", f"{folder}/{name}", text_paths=paths), messages
-
-    async def _listing(self, folder: str) -> list[str] | None:
-        """A CDN folder's file names, fetched once per load (an unreachable CDN
-        then costs one timeout, not one per device)."""
-        if folder not in self._listings:
-            text = await self._text(f"{folder}/")
-            self._listings[folder] = text.split("\n") if text else None
-        return self._listings[folder]
-
-    async def _text(self, rel: str, lang: str | None = None) -> str | None:
-        """A CDN file (a folder listing for a path ending in '/'), from the cache
-        while it is fresh, else fetched (and cached); a stale copy stands in when
-        the CDN cannot be reached or answers with something else. "" when the CDN
-        says it has no such file (and nothing is cached)."""
-        return (await self._text_state(rel, lang))[0]
-
-    async def _text_state(self, rel: str, lang: str | None = None) -> tuple[str | None, bool]:
-        """:meth:`_text` and whether that is the current state (a fresh copy, a
-        fetched file, or the CDN's final "not there") rather than a stand-in."""
-        lang = lang or self.lang
-        cached = None
-        if self.cache_dir is not None:
-            cached = self.cache_dir / lang / (rel + _LISTING if rel.endswith("/") else rel)
-        stale: str | None = None
-        if cached is not None:
-            age_text = await asyncio.to_thread(_read_cached, cached)
-            if age_text is not None:
-                age, stale = age_text
-                if age < CACHE_MAX_AGE:
-                    return stale, True
-        if self._fetch is None:
-            return stale, False
-        try:
-            text = await self._fetch(f"{CDN}/{lang}/{rel}")
-        except Exception as err:  # a fetch that raises counts as unreachable
-            _LOGGER.debug("%s not fetched: %s", rel, err)
-            text = None
-        if not text:  # None: not reachable; "": not there (final)
-            return (stale if stale is not None else text), text == ""
-        if rel.endswith("/"):  # a folder listing is a JSON string of names
-            try:
-                listing = json.loads(text)
-            except ValueError:
-                listing = None
-            if not isinstance(listing, str):
-                return stale, False
-            text = listing
-        elif not text.lstrip().startswith("type,"):
-            # not an ebusd CSV (e.g. a captive portal's page): never cache that
-            _LOGGER.warning("%s: unexpected content, ignored", rel)
-            return stale, False
-        if cached is not None:
-            await asyncio.to_thread(_write_cached, cached, text)
-        return text, True
 
     @property
     def text_paths(self) -> list[str]:
@@ -439,7 +398,7 @@ class Catalog:
         paths = self.text_paths
         for lang in dict.fromkeys(langs):
             # one language's files at once: a slow one does not hold up the rest
-            states = await asyncio.gather(*(self._text_state(p, lang) for p in paths))
+            states = await asyncio.gather(*(self._cdn.text_state(p, lang) for p in paths))
             for text, current in states:
                 # not reachable (even if a stale copy stood in): try again later;
                 # "" is final, e.g. a language upstream does not translate
@@ -569,20 +528,3 @@ async def _read_user(path: Path, ctx: ConditionContext) -> list[MessageDef]:
 
     messages, _used = await _with_includes(path.name, text, ctx, read)
     return messages
-
-
-def _read_cached(path: Path) -> tuple[float, str] | None:
-    try:
-        return time.time() - path.stat().st_mtime, path.read_text(encoding="utf-8")
-    except (OSError, ValueError):  # unreadable or not UTF-8: as if not cached
-        return None
-
-
-def _write_cached(path: Path, text: str) -> None:
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_text(text, encoding="utf-8")
-        tmp.replace(path)
-    except OSError as err:  # a read-only cache costs the next start a fetch
-        _LOGGER.debug("cache %s not written: %s", path, err)

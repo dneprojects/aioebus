@@ -31,14 +31,6 @@ from dataclasses import dataclass, field
 from .messages import MessageDef
 
 
-def _is_hex(text: str) -> bool:
-    try:
-        int(text, 16)
-    except ValueError:
-        return False
-    return True
-
-
 @dataclass
 class PollItem:
     msg: MessageDef
@@ -64,7 +56,7 @@ class PollScheduler:
         for m in messages:
             if not m.is_polled_read or m.needs_args:  # true reads without arguments
                 continue
-            if not (len(m.zz) == 2 and _is_hex(m.zz)):  # no address to read from
+            if m.address is None:  # no address to read from
                 continue
             priority = m.poll_priority or default_priority
             if priority > 0:
@@ -119,9 +111,3 @@ class PollScheduler:
             if best_key is None or key > best_key:
                 best, best_key = item, key
         return best
-
-    def due_count(self, now: float) -> int:
-        return sum(
-            1 for it in self._items.values()
-            if (now - it.last_update) >= self.interval(it)
-        )

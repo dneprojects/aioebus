@@ -15,7 +15,7 @@ import asyncio
 import logging
 import time
 from collections import deque
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 
 from .active import (
@@ -30,7 +30,7 @@ from .active import (
     WriteUncertain,
 )
 from .frame import BROADCAST, SYN, FrameError, is_master, is_slave, parse_telegram
-from .messages import MessageDef
+from .messages import MessageDef, label_of
 from .passive import MessageRegistry, expects_slave
 from .poll import PollScheduler
 from .scan import (
@@ -43,11 +43,23 @@ from .scan import (
     decode_scan,
 )
 from .transport import RECEIVED, STARTED, EnhDecoder
-from .values import value_key
+from .values import CacheKey, message_key, value_key
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_TIMEOUT = 6.0  # s a caller waits for one read or write
+
 _Driver = ReadDriver | WriteDriver
+Send = Callable[[bytes], Awaitable[None]]
+Recv = Callable[[], Awaitable[bytes]]
+
+
+async def _unattached_send(_data: bytes) -> None:
+    raise OSError("no link attached")
+
+
+async def _unattached_recv() -> bytes:
+    raise OSError("no link attached")
 
 
 @dataclass(eq=False)  # compared by identity (queue removal)
@@ -78,6 +90,16 @@ class EngineStats:
     last_telegram: float | None = None  # monotonic time of the last bus telegram
 
 
+@dataclass(frozen=True)
+class WriteOutcome:
+    """How a :meth:`EbusEngine.write_confirmed` went: ``uncertain`` is set when
+    the write went out but was not confirmed (it may have been applied);
+    ``read_back`` tells whether the cache now holds the value read from the
+    device rather than the written one."""
+    uncertain: WriteUncertain | None
+    read_back: bool
+
+
 class EbusEngine:
     """Drive one eBUS adapter connection: passive decode + interleaved actives."""
 
@@ -92,18 +114,20 @@ class EbusEngine:
 
     def __init__(
         self,
-        send: Callable[[bytes], Awaitable[None]],
-        recv: Callable[[], Awaitable[bytes]],
-        registry: MessageRegistry,
+        send: Send | None = None,
+        recv: Recv | None = None,
+        registry: MessageRegistry | None = None,
         *,
         scheduler: PollScheduler | None = None,
         qq: int = DEFAULT_SOURCE,
         on_value: Callable[[MessageDef, dict], None] | None = None,
         allow_write: bool = False,
     ):
-        self._send = send
-        self._recv = recv
-        self.registry = registry
+        # the link; attach() binds a new one (an EngineRunner does it on reconnect)
+        self._attached = send is not None and recv is not None
+        self._send: Send = send or _unattached_send
+        self._recv: Recv = recv or _unattached_recv
+        self.registry = registry if registry is not None else MessageRegistry([])
         self.scheduler = scheduler
         self.qq = qq
         self._on_value = on_value
@@ -112,7 +136,7 @@ class EbusEngine:
         self._buf = bytearray()  # passive telegram assembly (on-wire bytes)
         self._active: _Active | None = None
         self._queue: deque[_Active] = deque()
-        self.cache: dict[tuple[str, str, str], object] = {}
+        self.cache: dict[CacheKey, object] = {}
         self.stats = EngineStats()
         self._stop = False
         self.running = False  # run() is pumping the stream
@@ -174,12 +198,17 @@ class EbusEngine:
         self._stop = True
         self.stats.connected = False
 
-    def attach(self, send: Callable[[bytes], Awaitable[None]],
-               recv: Callable[[], Awaitable[bytes]]) -> None:
+    @property
+    def stopped(self) -> bool:
+        """stop() was called (until attach() binds a new link)."""
+        return self._stop
+
+    def attach(self, send: Send, recv: Recv) -> None:
         """Rebind to a fresh connection (after a reconnect) and reset the stream
         state. The value cache and poll scheduler are kept across reconnects."""
         self._send = send
         self._recv = recv
+        self._attached = True
         self._dec = EnhDecoder()
         self._buf.clear()
         self._traffic = asyncio.Event()
@@ -226,7 +255,7 @@ class EbusEngine:
             await self._send(CANCEL_ARBITRATION)
         self._fail_active(reason)
 
-    async def read(self, msg: MessageDef, timeout: float = 6.0,
+    async def read(self, msg: MessageDef, timeout: float = DEFAULT_TIMEOUT,
                    args: dict | None = None) -> dict:
         """Actively read a message as soon as the bus is idle; return its values.
         ``args`` are the values of its request fields, for a read that takes
@@ -239,7 +268,8 @@ class EbusEngine:
                                    answer_tries=NO_ANSWER_TRIES)
         return _decode_answer(msg, request, slave)
 
-    async def read_raw(self, zz: int, pbsb: str, msgid: str, timeout: float = 6.0) -> bytes:
+    async def read_raw(self, zz: int, pbsb: str, msgid: str,
+                       timeout: float = DEFAULT_TIMEOUT) -> bytes:
         """Actively read a register without a definition; return the slave's raw
         answer data (e.g. for the identification reads at runtime)."""
         # malformed arguments fail this call, not later inside the bus loop
@@ -250,7 +280,7 @@ class EbusEngine:
         return await self._submit(lambda: ReadDriver(zz, pbsb, msgid, self.qq), None, timeout,
                                   answer_tries=NO_ANSWER_TRIES)
 
-    async def scan(self, zz: int, timeout: float = 6.0) -> ScanResult:
+    async def scan(self, zz: int, timeout: float = DEFAULT_TIMEOUT) -> ScanResult:
         """Identify the device at an address (0704: manufacturer, id, SW, HW).
         Raises ReadError/TimeoutError when nothing answers there."""
         answer = await self.read_raw(zz, SCAN_PBSB, "", timeout)
@@ -259,7 +289,8 @@ class EbusEngine:
         except ValueError as err:
             raise ReadError(str(err)) from err
 
-    async def read_identification(self, zz: int, timeout: float = 6.0) -> Identification | None:
+    async def read_identification(self, zz: int,
+                                  timeout: float = DEFAULT_TIMEOUT) -> Identification | None:
         """The Vaillant extended identification (article/serial) of a device, read
         through the running engine; None when it does not answer these reads (or
         the link dropped meanwhile), so the caller may simply try again later."""
@@ -270,38 +301,82 @@ class EbusEngine:
             return None
         return decode_identification(*parts)
 
-    async def write(self, msg: MessageDef, values: dict, timeout: float = 6.0) -> None:
+    async def write(self, msg: MessageDef, values: dict,
+                    timeout: float = DEFAULT_TIMEOUT) -> None:
         """Actively write a message (requires allow_write=True)."""
         if not self._allow_write:
             raise PermissionError("writing is disabled; construct the engine with allow_write=True")
         if msg.direction != "w":  # a passive write (uw) is other masters' to send
             raise ValueError(f"{msg.name}: not a write message")
-        self._require_addr(msg)
-        zz = int(msg.zz, 16)
+        zz = self._require_addr(msg)
         payload = msg.encode(values)
         await self._submit(lambda: WriteDriver(zz, msg.pbsb, payload, self.qq), msg, timeout)
+
+    async def write_confirmed(self, msg: MessageDef, values: dict, *,
+                              read_back: MessageDef | None = None,
+                              timeout: float = DEFAULT_TIMEOUT) -> WriteOutcome:
+        """Write, then read the register back (``read_back``: its read message)
+        so the cache holds what the device actually took. When it cannot be read
+        back, a confirmed write's values are cached as written, an unconfirmed
+        one's not at all. Raises like :meth:`write`, except that a write which
+        may have been applied is reported in the outcome (and never retried)."""
+        uncertain: WriteUncertain | None = None
+        try:
+            await self.write(msg, values, timeout)
+        except WriteUncertain as err:  # sent, but unconfirmed
+            uncertain = err
+        if read_back is not None:
+            try:
+                await self.read(read_back, timeout)  # caches what the device holds
+                return WriteOutcome(uncertain, True)
+            except (TimeoutError, ReadError, ValueError, OSError) as err:
+                _LOGGER.debug("eBUS engine: read-back of %s failed: %s", msg.name, err)
+        if uncertain is None:
+            self._store_written(msg, values)
+        return WriteOutcome(uncertain, False)
+
+    def restore(self, values: Iterable[tuple[CacheKey, object]]) -> None:
+        """Seed the value cache with saved values (e.g. after a restart). A value
+        of a register the registry no longer has for a device it knows (retired,
+        renamed) is dropped; one of a device it does not know is kept, as that
+        device may only have missed this scan."""
+        known = {message_key(m) for m in self.registry.messages}
+        devices = {device for device, _name in known}
+        for key, value in values:
+            if key[0] not in devices or (key[0], key[1]) in known:
+                self.cache[key] = value
 
     # -- internals ----------------------------------------------------------
 
     def _read_driver(self, msg: MessageDef, request: bytes) -> Callable[[], ReadDriver]:
         """A builder of read drivers for a message (``request``: id + arguments)."""
-        zz = int(msg.zz, 16)
+        zz = self._require_addr(msg)
         return lambda: ReadDriver(zz, msg.pbsb, "", self.qq, request)
 
     @staticmethod
-    def _require_addr(msg: MessageDef) -> None:
-        try:
-            zz = int(msg.zz, 16) if len(msg.zz) == 2 else -1
-        except ValueError:
-            zz = -1
-        if not (is_slave(zz) or is_master(zz) or zz == BROADCAST):
+    def _require_addr(msg: MessageDef) -> int:
+        """The message's destination; ValueError unless it is a slave, a master
+        or the broadcast."""
+        zz = msg.address
+        if zz is None or not (is_slave(zz) or is_master(zz) or zz == BROADCAST):
             raise ValueError(f"{msg.name}: no valid destination address")
+        return zz
+
+    def _store_written(self, msg: MessageDef, values: dict) -> None:
+        """Cache a confirmed write's request values under their read labels."""
+        named = msg.request_fields()
+        lone = named[0].name if len(named) == 1 else None
+        for f in named:
+            if f.name in values:
+                value = values[f.name]
+            elif f.name in (lone, "value") and msg.name in values:
+                value = values[msg.name]
+            else:
+                continue
+            self.cache[value_key(msg, label_of(msg.name, f.name))] = value
 
     async def _submit(self, make: Callable[[], _Driver], msg: MessageDef | None,
                       timeout: float, answer_tries: int = 1):
-        if self._ended.is_set():
-            # the link is down (until attach() binds a new one): fail at once
-            raise ReadError("not connected")
         if timeout <= self.ACTIVE_DEADLINE + self.START_MARGIN:
             # it could never start (see _next_request): say so instead of timing out
             raise ValueError(f"timeout {timeout} s is shorter than one transaction "
@@ -309,6 +384,9 @@ class EbusEngine:
         # drivers are pure: building one checks the frame (address, PBSB, id,
         # length) here, so a malformed request fails this call, not the bus loop
         make()
+        if self._ended.is_set() or not self._attached:
+            # the link is down (until attach() binds a new one): fail at once
+            raise ReadError("not connected")
         fut: asyncio.Future = asyncio.get_running_loop().create_future()
         act = _Active(make, msg, fut, expires=time.monotonic() + timeout,
                       answer_tries=answer_tries)
@@ -472,9 +550,8 @@ class EbusEngine:
         # now that _active is clear those bytes route to the passive buffer -- so
         # seed the buffer with the winner's address and the next SYN decodes the
         # whole telegram (a broadcast, or another master's read incl. the slave part).
-        lost_to = getattr(drv, "lost_to", None)
-        if isinstance(lost_to, int) and not self._buf:
-            self._buf.append(lost_to)
+        if drv.lost_to is not None and not self._buf:
+            self._buf.append(drv.lost_to)
         # error: retry a lost/contended bus (rebuild a fresh driver), else give up
         retryable = drv.retryable
         if isinstance(drv, WriteDriver) and drv.may_have_landed:
@@ -501,4 +578,4 @@ class EbusEngine:
 
 def _decode_answer(msg: MessageDef, request: bytes, answer: bytes) -> dict:
     """A read's values: its answer, and the arguments it was asked with."""
-    return msg.decode_labeled(master=request[len(bytes.fromhex(msg.msgid)):], slave=answer)
+    return msg.decode_labeled(master=request[len(msg.id_bytes):], slave=answer)

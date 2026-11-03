@@ -82,7 +82,10 @@ def test_never_polled_is_due_right_after_boot():
     # the monotonic clock may start near zero: a new register is due at once,
     # not only after its interval has passed since the clock started
     sch = PollScheduler(MSGS, base_interval=60.0)
-    assert sch.next_due(5.0) is not None and sch.due_count(5.0) == 2
+    first = sch.next_due(5.0)
+    assert first is not None
+    sch.mark(first.msg.zz, first.msg.name, 5.0)
+    assert sch.next_due(5.0) is not None  # both were due
 
 
 def test_read_needing_arguments_is_not_polled():
@@ -93,13 +96,15 @@ def test_read_needing_arguments_is_not_polled():
     assert [k[1] for k in PollScheduler(msgs)._items] == ["Plain"]
 
 
-def test_one_at_a_time_and_due_count():
+def test_one_at_a_time():
     sch = _polled_at(PollScheduler(MSGS, base_interval=10.0), 0.0)
-    assert sch.due_count(60.0) == 2       # both overdue
-    picked = sch.next_due(60.0)           # but only one handed back
+    picked = sch.next_due(60.0)           # both overdue, but only one handed back
     assert picked is not None
     sch.mark(picked.msg.zz, picked.msg.name, 60.0)
-    assert sch.due_count(60.0) == 1
+    other = sch.next_due(60.0)
+    assert other is not None and other.msg.name != picked.msg.name
+    sch.mark(other.msg.zz, other.msg.name, 60.0)
+    assert sch.next_due(60.0) is None
 
 
 def test_read_without_a_device_address_is_not_polled():

@@ -19,11 +19,9 @@ and the adapter and owns the retry policy.
 from __future__ import annotations
 
 from .frame import BROADCAST, ESC, SYN, crc8, escape, is_master
-from .transport import FAILED, RECEIVED, STARTED, EnhDecoder
+from .transport import FAILED, RECEIVED, SEND, START, STARTED, EnhDecoder, encode_command
 
 DEFAULT_SOURCE = 0x31  # ebusd's own master address on the reference bus (free when ebusd is down)
-SEND = 0x1
-START = 0x2
 ACK = 0x00
 NAK = 0xFF
 NO_ANSWER = "no answer from slave"
@@ -39,30 +37,17 @@ class WriteUncertain(ReadError):
     may have applied it. Read the value back instead of blindly retrying."""
 
 
-def _symbol2(code: int, value: int) -> bytes:
-    """Encode a host->adapter symbol in the two-byte form. ebusd always uses the
-    long form for SEND/START (its EnhancedDevice::send never short-forms), and
-    the adapter firmware drops short-form sends, so we match it exactly."""
-    return bytes((0xC0 | ((code & 0x0F) << 2) | ((value >> 6) & 0x03),
-                  0x80 | (value & 0x3F)))
-
-
 # START with SYN as the address withdraws a pending arbitration (enh protocol), so
 # an abandoned START cannot win the bus later with nobody to continue the telegram
-CANCEL_ARBITRATION = _symbol2(START, SYN)
-RELEASE_BUS = _symbol2(SEND, SYN)  # a SYN from the bus owner ends its turn
+CANCEL_ARBITRATION = encode_command(START, SYN)
+RELEASE_BUS = encode_command(SEND, SYN)  # a SYN from the bus owner ends its turn
 
 
-def build_read_frame(
-    zz: int, pbsb: str, msgid: str, qq: int = DEFAULT_SOURCE, master_data: bytes = b""
-) -> bytes:
-    """Return the escaped on-wire master frame (incl. CRC) for a read request.
-
-    For a plain read the master payload is just the message id; `master_data`
-    appends any master-side argument bytes for the rare parametrised reads.
-    """
+def build_master_frame(zz: int, pbsb: str, data: bytes, qq: int = DEFAULT_SOURCE) -> bytes:
+    """The escaped on-wire master part (incl. CRC) of a telegram: ``data`` is
+    the master data, i.e. the message id and any encoded fields (see
+    :meth:`MessageDef.encode`)."""
     pb, sb = int(pbsb[0:2], 16), int(pbsb[2:4], 16)
-    data = bytes.fromhex(msgid) + master_data
     if len(data) > 16:  # eBUS allows at most 16 master data bytes
         raise ValueError(f"{pbsb}: {len(data)} data bytes, eBUS allows 16")
     logical = bytes((qq, zz, pb, sb, len(data))) + data
@@ -70,12 +55,12 @@ def build_read_frame(
     return escape(logical) + escape(bytes((crc,)))
 
 
-def build_write_frame(
-    zz: int, pbsb: str, master_data: bytes, qq: int = DEFAULT_SOURCE
+def build_read_frame(
+    zz: int, pbsb: str, msgid: str, qq: int = DEFAULT_SOURCE, master_data: bytes = b""
 ) -> bytes:
-    """Build the on-wire master frame for a write; `master_data` already includes
-    the message id and the encoded field bytes (see MessageDef.encode)."""
-    return build_read_frame(zz, pbsb, "", qq, master_data)
+    """The master part of a read: the message id, then any argument bytes of a
+    parametrised read."""
+    return build_master_frame(zz, pbsb, bytes.fromhex(msgid) + master_data, qq)
 
 
 class _CommandDriver:
@@ -96,13 +81,12 @@ class _CommandDriver:
     def __init__(self, zz: int, pbsb: str, data: bytes, qq: int = DEFAULT_SOURCE):
         # the whole master part, QQ ZZ PB SB NN data CRC; arbitration puts QQ on
         # the bus, so the first send starts after it, a repeat after NAK at QQ
-        self._cmd = build_read_frame(zz, pbsb, "", qq, data)
-        self._first = len(escape(bytes((qq,))))
+        self._cmd = build_master_frame(zz, pbsb, data, qq)
         self.qq = qq
         self.zz = zz
         self._dec = EnhDecoder()
         self._state = "arb"
-        self._sendpos = self._first
+        self._sendpos = len(escape(bytes((qq,))))  # QQ went out with START
         # the destination ACKed the command (or it was a complete broadcast): a
         # write has been applied, whatever happens to the rest of the telegram
         self.accepted = False
@@ -123,7 +107,7 @@ class _CommandDriver:
 
     def start(self) -> list[bytes]:
         """Initial symbols to send: the arbitration START with QQ."""
-        return [_symbol2(START, self.qq)]
+        return [encode_command(START, self.qq)]
 
     @property
     def arbitrating(self) -> bool:
@@ -187,7 +171,7 @@ class _CommandDriver:
                 return self._send_next_cmd()
             if code == RECEIVED and data == NAK:
                 self._fail("command NAKed by slave")
-                return [_symbol2(SEND, SYN)]  # the bus is ours: release it
+                return [encode_command(SEND, SYN)]  # the bus is ours: release it
             return self._fail("unexpected symbol waiting for command ACK")
 
         if self._state == "nak_echo":  # our own NAK coming back; the repeat follows
@@ -211,7 +195,7 @@ class _CommandDriver:
         self._sendpos += 1
         if self._sendpos == len(self._cmd):
             self.may_have_landed = True
-        return [_symbol2(SEND, b)]
+        return [encode_command(SEND, b)]
 
     def _answer_byte(self, data: int) -> list[bytes]:
         # a raw SYN never occurs inside a frame: the slave did not answer and the
@@ -235,20 +219,20 @@ class _CommandDriver:
         sdata = bytes(u[1:1 + sn])
         if crc8(escape(bytes((sn,)) + sdata)) == u[1 + sn]:
             # ACK the good answer, then release the bus with a SYN
-            return self._complete(sdata, [_symbol2(SEND, ACK)])
+            return self._complete(sdata, [encode_command(SEND, ACK)])
         if not self._answer_nakd:  # NAK it once; the slave repeats its answer
             self._answer_nakd = True
             self._slave.clear()
             self._state = "nak_echo"
-            return [_symbol2(SEND, NAK)]
+            return [encode_command(SEND, NAK)]
         self.error = "slave CRC mismatch"
         self.done = True
-        return [_symbol2(SEND, NAK), _symbol2(SEND, SYN)]
+        return [encode_command(SEND, NAK), encode_command(SEND, SYN)]
 
     def _complete(self, answer: bytes, before_syn: list[bytes] | None = None) -> list[bytes]:
         self.result = self._result(answer)
         self.done = True
-        return [*(before_syn or []), _symbol2(SEND, SYN)]
+        return [*(before_syn or []), encode_command(SEND, SYN)]
 
     def _result(self, answer: bytes):  # subclass: what the caller gets back
         return answer

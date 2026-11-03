@@ -11,7 +11,7 @@ from aioebus.active import (
     SEND,
     START,
     WriteDriver,
-    build_write_frame,
+    build_master_frame,
 )
 from aioebus.frame import BROADCAST, SYN, crc8, escape
 from aioebus.transport import RECEIVED, STARTED, EnhDecoder, encode_symbol
@@ -119,7 +119,7 @@ MASTER = bytes.fromhex("0e18003c")  # FlowTempDesired = 30.0
 
 def _cmd(zz: int) -> bytes:
     """The whole master part on the wire, QQ ZZ PB SB NN DD CRC."""
-    return build_write_frame(zz, "b509", MASTER, QQ)
+    return build_master_frame(zz, "b509", MASTER, QQ)
 
 
 def test_write_to_slave_waits_for_its_answer():
@@ -176,8 +176,8 @@ def test_write_nak_twice_is_error_and_releases_the_bus():
 
 def test_more_than_16_data_bytes_is_refused():
     with pytest.raises(ValueError):
-        build_write_frame(0x15, "b524", bytes(17), QQ)
-    assert build_write_frame(0x15, "b524", bytes(16), QQ)
+        build_master_frame(0x15, "b524", bytes(17), QQ)
+    assert build_master_frame(0x15, "b524", bytes(16), QQ)
 
 
 def test_bad_answer_crc_is_nakd_and_repeated():

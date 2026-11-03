@@ -255,3 +255,19 @@ def test_negative_and_formatted_constants():
     assert msg[1].decode(b"", bytes.fromhex("0a0007")) == {"value": 7}
     with pytest.raises(ValueError, match="is not 10:00"):
         msg[1].decode(b"", bytes.fromhex("0b0007"))
+
+
+def test_destination_address_and_id_bytes():
+    rows = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                     "r,,,A,,,15,b509,0d1800,value,,UCH,,,\n"
+                     "r,,,B,,,,b509,0d1900,value,,UCH,,,\n"
+                     "r,,,C,,,x8,b509,,value,,UCH,,,\n")
+    assert [m.address for m in rows] == [0x15, None, None]
+    assert rows[0].id_bytes == bytes.fromhex("0d1800") and rows[2].id_bytes == b""
+
+
+def test_value_fields_skip_ignored_and_nameless():
+    pump = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                     "r1,,,PumpState,,,38,b511,01,ign,,IGN:6,,,,value,,UCH,0=off;1=on,,"
+                     ",,,UCH,,,\n")[0]
+    assert [f.name for f in pump.value_fields] == ["value"]

@@ -56,7 +56,7 @@ class Codec:
         raise NotImplementedError
 
 
-class _Numeric(Codec):
+class NumericCodec(Codec):
     def __init__(self, name, size, signed, base_div, repl, big=False):
         super().__init__(name, size)
         self.signed = signed
@@ -122,7 +122,7 @@ class _Numeric(Codec):
         return raw.to_bytes(self.length, order)
 
 
-class _Bcd(Codec):
+class BcdCodec(Codec):
     def __init__(self, n=1):
         super().__init__("BCD" if n == 1 else f"BCD:{n}", n)
 
@@ -309,7 +309,7 @@ class _Pin(Codec):
         return None if hi is None or lo is None else f"{hi:02d}{lo:02d}"
 
 
-class _Bit(Codec):
+class BitCodec(Codec):
     """A bit field inside a shared byte: BIx reads `nbits` bits starting at bit x.
     Its byte length is 0 -- the message decoder groups consecutive bit fields into
     one byte and advances past it when the group ends (see messages.decode)."""
@@ -326,7 +326,7 @@ class _Bit(Codec):
         return None if not data else self.decode_bits(data[0])
 
 
-class _Float(Codec):
+class FloatCodec(Codec):
     """EXP/EXR: IEEE-754 binary32, little- or big-endian."""
 
     def __init__(self, name, big):
@@ -377,13 +377,22 @@ _SPECIAL = {
     "DTM": lambda n: _DateTime(),
     "DAY": lambda n: _Days(),
     "PIN": lambda n: _Pin(),
-    "EXP": lambda n: _Float("EXP", big=False),
-    "EXR": lambda n: _Float("EXR", big=True),
+    "EXP": lambda n: FloatCodec("EXP", big=False),
+    "EXR": lambda n: FloatCodec("EXR", big=True),
 }
 
 
-def make_codec(spec: str) -> Codec:
-    """Build a codec from a type spec like 'D2C', 'UIN', 'HEX:6', 'STR:*'."""
+def make_codec(spec: str, divisor: float | None = None) -> Codec:
+    """Build a codec from a type spec like 'D2C', 'UIN', 'HEX:6', 'STR:*';
+    ``divisor`` is the CSV divisor column (numbers only: positive divides,
+    negative multiplies, on top of the base type's own divisor)."""
+    codec = _make(spec)
+    if divisor and isinstance(codec, NumericCodec | FloatCodec):
+        codec.extra_div = divisor
+    return codec
+
+
+def _make(spec: str) -> Codec:
     spec = spec.strip().upper()
     base, _, suffix = spec.partition(":")
     n = -1 if suffix == "*" else (int(suffix) if suffix else None)
@@ -394,17 +403,17 @@ def make_codec(spec: str) -> Codec:
     if base == "STR":
         return _Str(n if n is not None else 1)
     if base == "BCD":
-        return _Bcd(n if n and n > 0 else 1)
+        return BcdCodec(n if n and n > 0 else 1)
     if len(base) == 3 and base[:2] == "BI" and base[2].isdigit():
-        return _Bit(base, int(base[2]), n if n and n > 0 else 1)
+        return BitCodec(base, int(base[2]), n if n and n > 0 else 1)
     if base in _SPECIAL:
         return _SPECIAL[base](n if n and n > 0 else None)
     if base in _NUMERIC:
         size, signed, bdiv, repl = _NUMERIC[base]
-        return _Numeric(base, size, signed, bdiv, repl)
+        return NumericCodec(base, size, signed, bdiv, repl)
     if base in _NUMERIC_REV:
         size, signed, bdiv, repl = _NUMERIC_REV[base]
-        return _Numeric(base, size, signed, bdiv, repl, big=True)
+        return NumericCodec(base, size, signed, bdiv, repl, big=True)
     raise ValueError(f"unknown eBUS type: {spec!r}")
 
 
@@ -413,19 +422,36 @@ def decode(spec: str, data, divisor: float | None = None):
     CSV divisor column (applied on top of the base type's own divisor)."""
     if isinstance(data, str):
         data = bytes.fromhex(data)
-    codec = make_codec(spec)
-    if divisor and hasattr(codec, "extra_div"):  # _Numeric and _Float (EXP/EXR)
-        codec.extra_div = divisor
-    return codec.decode(data)
+    return make_codec(spec, divisor).decode(data)
+
+
+def _codec_is(spec: str, *kinds: type[Codec]) -> bool:
+    try:
+        return isinstance(make_codec(spec), kinds)
+    except ValueError:
+        return False
 
 
 def is_numeric(spec: str) -> bool:
     """True for an integer type (with or without a base divisor) whose value range
-    is known, i.e. one that can back a number control."""
-    try:
-        return isinstance(make_codec(spec), _Numeric)
-    except ValueError:
-        return False
+    is known (:func:`value_range`)."""
+    return _codec_is(spec, NumericCodec)
+
+
+def is_float(spec: str) -> bool:
+    """True for a float type (EXP, EXR): numeric, but without a natural range."""
+    return _codec_is(spec, FloatCodec)
+
+
+def is_number(spec: str) -> bool:
+    """True for a type a number can be written to: an integer or a float type."""
+    return _codec_is(spec, NumericCodec, FloatCodec)
+
+
+def has_numeric_value(spec: str) -> bool:
+    """True for a type that decodes to a number (so its history can be
+    aggregated): a number type or BCD."""
+    return _codec_is(spec, NumericCodec, FloatCodec, BcdCodec)
 
 
 def value_range(spec: str, divisor: float | None = None) -> tuple[float, float, float] | None:
@@ -436,7 +462,7 @@ def value_range(spec: str, divisor: float | None = None) -> tuple[float, float, 
         codec = make_codec(spec)
     except ValueError:
         return None
-    if not isinstance(codec, _Numeric):
+    if not isinstance(codec, NumericCodec):
         return None
     bits = 8 * codec.length
     lo, hi = (-(1 << (bits - 1)), (1 << (bits - 1)) - 1) if codec.signed else (0, (1 << bits) - 1)
@@ -453,9 +479,7 @@ def value_range(spec: str, divisor: float | None = None) -> tuple[float, float, 
 
 def encode(spec: str, value, divisor: float | None = None) -> bytes:
     """Encode a value to raw field bytes (numeric and float types, for writes)."""
-    codec = make_codec(spec)
-    if not isinstance(codec, (_Numeric, _Float)):
+    codec = make_codec(spec, divisor)
+    if not isinstance(codec, NumericCodec | FloatCodec):
         raise NotImplementedError(f"encode not supported for type {spec!r}")
-    if divisor:
-        codec.extra_div = divisor
     return codec.encode(value)

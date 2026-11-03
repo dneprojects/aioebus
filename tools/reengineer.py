@@ -33,9 +33,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from aioebus.convert import to_dicts
+from aioebus.frame import BROADCAST
 from aioebus.messages import MessageDef, parse_csv
-
-BROADCAST = 0xFE
 
 
 def _load_defs(csv_paths: list[Path]) -> list[MessageDef]:
@@ -62,7 +61,9 @@ def _by_pbsb(defs: list[MessageDef]) -> dict[tuple[int, int], list[MessageDef]]:
 
 def _match(dd: str, cands: list[MessageDef]) -> list[MessageDef]:
     """Defs whose message id prefixes this master data; keep the longest-id
-    group so a short-id sibling does not claim a longer id's telegrams."""
+    group so a short-id sibling does not claim a longer id's telegrams. Unlike
+    MessageRegistry.match (one definition per telegram), every definition of the
+    group counts: a read and its write twin are both kept."""
     dd = dd.lower()
     hits = [m for m in cands if m.msgid and dd.startswith(m.msgid.lower())]
     if not hits:

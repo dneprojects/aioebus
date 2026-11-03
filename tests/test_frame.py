@@ -3,7 +3,9 @@ live Vaillant bus (ebusd SQLite log) and its expected fields are ebusd's own
 decoded columns. `tools/validate_frame_db.py` runs the same checks across all
 285k telegrams; this file is the offline subset that runs without the DB.
 """
-from aioebus.frame import crc8, escape, parse_telegram, unescape
+import pytest
+
+from aioebus.frame import FrameError, crc8, escape, parse_telegram, unescape
 
 
 def test_crc_known_master():
@@ -72,3 +74,14 @@ def test_master_nak_retransmit():
     assert tg.data.hex() == "0001"
     assert tg.slave_data.hex() == "ffffffffffffffffffff"
     assert tg.crc_ok
+
+
+@pytest.mark.parametrize("raw, what", [
+    ("3138b5", "too short"),
+    ("3138b509030d1800", "master data truncated"),                   # NN=3, 2 data bytes + CRC
+    ("3138b509030d180074ff3138", "master header truncated"),        # NAKed, resend cut off
+    ("3138b509030d18007400039101", "slave data truncated"),          # SN=3, 2 bytes
+])
+def test_broken_frames_raise(raw, what):
+    with pytest.raises(FrameError, match=what):
+        parse_telegram(raw)

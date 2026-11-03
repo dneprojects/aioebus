@@ -138,6 +138,7 @@ def test_stats_track_connection_and_bus_activity():
 
         class _FailedDriver:
             error = "timeout waiting for slave"
+            lost_to = None
             retryable = False
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
@@ -190,6 +191,7 @@ def test_failed_poll_is_recorded_not_restuck():
 
         class _FailedDriver:
             error = "timeout waiting for slave"
+            lost_to = None
             retryable = False
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
@@ -346,7 +348,7 @@ _Z1 = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,"
 def _engine_write(sim_kwargs: dict):
     """Write Z1DayTemp=21.5 through the engine against a simulated bus; returns
     (simulator, engine, exception or None)."""
-    from test_write import _BusSim
+    from test_active_write import _BusSim
 
     frame = build_read_frame(0x15, "b524", "", QQ, _Z1.encode({"Z1DayTemp": 21.5}))
     sim = _BusSim(frame, **sim_kwargs)
@@ -386,7 +388,7 @@ def _engine_write(sim_kwargs: dict):
 def test_engine_write_to_slave_completes_after_answer():
     """The path Home Assistant uses: a write through the engine is reported done
     only after the slave answered; its closing ACK/SYN echoes are harmless."""
-    from test_write import _answer
+    from test_active_write import _answer
 
     sim, eng, err = _engine_write({"answers": [_answer("")]})
     assert err is None and eng.stats.writes == 1 and sim.answered == 1
@@ -396,7 +398,7 @@ def test_engine_write_to_slave_completes_after_answer():
 def test_engine_accepted_write_with_broken_tail_is_sent_once():
     # ACKed = applied; a garbled echo of our NAK afterwards is a "collision" the
     # engine would otherwise retry -- re-sending the setpoint up to 12 times
-    from test_write import _answer
+    from test_active_write import _answer
 
     sim, eng, err = _engine_write({"answers": [_answer("", crc=0x12)], "nak_echo": 0x12})
     assert err is None and eng.stats.writes == 1
@@ -967,3 +969,159 @@ def test_only_valid_destinations_and_active_writes_are_sent():
         with pytest.raises(ValueError, match="slave"):
             asyncio.run(eng.read_raw(zz, "0704", ""))
     assert not eng._queue
+
+
+# -- write and read back, restore, a missing or silent link ----------------
+
+_SET = parse_csv("type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+                 "w,,,Z1DayTemp,,,15,b524,02,value,,D2C,,,\n"
+                 "r,,,Z1DayTemp,,,15,b524,01,value,,D2C,,,\n")
+
+
+def _confirmed(write_error=None, read_error=None, read_value=None):
+    """write_confirmed with the bus calls replaced: (outcome, cache)."""
+    eng = EbusEngine(allow_write=True)
+    write, read = _SET
+    key = value_key(read, "Z1DayTemp")
+
+    async def fake_write(msg, values, timeout):
+        if write_error is not None:
+            raise write_error
+
+    async def fake_read(msg, timeout):
+        assert msg is read
+        if read_error is not None:
+            raise read_error
+        eng.cache[key] = read_value
+
+    eng.write, eng.read = fake_write, fake_read
+    outcome = asyncio.run(eng.write_confirmed(write, {"Z1DayTemp": 21.5}, read_back=read))
+    return outcome, eng.cache.get(key, "unset")
+
+
+def test_write_confirmed_shows_what_the_device_took():
+    outcome, cached = _confirmed(read_value=21.0)
+    assert outcome.read_back and outcome.uncertain is None and cached == 21.0
+
+
+def test_write_confirmed_without_read_back_caches_the_written_value():
+    outcome, cached = _confirmed(read_error=ReadError("no answer from slave"))
+    assert not outcome.read_back and cached == 21.5
+    eng = EbusEngine(allow_write=True)
+
+    async def fake_write(msg, values, timeout):
+        pass
+
+    eng.write = fake_write
+    outcome = asyncio.run(eng.write_confirmed(_SET[0], {"value": 20}))  # no read message
+    assert not outcome.read_back and eng.cache == {value_key(_SET[0], "Z1DayTemp"): 20}
+
+
+def test_unconfirmed_write_is_reported_and_never_cached_as_written():
+    uncertain = WriteUncertain("collision: echo mismatch")
+    outcome, cached = _confirmed(write_error=uncertain, read_value=21.5)
+    assert outcome.uncertain is uncertain and outcome.read_back and cached == 21.5
+    outcome, cached = _confirmed(write_error=uncertain, read_error=TimeoutError())
+    assert outcome.uncertain is uncertain and not outcome.read_back and cached == "unset"
+
+
+def test_failed_write_raises_and_reads_nothing_back():
+    with pytest.raises(ReadError, match="NAK"):
+        _confirmed(write_error=ReadError("command NAKed by slave"))
+
+
+def test_restore_drops_retired_registers_of_known_devices_only():
+    eng = EbusEngine(registry=REG)
+    eng.restore([(("38", "FlowTemp", "FlowTemp"), 40.5),
+                 (("38", "Retired", "Retired"), 1),  # device known, register gone
+                 (("18", "FlowTemp", "FlowTemp"), 38.0)])  # device missed this scan
+    assert eng.cache == {("38", "FlowTemp", "FlowTemp"): 40.5,
+                         ("18", "FlowTemp", "FlowTemp"): 38.0}
+
+
+def test_an_engine_without_a_link_fails_requests_at_once():
+    eng = EbusEngine(registry=REG)
+    with pytest.raises(ReadError, match="not connected"):
+        asyncio.run(eng.read(BY["FlowTemp"]))
+    asyncio.run(eng.run())  # ends at once: nothing to pump
+    assert not eng.running and not eng.stats.connected
+
+
+def test_a_silent_link_ends_the_run_and_fails_the_waiting_caller():
+    async def inner():
+        link = _Link()
+        silent = asyncio.Event()
+
+        async def recv():
+            await silent.wait()
+            raise TimeoutError  # what Link.recv raises after RECV_TIMEOUT
+
+        eng = EbusEngine(link.send, recv, REG)
+        task = asyncio.create_task(eng.run())
+        read = asyncio.create_task(eng.read(BY["FlowTemp"]))
+        await asyncio.sleep(0.01)
+        silent.set()
+        await asyncio.wait_for(task, 1)
+        with pytest.raises(ReadError, match="connection lost"):
+            await read
+        assert not eng.stats.connected
+
+    asyncio.run(inner())
+
+
+# -- real frames as an adapter stream ---------------------------------------
+
+
+_FRAME_CSV = """\
+type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
+*r,elo,,,,,38,,
+r1,,,FlowTemp,flow temperature,,,b509,0d1800,value,,D2C,,°C,,ign,,IGN:1,,,
+r,,,ModulationDesired,modulation setpoint,,,b509,0d2e00,value,,SIN,10,%,
+r1,,,Statenumber,status number,,,b509,0dab00,value,,UCH,0=kein_bedarf;31=sommer,,
+"""
+
+
+_FRAME_REGISTRY = MessageRegistry(parse_csv(_FRAME_CSV))
+
+
+_FRAMES = [
+    ("3138b509030d1800740003910100bb00", ("FlowTemp", 25.0625)),
+    ("3138b509030d2e004e000271022b00", ("ModulationDesired", 62.5)),
+    ("3138b509030dab001f00011f8400", ("Statenumber", "sommer")),
+]
+
+
+def _engine_decodes(chunks: list[bytes]) -> list[tuple[str, object]]:
+    """Feed adapter chunks to an engine (no writes); the values it decoded."""
+    import asyncio
+
+    from aioebus.engine import EbusEngine
+
+    got: list[tuple[str, object]] = []
+
+    async def inner():
+        queue: asyncio.Queue = asyncio.Queue()
+        for chunk in [*chunks, b""]:
+            queue.put_nowait(chunk)
+
+        async def send(_data: bytes) -> None:
+            raise AssertionError("a passive engine sends nothing")
+
+        eng = EbusEngine(send, queue.get, _FRAME_REGISTRY,
+                         on_value=lambda m, v: got.append((m.name, next(iter(v.values())))))
+        await asyncio.wait_for(eng.run(), 2)
+
+    asyncio.run(inner())
+    return got
+
+
+def test_engine_decodes_real_frames():
+    stream = [encode_received_frame(bytes.fromhex(raw)) for raw, _ in _FRAMES]
+    assert _engine_decodes(stream) == [exp for _, exp in _FRAMES]
+
+
+def test_decoding_survives_fragmentation():
+    # feed the whole stream one byte at a time; the stateful decoder must not care
+    stream = b"".join(encode_received_frame(bytes.fromhex(r)) for r, _ in _FRAMES)
+    assert _engine_decodes([stream[i:i + 1] for i in range(len(stream))]) == [
+        exp for _, exp in _FRAMES]

@@ -5,8 +5,9 @@ aioebus.frame and check it against ebusd's own decoded columns + CRC.
 """
 import sqlite3
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "src")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from aioebus.frame import FrameError, parse_telegram
 
 
@@ -46,6 +47,9 @@ def main(db_path: str) -> int:
             crc_fail += 1
             if len(examples) < 10:
                 examples.append(f"CRC {raw}: computed != carried")
+    if not total:
+        print("telegrams: 0 (nothing to check)")
+        return 1
     ok = total - parse_fail - mismatch - crc_fail
     print(f"telegrams: {total}")
     print(f"  parsed+matched+crc-ok: {ok} ({100 * ok / total:.2f}%)")

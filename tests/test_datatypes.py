@@ -54,7 +54,7 @@ def test_float_and_u2l():
     assert decode("U2L", "ffff") == 65535               # full range, no replacement
 
 
-def test_real_captures():
+def test_real_captures_of_time_and_float_types():
     # from live 15.ctlv3: DisplayedOutsideTemp (EXP), Time (HTI), HwcTimer (HTM)
     assert decode("EXP", "00003e41") == 11.875
     assert decode("HTI", "100736") == "16:07:54"

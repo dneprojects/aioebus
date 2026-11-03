@@ -1,6 +1,6 @@
 """What a message's values are: one :class:`Value` per named field, its stable
-key, label and cache key, whether it is numeric, and the control a writable one
-allows.
+key, label and cache key, and the control a writable one allows (whether a type
+is numeric is the codecs' business).
 
 Presentation (entity platforms, names, icons) is the consumer's business; this
 module only states the facts every consumer derives it from.
@@ -10,23 +10,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Literal, TypeAlias
 
-from .codecs import is_numeric
+from .codecs import is_number
 from .messages import FieldDef, MessageDef, label_of
 from .translations import translation_key
 
-# float types: numeric, but with no natural raw range (a control needs bounds)
-FLOAT_TYPES: Final[frozenset[str]] = frozenset({"EXP", "EXR"})
 # a message named so holds the total of a closed period (last month, last year):
 # it changes once per period, so its history is a series of totals, not a meter
 _PERIOD_SUFFIXES: Final = ("LastMonth", "LastYear")
 
+MessageKey: TypeAlias = tuple[str, str]  # (device, message)
 CacheKey: TypeAlias = tuple[str, str, str]  # (device, message, label)
 
 
+def message_key(msg: MessageDef) -> MessageKey:
+    """Which register of which device a message is: the device (address if
+    known, else circuit) and the message name."""
+    return (msg.zz or msg.circuit, msg.name)
+
+
 def value_key(msg: MessageDef, label: str) -> CacheKey:
-    """Cache key for one decoded value: the device (address if known, else
-    circuit), the message name and the value's label."""
-    return (msg.zz or msg.circuit, msg.name, label)
+    """Cache key for one decoded value: :func:`message_key` and the value's label."""
+    return (*message_key(msg), label)
 
 
 @dataclass
@@ -59,24 +63,6 @@ def closes_period(msg: MessageDef) -> bool:
     return msg.name.endswith(_PERIOD_SUFFIXES)
 
 
-def _base(type_: str) -> str:
-    return type_.upper().split(":", 1)[0]
-
-
-def is_number_type(type_: str) -> bool:
-    """A type a number control can write (integers, and floats given bounds)."""
-    return is_numeric(type_) or _base(type_) in FLOAT_TYPES
-
-
-def is_float_type(type_: str) -> bool:
-    return _base(type_) in FLOAT_TYPES
-
-
-def has_numeric_value(type_: str) -> bool:
-    """A type that decodes to a number (so its history can be aggregated)."""
-    return is_number_type(type_) or _base(type_) == "BCD"
-
-
 def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Value] | None:
     """The control an active write message allows: a select for a value table, a
     number for a numeric type; only writes sending a single value get one (a
@@ -90,6 +76,6 @@ def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Value] | N
     value = values[0]
     if value.field.values:
         return "select", value
-    if is_number_type(value.field.type):
+    if is_number(value.field.type):
         return "number", value
     return None

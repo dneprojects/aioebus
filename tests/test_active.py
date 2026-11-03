@@ -1,6 +1,12 @@
-"""Active read-frame construction (offline)."""
-from aioebus.active import build_read_frame
-from aioebus.frame import parse_telegram
+"""Active transactions: the master frame and the read driver against a simulated
+adapter (the write driver: test_active_write.py)."""
+from aioebus.active import ACK, SEND, START, ReadDriver, build_read_frame
+from aioebus.frame import crc8, escape, parse_telegram
+from aioebus.messages import parse_csv
+from aioebus.transport import RECEIVED, STARTED, EnhDecoder, encode_symbol
+
+QQ = 0x31
+ZZ, PBSB, MSGID = 0x38, "b509", "0d1800"  # eloBlock FlowTemp read
 
 
 def test_build_read_frame_roundtrips():
@@ -21,3 +27,148 @@ def test_escaping_in_master_data():
     tg = parse_telegram(wire + b"\x00")
     assert tg.data.hex() == "0daa00"
     assert tg.crc_ok
+
+
+def _slave_wire(slave_data_hex: str) -> bytes:
+    """Build the RECEIVED byte values for: master ACK + SN + data + slave CRC."""
+    sdata = bytes.fromhex(slave_data_hex)
+    sn = len(sdata)
+    scrc = crc8(escape(bytes((sn,)) + sdata))
+    return bytes((ACK, sn)) + sdata + bytes((scrc,))
+
+
+class FakeAdapter:
+    def __init__(self, cmd_bytes: bytes, slave_wire: bytes):
+        self.cmd = cmd_bytes
+        self.slave = slave_wire
+        self.i = 0
+
+    def respond(self, code: int, data: int) -> bytes:
+        out = bytearray()
+        if code == START:
+            out += encode_symbol(STARTED, data)         # arbitration won
+        elif code == SEND:
+            if self.i < len(self.cmd):
+                out += encode_symbol(RECEIVED, self.cmd[self.i])  # echo the sent byte
+                self.i += 1
+                if self.i == len(self.cmd):              # last cmd byte -> answer
+                    for b in self.slave:
+                        out += encode_symbol(RECEIVED, b)
+            # SEND after the answer (our ACK/SYN) needs no reply
+        return bytes(out)
+
+
+def _run(drv: ReadDriver, adapter: FakeAdapter) -> None:
+    dec = EnhDecoder()
+    pending = list(drv.start())
+    guard = 0
+    while not drv.done and guard < 2000:
+        guard += 1
+        reply = bytearray()
+        for sym in pending:
+            for code, data in dec.feed(sym):
+                reply += adapter.respond(code, data)
+        pending = drv.feed(bytes(reply)) if reply else []
+        if not reply and not pending:
+            break
+
+
+def test_active_read_roundtrip():
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    adapter = FakeAdapter(cmd, _slave_wire("910100"))
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, adapter)
+    assert drv.error is None
+    assert drv.result == bytes.fromhex("910100")
+
+
+def test_active_read_decodes_value():
+    csv = ("type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment\n"
+           "r1,elo,,FlowTemp,,,38,b509,0d1800,value,,D2C,,°C,,ign,,IGN:1,,,\n")
+    msg = parse_csv(csv)[0]
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    adapter = FakeAdapter(cmd, _slave_wire("910100"))
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, adapter)
+    assert msg.decode_labeled(slave=drv.result) == {"FlowTemp": 25.0625}
+
+
+def test_arbitration_lost():
+    from aioebus.transport import FAILED
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    drv.start()
+    out = drv.feed(encode_symbol(FAILED, 0x10))  # another master won
+    assert drv.done and drv.error and "arbitration lost" in drv.error
+    assert out == []
+
+
+def test_slave_crc_aa_is_unescaped_before_completion():
+    # a slave CRC of 0xAA travels as A9 01; the frame must not be judged complete
+    # (and fail the CRC) on the escape prefix alone
+    data = next(bytes((d,)) for d in range(256)
+                if d not in (0xA9, 0xAA) and crc8(escape(bytes((1, d)))) == 0xAA)
+    wire = bytes((ACK,)) + escape(bytes((1,)) + data + bytes((0xAA,)))
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, wire))
+    assert drv.error is None
+    assert drv.result == data
+
+
+def test_slave_data_with_escaped_bytes():
+    # 0xA9 and 0xAA inside the answer travel escaped (A9 00 / A9 01)
+    data = bytes((0xA9, 0x01, 0xAA, 0x00))
+    sn = bytes((len(data),))
+    crc = crc8(escape(sn + data))
+    wire = bytes((ACK,)) + escape(sn + data + bytes((crc,)))
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, wire))
+    assert drv.error is None
+    assert drv.result == data
+
+
+def test_read_command_nak_twice_fails():
+    # a NAKed command is sent once more (no new arbitration); a second NAK fails
+    full = build_read_frame(ZZ, PBSB, MSGID, QQ)
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    drv.start()
+    out = drv.feed(encode_symbol(STARTED, QQ))
+    dec = EnhDecoder()
+    for attempt, part in enumerate((full[1:], full)):  # repeat starts again at QQ
+        for b in part:
+            assert [d for _c, d in dec.feed(b"".join(out))] == [b]
+            out = drv.feed(encode_symbol(RECEIVED, b))  # echo
+        out = drv.feed(encode_symbol(RECEIVED, 0xFF))  # NAK
+        if attempt == 0:
+            assert not drv.done
+    assert drv.done and drv.error == "command NAKed by slave"
+
+
+def test_unanswered_read_fails_on_syn():
+    # the slave ACKs the command but never answers: the bus goes idle (SYN), so
+    # the read fails at once instead of waiting for a 0xAA-byte answer
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, bytes((ACK, 0xAA))))
+    assert drv.done and drv.error == "no answer from slave"
+
+
+def test_collision_on_echo_mismatch():
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    drv.start()
+    drv.feed(encode_symbol(STARTED, QQ))          # won; now sending first cmd byte
+    out = drv.feed(encode_symbol(RECEIVED, 0x99))  # wrong echo
+    assert drv.done and "collision" in drv.error
+    assert out == []
+
+
+def test_garbled_nak_echo_is_a_retryable_collision():
+    # we NAK a bad answer, its echo comes back wrong: contended bus, try again
+    cmd = build_read_frame(ZZ, PBSB, MSGID, QQ)[len(escape(bytes((QQ,)))):]
+    bad = bytes((ACK, 1, 0x05, 0x00))  # wrong CRC
+    drv = ReadDriver(ZZ, PBSB, MSGID, QQ)
+    _run(drv, FakeAdapter(cmd, bad))
+    assert not drv.done and drv._state == "nak_echo"
+    drv.feed(encode_symbol(RECEIVED, 0x12))  # not our NAK
+    assert drv.done and "collision" in drv.error and drv.retryable

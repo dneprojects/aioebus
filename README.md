@@ -13,25 +13,32 @@ It ports [ebusd](https://github.com/john30/ebusd)'s behaviour to Python by spec
 | Module | |
 |---|---|
 | `link` | TCP connection to the adapter (`connect`), liveness `probe` |
-| `engine` | One connection: decodes what other masters put on the bus (free), slips its own reads/writes in when the bus is idle, keeps a value cache, polls by priority (`poll`) |
-| `discovery` | Which devices are on the bus: scan, Vaillant identification (article, serial), deep scan of every slave address, phantom addresses |
-| `catalog` | Each device's definitions: our bundled ones, else a user file, else the matching ebusd-configuration CSV from ebus.github.io (chosen as ebusd chooses it, with its `!load` includes), cached; display texts per language |
-| `values` | What a message's values are: labels, stable keys, cache keys, numeric or not, the control a write allows |
-| `messages`, `codecs` | Message model, ebusd-CSV ingest (default rows, conditions, value tables), every ebusd datatype |
+| `engine` | One connection: decodes what other masters put on the bus (free), slips its own reads/writes in when the bus is idle, keeps a value cache, polls by priority (`poll`); a write can be read back (`write_confirmed`), a saved cache restored (`restore`) |
+| `runner` | Keeps an engine connected: reconnects with a pause when the link ends |
+| `discovery`, `scan` | Which devices are on the bus: scan, Vaillant identification (article, serial), deep scan of every slave address, phantom addresses |
+| `catalog`, `cdn`, `conditions` | Each device's definitions: our bundled ones, else a user file, else the matching ebusd-configuration CSV from ebus.github.io (chosen as ebusd chooses it, with its `!load` includes and conditions), cached |
+| `values` | What a message's values are: labels, stable keys, cache keys, the control a write allows |
+| `messages`, `codecs`, `convert` | Message model, ebusd-CSV ingest (default rows, conditions, value tables, constants), every ebusd datatype, our JSON format |
+| `translations` | Stable keys for display texts, and the texts per language from the ebusd CSVs |
 | `frame`, `passive`, `transport`, `active` | Telegrams and CRC, matching telegrams to definitions, the adapter's byte protocol, the transaction state machine |
+
+Everything in `aioebus.__all__` is the public API, under the submodule paths as
+well.
 
 ## Example
 
 ```python
 import asyncio
 
-from aioebus import Catalog, EbusEngine, MessageRegistry, PollScheduler, connect, discover
+from aioebus import (
+    Catalog, EbusEngine, EngineRunner, MessageRegistry, PollScheduler, connect, discover,
+)
 
 
 async def main() -> None:
-    link = await connect("192.168.1.50", 9999)
-    engine = EbusEngine(link.send, link.recv, MessageRegistry([]))
-    run = asyncio.create_task(engine.run())
+    engine = EbusEngine()
+    runner = EngineRunner(engine, lambda: connect("192.168.1.50", 9999))
+    await runner.start()                              # reconnects by itself from here
 
     found = await discover(engine)                    # which devices answer
     catalog = Catalog()                               # bundled definitions only
@@ -42,9 +49,7 @@ async def main() -> None:
 
     await asyncio.sleep(120)
     print(engine.cache)                               # (device, message, label) -> value
-    engine.stop()
-    link.close()
-    await run
+    runner.close()
 
 
 asyncio.run(main())
@@ -56,7 +61,9 @@ the catalog a cache directory and a `fetch(url) -> str | None` coroutine
 
 Writing is opt-in (`EbusEngine(..., allow_write=True)`). A write that went out
 completely but was not acknowledged raises `WriteUncertain` and is never sent
-twice; read the value back instead.
+twice. `write_confirmed(msg, values, read_back=catalog.read_twin(msg))` reads
+the register back afterwards, so the cache holds what the device took, and
+reports an unconfirmed write instead of raising.
 
 Decoding a captured telegram needs no bus:
 
@@ -83,4 +90,5 @@ python -m pytest            # tests, incl. real captures
 ruff check src tests tools
 mypy
 python tools/validate_frame_db.py /path/to/telegrams.db   # frames vs ebusd
+python tools/replay.py /path/to/telegrams.db              # a capture through the engine
 ```

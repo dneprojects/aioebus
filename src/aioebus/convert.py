@@ -1,9 +1,7 @@
 """Native structured format (JSON) + CSV->structured converter.
 
-This is the "something structured" alternative to ebusd-CSV for OUR OWN curated
-definitions: a nested, schema-able, comment-tolerant-when-YAML format with real
-field objects instead of positional columns. JSON here keeps the lib dependency
-free; swap `json` for `yaml` if you want comments in authored files.
+The format of our own curated definitions: real field objects instead of
+ebusd-CSV's positional columns, read without any dependency.
 
 `to_dicts` / `from_dicts` round-trip MessageDef <-> plain dicts; `csv_to_json`
 converts an ebusd-CSV file into the native format (we convert what we curate,
@@ -88,45 +86,6 @@ def from_dicts(data: list[dict]) -> list[MessageDef]:
 
 def csv_to_json(csv_text: str) -> str:
     return json.dumps(to_dicts(parse_csv(csv_text)), indent=2, ensure_ascii=False)
-
-
-def _msg_key(m: MessageDef) -> tuple[str, str, str, str]:
-    return (m.direction, m.pbsb, m.msgid, m.name)
-
-
-def attach_translations(
-    defs: list[MessageDef], by_lang: dict[str, list[MessageDef]]
-) -> list[MessageDef]:
-    """Set ``tr`` on each def from the same message in every provided language.
-
-    ``by_lang`` maps a language code to that language's parsed definitions of the
-    *same device* (the per-language CSVs are structurally identical). Messages are
-    matched by ``(direction, pbsb, id, name)`` and fields by position (guarded by
-    the field name), so order differences do not matter. Only non-empty comments
-    are stored; a message/field with no translation anywhere keeps ``tr=None``.
-    Mutates and returns ``defs``."""
-    # conditional variants share a key: each takes its own variant's texts
-    # (same conditions), else the first one's
-    index: dict[str, dict] = {}
-    for lang, msgs in by_lang.items():
-        for m in msgs:
-            idx = index.setdefault(lang, {})
-            idx.setdefault(_msg_key(m), m)
-            idx.setdefault((*_msg_key(m), tuple(m.conditions or ())), m)
-    for m in defs:
-        key = (*_msg_key(m), tuple(m.conditions or ()))
-        m_tr = {lang: o.comment for lang, idx in index.items()
-                if (o := idx.get(key)) is not None and o.comment}
-        m.tr = m_tr or None
-        for i, f in enumerate(m.fields):
-            f_tr = {
-                lang: o.fields[i].comment
-                for lang, idx in index.items()
-                if (o := idx.get(key)) is not None
-                and i < len(o.fields) and o.fields[i].name == f.name and o.fields[i].comment
-            }
-            f.tr = f_tr or None
-    return defs
 
 
 def convert_dir(src_dir: Path, out_dir: Path) -> int:
