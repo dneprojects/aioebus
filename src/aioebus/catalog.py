@@ -106,12 +106,19 @@ def bundled_files() -> list[str]:
     return sorted(p.name for p in BUNDLED_DIR.glob("*.json") if p.name != "index.json")
 
 
+@cache
+def _bundled_names() -> frozenset[str]:
+    """The bundled file names, read once (a lookup in the event loop must not
+    scan the folder)."""
+    return frozenset(bundled_files())
+
+
 def bundled_file_of(key: str) -> str | None:
     """The bundled file a definition key stands for: a file name itself, or the
     file of an ``IDENT/HW`` profile (:attr:`Definition.profile`); None if the
     catalog has no such file or profile."""
     if "/" not in key:
-        return key if key in bundled_files() else None
+        return key if key in _bundled_names() else None
     ident, hw = key.split("/", 1)
     found = _profile(ident, hw)
     return found[0] if found is not None and found[1] == key else None

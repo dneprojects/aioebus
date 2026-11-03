@@ -11,6 +11,7 @@
 - `transport` owns the host commands (`SEND`, `START`, `encode_command()`); `build_master_frame()` replaces `build_write_frame()`
 - New `cdn` module (download and cache, out of `catalog`); `attach_translations()` moved to `translations`
 - `__all__` lists everything the integration uses; removed `values.FLOAT_TYPES`, `is_number_type()`, `is_float_type()`, `PollScheduler.due_count()`, `discovery.BROADCAST_ADDRESS`
+- Moved or renamed: `values.has_numeric_value()` to `codecs`, `catalog.CDN`/`CACHE_MAX_AGE` to `cdn`, `discovery.PROBE_TIMEOUT` is `ADDRESS_TIMEOUT`; `Catalog.cache_dir`/`lang` are read-only
 - `tools/replay.py` (from the integration) feeds a capture through the engine; `validate_frame_db.py` runs from any folder
 - Publishing tests the built wheel and its definitions first
 - Tests for broken frames, a silent link and the tools; test files one per module

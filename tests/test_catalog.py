@@ -495,3 +495,14 @@ def test_bundled_file_of_a_definition_key():
     plain = next(i for i, e in index["devices"].items() if isinstance(e, str))
     assert cat.bundled_file_of(f"{plain}/1234") is None  # a device without profiles
     assert cat.bundled_file_of("NOPE/1234") is None
+
+
+def test_bundled_file_of_reads_the_folder_once(monkeypatch):
+    cat.bundled_file_of("hmu.json")  # warm, e.g. in an executor
+
+    def no_scan(*_a, **_k):
+        raise AssertionError("folder scanned again")
+
+    monkeypatch.setattr(type(cat.BUNDLED_DIR), "glob", no_scan)
+    assert cat.bundled_file_of("hmu.json") == "hmu.json"
+    assert cat.bundled_file_of("nope.json") is None
