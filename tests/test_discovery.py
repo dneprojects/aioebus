@@ -158,7 +158,7 @@ def test_link_dropping_during_identification_fails_the_discovery():
 
 def test_invalid_stored_addresses_are_ignored():
     eng = FakeEngine({0x08: HMU})
-    found = run(discover(eng, extra_addresses=[300, -1, True, "52", 0x52]))
+    found = run(discover(eng, extra_addresses=[300, -1, True, "52", 0xAA, 0x10, 0xFE, 0x52]))
     assert set(eng.probed) == {*BASE_ADDRESSES, 0x52}
     assert found.extra_addresses == [0x52]
 
@@ -189,3 +189,11 @@ def test_reattached_engine_waits_for_its_new_run():
         await task
 
     run(inner())
+
+
+def test_a_hand_edited_identification_of_wrong_types_is_dropped():
+    record = {"ident": "HMU00", "hw": "5103", "sw": "0902", "article": 20260913,
+              "serial": SERIAL, "year": "2021", "week": None}
+    found = run(discover(FakeEngine({0x08: HMU}), remembered={"08": record}))
+    ident = found.devices[0x08].ident
+    assert ident is not None and ident.article == "" and ident.year is None

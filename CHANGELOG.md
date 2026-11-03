@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.4
+
+- A field without a part lives where ebusd puts it: in the answer for a passive read (`u`), in the request for a write; everything in the request when the destination is a broadcast or a master (`MessageDef.part_of()` replaces `default_part`)
+- A write whose value lies in the device's answer gets no control (`control_of()`), and `encode()` refuses a value for an answer field
+- Constant fields (`=x`, verified `==x`) are written by themselves and yield no value
+- Value tables are looked up by the raw value, before the replacement value, as in ebusd
+- EXP/EXR infinity decodes to no value; a 4-byte date ignores its weekday byte
+- `EbusEngine.write()` refuses passive writes (`uw`); `read_raw()` reads only slaves; messages need a valid destination
+- Discovery ignores stored extra addresses that are no slave and stored identifications of wrong types
+- `decode_raw()` returns None for a malformed frame; translations of conditional variants come from the first variant
+
 ## 0.7.3
 
 - Catalog: a read and a write (or an active and a passive message) sharing one command are both kept, as in ebusd; before, one was dropped (e.g. the bus date/time write, the heat pump's SetMode write, timer writes)

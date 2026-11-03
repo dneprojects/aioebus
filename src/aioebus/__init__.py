@@ -106,4 +106,4 @@ __all__ = [
     "value_key",
     "values_of",
 ]
-__version__ = "0.7.3"
+__version__ = "0.7.4"

@@ -42,3 +42,13 @@ def test_passive_writes_get_no_control_and_period_totals():
     assert not closes_period(msg("r", NUM, name="PrEnergySumHc"))
     v = values_of(msg("r", NUM, name="FlowTemp"))[0]
     assert v.cache_key == value_key(v.msg, "FlowTemp") == ("15", "FlowTemp", "FlowTemp")
+
+
+def test_a_write_whose_value_is_in_the_answer_gets_no_control():
+    from aioebus.messages import parse_csv
+    hdr = "type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+    msg = parse_csv(hdr + "w,,,Clearerrorhistory,,,08,b503,0201,cleared,s,UCH,0=no;1=yes,,\n")[0]
+    assert control_of(msg) is None
+    both = parse_csv(hdr + "w,,,Set,,,08,b509,0e,value,,UCH,0=a;1=b,,,ok,s,UCH,,,\n")[0]
+    kind, value = control_of(both)
+    assert kind == "select" and value.field.name == "value"

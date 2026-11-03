@@ -13,21 +13,19 @@ up the same way read responses do.
 """
 from __future__ import annotations
 
-from .frame import Telegram, parse_telegram
+from .frame import FrameError, Telegram, parse_telegram
 from .messages import MessageDef
 
 
 def expects_slave(d: MessageDef) -> bool:
     """True if any field of the definition lives in the slave's answer."""
-    default = d.default_part
-    return any((f.part if f.part in ("m", "s") else default) == "s" for f in d.fields)
+    return any(d.part_of(f) == "s" for f in d.fields)
 
 
 def _has_master_data(d: MessageDef) -> bool:
     """True if the request carries data after the id (a write's value, a read's
     arguments)."""
-    default = d.default_part
-    return any((f.part if f.part in ("m", "s") else default) == "m" for f in d.fields)
+    return any(d.part_of(f) == "m" for f in d.fields)
 
 
 class MessageRegistry:
@@ -83,7 +81,10 @@ class MessageRegistry:
 
 def decode_raw(registry: MessageRegistry, raw: bytes | str):
     """Convenience: parse a wire frame and decode it, or None if unknown/bad."""
-    tg = parse_telegram(raw)
+    try:
+        tg = parse_telegram(raw)
+    except (FrameError, ValueError):  # truncated, or no hex
+        return None
     if not tg.crc_ok:
         return None
     return registry.decode(tg)

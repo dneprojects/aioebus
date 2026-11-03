@@ -8,9 +8,9 @@ own curated definitions can instead come from the native JSON format in
 
 Supported: the common Vaillant row shape
     type,circuit,level,name,comment,qq,zz,pbsb,id,[ name,part,type,divisor/values,unit,comment ]*
-with default rows (as ebusd applies them), IGN fields, value tables, the divisor
-column and condition prefixes (evaluated by conditions.py); templates and chained
-ids are not.
+with default rows (as ebusd applies them), IGN fields, value tables, constant
+values (``=x``), the divisor column and condition prefixes (evaluated by
+conditions.py); templates and chained ids are not.
 """
 from __future__ import annotations
 
@@ -21,8 +21,9 @@ import logging
 import re
 from dataclasses import dataclass, replace
 
-from .codecs import _Bit, make_codec
+from .codecs import _Bit, _Numeric, make_codec
 from .codecs import encode as _encode_field
+from .frame import BROADCAST, is_master
 
 # Valid message directions (ebusd): read, polled read r1..r9, write, update(+write).
 # Anything else in column 0 -- the CSV header line, condition/template rows we do
@@ -44,6 +45,19 @@ class FieldDef:
     # display-text translations by language code ({"en": ..., "de": ...}); the
     # technical `name` stays the language-neutral key, so entity ids are stable
     tr: dict[str, str] | None = None
+    # a constant (``=x`` in the values column): always written, never a value;
+    # ``verify`` (``==x``) also requires it in a decoded telegram
+    const: str | None = None
+    verify: bool = False
+
+    @property
+    def ignored(self) -> bool:
+        return self.type.upper().startswith("IGN")
+
+    @property
+    def has_value(self) -> bool:
+        """Named, neither ignored nor a constant: the field yields a value."""
+        return bool(self.name) and not self.ignored and self.const is None
 
 
 @dataclass
@@ -64,8 +78,8 @@ class MessageDef:
 
     @property
     def value_fields(self) -> list[FieldDef]:
-        """The fields that yield a value (named, not IGN): one entity each."""
-        return [f for f in self.fields if f.name and not f.type.upper().startswith("IGN")]
+        """The fields that yield a value (named, not IGN, no constant): one entity each."""
+        return [f for f in self.fields if f.has_value]
 
     @property
     def is_polled_read(self) -> bool:
@@ -90,18 +104,29 @@ class MessageDef:
         tail = self.direction[1:]
         return int(tail) if self.direction[:1] == "r" and tail.isdigit() else 0
 
-    @property
-    def default_part(self) -> str:
-        """Where a field without an explicit part lives: a pure read's in the
-        slave answer, any other's (write, passive) in the master data."""
-        return "s" if self.direction[:1] == "r" else "m"
+    def part_of(self, f: FieldDef) -> str:
+        """Where a field lives, as in ebusd: everything in the master data when
+        the destination is a broadcast or a master (nobody answers), else its own
+        part, else the master data for a write (w, uw) and the slave's answer for
+        a read (r, u)."""
+        if len(self.zz) == 2 and _is_hex(self.zz):
+            zz = int(self.zz, 16)
+            if zz == BROADCAST or is_master(zz):
+                return "m"
+        part = f.part.lower()
+        if part in ("m", "s"):
+            return part
+        return "m" if self.is_write else "s"
+
+    def request_fields(self) -> list[FieldDef]:
+        """The value fields sent in the request (a write's value, a read's arguments)."""
+        return [f for f in self.value_fields if self.part_of(f) == "m"]
 
     @property
     def needs_args(self) -> bool:
         """A read whose request carries values (named master fields, e.g. an
         index): it cannot be polled without them."""
-        return self.is_polled_read and any(
-            f.part == "m" for f in self.value_fields)
+        return self.is_polled_read and bool(self.request_fields())
 
     def decode(self, master: bytes | str = b"", slave: bytes | str = b"") -> dict:
         """Decode a telegram's data into {field_name: value}."""
@@ -111,7 +136,6 @@ class MessageDef:
             slave = bytes.fromhex(slave)
         bufs = {"m": master, "s": slave}
         pos = {"m": 0, "s": 0}
-        default_part = self.default_part
         out: dict = {}
         bit_part: str | None = None  # part whose byte an open bit group sits in
         last_start = -1
@@ -123,7 +147,7 @@ class MessageDef:
                 bit_part, last_start = None, -1
 
         for f in self.fields:
-            part = f.part if f.part in ("m", "s") else default_part
+            part = self.part_of(f)
             codec = make_codec(f.type)
 
             if isinstance(codec, _Bit):
@@ -149,11 +173,26 @@ class MessageDef:
                 chunk, pos[part] = buf[p:], len(buf)
             else:
                 chunk, pos[part] = buf[p : p + codec.length], p + codec.length
-            if f.type.upper().startswith("IGN"):
+            if f.ignored:
                 continue
-            val = codec.decode(chunk)
-            if f.values and isinstance(val, (int, float)) and int(val) in f.values:
-                val = f.values[int(val)]
+            if f.const is not None:
+                if f.verify and not _is_const(f, chunk):
+                    raise ValueError(f"{self.name}: {f.name or 'field'} is not {f.const}")
+                continue
+            if f.values and isinstance(codec, _Numeric):
+                # as ebusd: the table is looked up by the raw value first, then
+                # the replacement means no value, else the raw number shows
+                raw = codec.raw(chunk)
+                if raw is None:
+                    val = None
+                elif raw == codec.repl:
+                    val = f.values.get(raw)
+                else:
+                    val = f.values.get(raw, raw)
+            else:
+                val = codec.decode(chunk)
+                if f.values and isinstance(val, int) and val in f.values:
+                    val = f.values[val]
             if f.name:
                 out[f.name] = val
         close_bits()
@@ -166,19 +205,23 @@ class MessageDef:
         `values` is keyed by field name; a message with a single value field also
         accepts the message name (as its decoded label is). Enum labels are mapped
         back to their numbers. Numeric and float types only -- bit-field and
-        string writes are not supported yet and raise."""
+        string writes are not supported yet and raise. A constant field is
+        written by itself; a value for a field of the answer is refused (the
+        request could not carry it)."""
         data = bytearray(bytes.fromhex(self.msgid))
-        default = self.default_part
-        named = [f for f in self.fields
-                 if f.name and not f.type.upper().startswith("IGN")
-                 and (f.part if f.part in ("m", "s") else default) == "m"]
+        named = self.request_fields()
         lone = named[0].name if len(named) == 1 else None
+        answer_only = {f.name for f in self.value_fields} - {f.name for f in named}
+        if stray := answer_only & set(values):
+            raise ValueError(f"{self.name}: {sorted(stray)} not part of the request")
         for f in self.fields:
-            part = f.part if f.part in ("m", "s") else default
-            if part != "m":
+            if self.part_of(f) != "m":
                 continue
-            if f.type.upper().startswith("IGN"):
+            if f.ignored:
                 data += bytes(max(make_codec(f.type).length, 0))  # IGN:* -> nothing
+                continue
+            if f.const is not None:
+                data += _const_bytes(f)
                 continue
             if f.name in values:
                 val = values[f.name]
@@ -193,7 +236,11 @@ class MessageDef:
                 if val not in reverse:
                     raise ValueError(f"{self.name}: {val!r} is not a valid option for {f.name}")
                 val = reverse[val]
-            data += _encode_field(f.type, val, f.divisor)
+            codec = make_codec(f.type)
+            if f.values and isinstance(codec, _Numeric):  # table values are raw
+                data += codec.encode_raw(int(val))
+            else:
+                data += _encode_field(f.type, val, f.divisor)
         return bytes(data)
 
     def decode_labeled(self, master: bytes | str = b"", slave: bytes | str = b"") -> dict:
@@ -208,10 +255,35 @@ def label_of(message: str, field: str) -> str:
     return message if field == "value" else f"{message} {field}"
 
 
+def _const_bytes(f: FieldDef) -> bytes:
+    """The bytes of a constant field (``=x``): hex for HEX, else the type's value."""
+    assert f.const is not None
+    codec = make_codec(f.type)
+    if f.type.upper().startswith("HEX"):
+        raw = bytes.fromhex(f.const.replace(" ", ""))
+        if codec.length >= 0 and len(raw) != codec.length:
+            raise ValueError(f"{f.name}: constant {f.const} does not fit {f.type}")
+        return raw
+    if isinstance(codec, _Numeric) and not f.divisor and codec.base_div == 1:
+        return codec.encode_raw(int(f.const))  # e.g. 65535 for U2L: no replacement check
+    return _encode_field(f.type, float(f.const), f.divisor)
+
+
+def _is_const(f: FieldDef, chunk: bytes) -> bool:
+    try:
+        return chunk == _const_bytes(f)
+    except ValueError:
+        return False
+
+
 def _split_divisor_values(text: str):
+    """The divisor/values column: (divisor, value table, constant, verify)."""
     text = text.strip()
     if not text:
-        return None, None
+        return None, None, None, False
+    if text.startswith("=") and len(text) > 1:  # constant: =x, or ==x verified
+        verify = text.startswith("==")
+        return None, None, text[2 if verify else 1:].strip(), verify
     if "=" in text or ";" in text:  # value table like 0=off;1=on
         vals: dict[int, str] = {}
         for part in text.split(";"):
@@ -219,11 +291,11 @@ def _split_divisor_values(text: str):
             if sep:
                 with contextlib.suppress(ValueError):
                     vals[int(key)] = label
-        return None, (vals or None)
+        return None, (vals or None), None, False
     try:  # divisor (positive divides, negative multiplies)
-        return (float(text) if "." in text else int(text)), None
+        return (float(text) if "." in text else int(text)), None, None, False
     except ValueError:
-        return None, None
+        return None, None, None, False
 
 
 def usable_fields(name: str, fields: list[FieldDef]) -> list[FieldDef] | None:
@@ -258,8 +330,9 @@ def _row_fields(row: list[str]) -> list[FieldDef]:
         name, part, typ, div_values, unit, cmt = (
             (row[j].strip() if j < len(row) else "") for j in range(i, i + 6))
         if typ:
-            div, vals = _split_divisor_values(div_values)
-            fields.append(FieldDef(name, part, typ, div, vals, unit, cmt))
+            div, vals, const, verify = _split_divisor_values(div_values)
+            fields.append(FieldDef(name, part, typ, div, vals, unit, cmt,
+                                   const=const, verify=verify))
     return fields
 
 

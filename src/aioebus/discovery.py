@@ -72,8 +72,15 @@ def recall(scan: ScanResult, record: object) -> Identification | None:
     if not (isinstance(record, dict) and record.get("ident") == scan.ident
             and record.get("hw") == scan.hw and record.get("sw") == scan.sw):
         return None
-    return Identification(record.get("article", ""), record.get("serial", ""),
-                          record.get("year"), record.get("week"))
+    def number(key: str) -> int | None:  # a hand-edited store may hold anything
+        value = record.get(key)
+        return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+    def text(key: str) -> str:
+        value = record.get(key)
+        return value if isinstance(value, str) else ""
+
+    return Identification(text("article"), text("serial"), number("year"), number("week"))
 
 
 async def discover(
@@ -99,7 +106,7 @@ async def discover(
     stored = dict(remembered or {})
     # a stored address may come from a corrupt or hand-edited store: only real ones
     extras = {a for a in extra_addresses
-              if isinstance(a, int) and not isinstance(a, bool) and 0 <= a <= 0xFF}
+              if isinstance(a, int) and not isinstance(a, bool) and is_slave(a)}
     targets = sorted(set(ALL_ADDRESSES) | extras) if deep else sorted(set(BASE_ADDRESSES) | extras)
     devices: dict[int, Device] = {}
     for zz in targets:

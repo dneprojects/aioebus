@@ -164,7 +164,7 @@ def test_default_star_takes_the_value():
 
 def test_read_with_arguments_encodes_its_request():
     msg = parse_csv(HDR + "\nr,,,Errorhistory,,,08,b509,11,index,m,UCH,,,,error,,UIN\n")[0]
-    assert msg.needs_args and msg.default_part == "s"
+    assert msg.needs_args and msg.part_of(msg.fields[1]) == "s"
     assert msg.encode({"index": 3}).hex() == "1103"
     assert msg.decode_labeled(master="03", slave="2a00") == {
         "Errorhistory index": 3, "Errorhistory error": 42}
@@ -187,3 +187,61 @@ def test_chained_id_is_skipped_not_fatal():
     bad = msgs[0].__class__(**{**msgs[0].__dict__, "name": "Chain", "msgid": "0d4300:2"})
     reg = MessageRegistry([bad, *msgs])  # e.g. from a JSON file: ignored, not raising
     assert [m.name for m in reg.messages] == ["FlowTemp"]
+
+
+# where a field without a part lives (ebusd data.cpp): the request for a write,
+# the answer for a read -- a passive read too; all of it in the request when
+# the destination is a broadcast or a master (nobody answers)
+def test_a_passive_read_of_a_device_decodes_its_answer():
+    msg = parse_csv(HDR + "\nu,,,YieldTotal,,,08,b509,29bc00,ign,,IGN:2,,,,value,,ULG\n")[0]
+    assert [msg.part_of(f) for f in msg.fields] == ["s", "s"]
+    assert msg.decode_labeled(b"", bytes.fromhex("000039300000")) == {"YieldTotal": 12345}
+
+
+def test_parts_to_a_broadcast_or_a_master_are_all_request():
+    rows = parse_csv(HDR + "\n"
+                     "u,,,Outside,,,fe,b516,01,temp,s,D2C\n"
+                     "r,,,ToMaster,,,10,b509,0d,value,,UCH\n"
+                     "uw,,,Passive,,,08,b509,0e,value,,UCH\n")
+    assert [m.part_of(m.fields[0]) for m in rows] == ["m", "m", "m"]
+
+
+def test_a_write_value_of_the_answer_is_refused():
+    msg = parse_csv(HDR + "\nw,,,Clearerrorhistory,,,08,b503,0201,cleared,s,UCH,0=no;1=yes\n")[0]
+    assert msg.request_fields() == []
+    with pytest.raises(ValueError, match="not part of the request"):
+        msg.encode({"cleared": "no"})
+
+
+def test_a_constant_is_written_by_itself_and_is_no_value():
+    msg = parse_csv(HDR + "\n"
+                    "w,,,EnableTest,,,08,b514,0515,ignore,,HEX:3,=03FFFF,,,"
+                    "slot,,UCH,,,,wconst,,U2L,=65535,,\n")[0]
+    assert [f.name for f in msg.value_fields] == ["slot"]
+    assert msg.encode({"slot": 2}).hex() == "051503ffff02ffff"
+    assert msg.decode(bytes.fromhex("03ffff020000")) == {"slot": 2}  # unverified
+
+
+def test_a_verified_constant_must_match():
+    msg = parse_csv(HDR + "\nr,,,Checked,,,08,b509,0d,kind,,UCH,==3,,,value,,UCH\n")[0]
+    assert msg.decode(b"", bytes.fromhex("0307")) == {"value": 7}
+    with pytest.raises(ValueError, match="is not 3"):
+        msg.decode(b"", bytes.fromhex("0407"))
+
+
+def test_constants_survive_the_json_format():
+    msg = parse_csv(HDR + "\nr,,,Checked,,,08,b509,0d,kind,,UCH,==3,,,value,,UCH\n")[0]
+    back = from_dicts(json.loads(csv_to_json(HDR + "\nr,,,Checked,,,08,b509,0d,kind,,UCH,==3,,,value,,UCH\n")))[0]
+    assert (back.fields[0].const, back.fields[0].verify) == ("3", True) == (
+        msg.fields[0].const, msg.fields[0].verify)
+
+
+def test_a_value_table_is_looked_up_by_the_raw_value():
+    msg = parse_csv(HDR + "\n"
+                    "r,,,Mode,,,08,b509,0d,mode,,UCH,1=on;255=off,,,"
+                    "level,,SCH,1=low;255=none,,\n")[0]
+    # the table comes before the replacement value, and a signed type's raw byte
+    assert msg.decode(b"", bytes.fromhex("ffff")) == {"mode": "off", "level": "none"}
+    assert msg.decode(b"", bytes.fromhex("0705")) == {"mode": 7, "level": 5}  # raw number
+    write = parse_csv(HDR + "\nw,,,Level,,,08,b509,0e,level,,SCH,1=low;255=none,,\n")[0]
+    assert write.encode({"level": "none"}).hex() == "0eff"

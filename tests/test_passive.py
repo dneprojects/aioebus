@@ -83,3 +83,17 @@ def test_a_read_and_a_write_with_one_id_decode_by_shape():
 def test_another_masters_update_prefers_the_passive_definition():
     seen = decode_raw(RW_REG, _frame(0x10, 0x08, "b510", "0005", ""))
     assert seen is not None and seen[0].direction == "uw" and seen[1] == {"SetMode mode": 5}
+
+
+def test_a_passive_read_of_a_device_keeps_its_answer():
+    reg = MessageRegistry(parse_csv(
+        "type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+        "u,,,YieldTotal,,,08,b509,29bc00,ign,,IGN:2,,,,value,,ULG,,,\n"))
+    got = decode_raw(reg, _frame(0x10, 0x08, "b509", "29bc00", "000039300000"))
+    assert got is not None and got[1] == {"YieldTotal": 12345}
+
+
+def test_garbage_frames_decode_to_none():
+    assert decode_raw(RW_REG, "3108b509") is None  # truncated header
+    assert decode_raw(RW_REG, "zz") is None
+    assert decode_raw(RW_REG, _frame(0x31, 0x38, "b509", "0d1800", "bd01")[:-4]) is None

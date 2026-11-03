@@ -29,7 +29,7 @@ from .active import (
     WriteDriver,
     WriteUncertain,
 )
-from .frame import SYN, FrameError, parse_telegram
+from .frame import BROADCAST, SYN, FrameError, is_master, is_slave, parse_telegram
 from .messages import MessageDef
 from .passive import MessageRegistry, expects_slave
 from .poll import PollScheduler
@@ -245,6 +245,8 @@ class EbusEngine:
         # malformed arguments fail this call, not later inside the bus loop
         if len(pbsb) != 4:
             raise ValueError(f"{pbsb!r}: PBSB must be 4 hex digits")
+        if not is_slave(zz):  # only a slave answers a read
+            raise ValueError(f"{zz:#04x}: not a slave address")
         return await self._submit(lambda: ReadDriver(zz, pbsb, msgid, self.qq), None, timeout,
                                   answer_tries=NO_ANSWER_TRIES)
 
@@ -272,7 +274,7 @@ class EbusEngine:
         """Actively write a message (requires allow_write=True)."""
         if not self._allow_write:
             raise PermissionError("writing is disabled; construct the engine with allow_write=True")
-        if not msg.is_write:
+        if msg.direction != "w":  # a passive write (uw) is other masters' to send
             raise ValueError(f"{msg.name}: not a write message")
         self._require_addr(msg)
         zz = int(msg.zz, 16)
@@ -288,8 +290,12 @@ class EbusEngine:
 
     @staticmethod
     def _require_addr(msg: MessageDef) -> None:
-        if not (msg.zz and len(msg.zz) == 2):
-            raise ValueError(f"{msg.name}: no destination address")
+        try:
+            zz = int(msg.zz, 16) if len(msg.zz) == 2 else -1
+        except ValueError:
+            zz = -1
+        if not (is_slave(zz) or is_master(zz) or zz == BROADCAST):
+            raise ValueError(f"{msg.name}: no valid destination address")
 
     async def _submit(self, make: Callable[[], _Driver], msg: MessageDef | None,
                       timeout: float, answer_tries: int = 1):

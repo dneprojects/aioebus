@@ -117,3 +117,14 @@ def test_wildcard_lengths_take_the_rest():
     assert decode("IGN:*", "0102") is None
     from aioebus.codecs import make_codec
     assert make_codec("HEX:*").length == -1 and make_codec("IGN:*").length == -1
+
+
+def test_an_infinite_float_is_no_value():
+    assert decode("EXP", "0000807f") is None
+    assert decode("EXR", "ff800000") is None  # -inf, big-endian
+
+
+def test_a_date_ignores_its_weekday_byte():
+    assert decode("BDA", "0101ff26") == "01.01.2026"
+    assert decode("HDA", "0101ff1a") == "01.01.2026"
+    assert decode("BDA", "ff010326") is None  # the day itself missing

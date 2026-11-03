@@ -79,10 +79,12 @@ def has_numeric_value(type_: str) -> bool:
 
 def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Value] | None:
     """The control an active write message allows: a select for a value table, a
-    number for a numeric type; only single-value writes get one."""
+    number for a numeric type; only writes sending a single value get one (a
+    field of the answer is not sent)."""
     if msg.direction != "w":
         return None
-    values = values_of(msg)
+    sent = msg.request_fields()
+    values = [v for v in values_of(msg) if v.field in sent]
     if len(values) != 1:
         return None
     value = values[0]

@@ -37,6 +37,10 @@ def to_dicts(msgs: list[MessageDef]) -> list[dict]:
                 fd["comment"] = f.comment
             if f.tr:
                 fd["tr"] = f.tr
+            if f.const is not None:
+                fd["const"] = f.const
+                if f.verify:
+                    fd["verify"] = True
             fields.append(fd)
         out.append(
             {
@@ -63,6 +67,7 @@ def from_dicts(data: list[dict]) -> list[MessageDef]:
                 divisor=f.get("divisor"),
                 values={int(k): v for k, v in f["values"].items()} if f.get("values") else None,
                 unit=f.get("unit", ""), comment=f.get("comment", ""), tr=f.get("tr"),
+                const=f.get("const"), verify=bool(f.get("verify")),
             )
             for f in m.get("fields", [])
         ]
@@ -100,7 +105,10 @@ def attach_translations(
     the field name), so order differences do not matter. Only non-empty comments
     are stored; a message/field with no translation anywhere keeps ``tr=None``.
     Mutates and returns ``defs``."""
-    index = {lang: {_msg_key(m): m for m in msgs} for lang, msgs in by_lang.items()}
+    index: dict[str, dict] = {}  # the first of conditional variants, as the catalog keeps it
+    for lang, msgs in by_lang.items():
+        for m in msgs:
+            index.setdefault(lang, {}).setdefault(_msg_key(m), m)
     for m in defs:
         key = _msg_key(m)
         m_tr = {lang: o.comment for lang, idx in index.items()

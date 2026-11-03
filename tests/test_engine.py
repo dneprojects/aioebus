@@ -952,3 +952,18 @@ def test_read_with_arguments_sends_and_decodes_them():
         await _stop(eng, link, task)
 
     asyncio.run(inner())
+
+
+def test_only_valid_destinations_and_active_writes_are_sent():
+    eng = EbusEngine(None, None, REG, allow_write=True)
+    hdr = "type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+    passive = parse_csv(hdr + "uw,,,Passive,,,15,b509,0e,value,,UCH,,,\n")[0]
+    with pytest.raises(ValueError, match="not a write"):
+        asyncio.run(eng.write(passive, {"value": 1}))
+    to_syn = parse_csv(hdr + "w,,,Bad,,,aa,b509,0e,value,,UCH,,,\n")[0]
+    with pytest.raises(ValueError, match="destination"):
+        asyncio.run(eng.write(to_syn, {"value": 1}))
+    for zz in (0xAA, 0xA9, 0x10, 0xFE, 0x100):
+        with pytest.raises(ValueError, match="slave"):
+            asyncio.run(eng.read_raw(zz, "0704", ""))
+    assert not eng._queue

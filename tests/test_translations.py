@@ -53,3 +53,14 @@ def test_tr_absent_stays_none():
     back = from_dicts(to_dicts([msg]))[0]
     assert back.tr is None
     assert "tr" not in to_dicts([msg])[0]
+
+
+def test_texts_of_conditional_variants_come_from_the_first():
+    from aioebus.convert import attach_translations
+    hdr = "type,circuit,level,name,comment,qq,zz,pbsb,id\n"
+    rows = ("[a=1]r,,,Temp,first,,08,b509,0d,value,,UCH,,,\n"
+            "[a=2]r,,,Temp,second,,08,b509,0d,value,,UCH,,,\n")
+    defs = parse_csv(hdr + rows)
+    attach_translations(defs, {"de": parse_csv(hdr + rows.replace("first", "erste").replace(
+        "second", "zweite"))})
+    assert defs[0].tr == {"de": "erste"}

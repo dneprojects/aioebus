@@ -66,10 +66,22 @@ class _Numeric(Codec):
         self.extra_div: float | None = None  # from the CSV divisor column
         self.max_raw = _MAX_RAW.get(name)  # a type narrower than its bytes (D1C)
 
-    def decode(self, data: bytes):
+    def raw(self, data: bytes) -> int | None:
+        """The unsigned raw value (what a value table is keyed by), None if short."""
         if len(data) < self.length:
             return None
-        raw = int.from_bytes(data[: self.length], "big" if self.big else "little")
+        return int.from_bytes(data[: self.length], "big" if self.big else "little")
+
+    def encode_raw(self, raw: int) -> bytes:
+        """Raw value -> bytes (a value table's number, a constant)."""
+        if not 0 <= raw < 1 << (8 * self.length):
+            raise ValueError(f"{self.name}: raw value {raw} out of range")
+        return raw.to_bytes(self.length, "big" if self.big else "little")
+
+    def decode(self, data: bytes):
+        raw = self.raw(data)
+        if raw is None:
+            return None
         if raw == self.repl or (self.max_raw is not None and raw > self.max_raw):
             return None
         if self.signed and raw >= 1 << (8 * self.length - 1):
@@ -216,12 +228,16 @@ class _Date(Codec):
         self.bcd = bcd
 
     def decode(self, data: bytes):
-        if len(data) < self.length or any(b == 0xFF for b in data[: self.length]):
+        if len(data) < self.length:
             return None
         raw = list(data[: self.length])
+        if self.length == 4:  # the weekday byte is not part of the date (ebusd skips it)
+            del raw[2]
+        if 0xFF in raw:
+            return None
         conv = (lambda b: _bcd(b)) if self.bcd else (lambda b: b)
         day, month = conv(raw[0]), conv(raw[1])
-        year = conv(raw[3]) if self.length == 4 else conv(raw[2])  # skip weekday
+        year = conv(raw[2])
         if day is None or month is None or year is None:
             return None
         if not (1 <= day <= 31 and 1 <= month <= 12):
@@ -322,7 +338,7 @@ class _Float(Codec):
         if len(data) < 4:
             return None
         value = struct.unpack(self.fmt, data[:4])[0]
-        if value != value:  # NaN (replacement) -> None
+        if not math.isfinite(value):  # NaN (replacement) or infinity: no value, as ebusd
             return None
         if self.extra_div:  # ebusd: positive divides, negative multiplies
             value = value / self.extra_div if self.extra_div > 0 else value * -self.extra_div
