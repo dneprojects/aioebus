@@ -245,3 +245,13 @@ def test_a_value_table_is_looked_up_by_the_raw_value():
     assert msg.decode(b"", bytes.fromhex("0705")) == {"mode": 7, "level": 5}  # raw number
     write = parse_csv(HDR + "\nw,,,Level,,,08,b509,0e,level,,SCH,1=low;255=none,,\n")[0]
     assert write.encode({"level": "none"}).hex() == "0eff"
+
+
+def test_negative_and_formatted_constants():
+    msg = parse_csv(HDR + "\n"
+                    "w,,,Neg,,,08,b509,0e,k,,SCH,=-1,,,value,,UCH\n"
+                    "r,,,At,,,08,b509,0f,t,,HTM,==10:00,,,value,,UCH\n")
+    assert msg[0].encode({"value": 5}).hex() == "0eff05"
+    assert msg[1].decode(b"", bytes.fromhex("0a0007")) == {"value": 7}
+    with pytest.raises(ValueError, match="is not 10:00"):
+        msg[1].decode(b"", bytes.fromhex("0b0007"))

@@ -105,12 +105,16 @@ def attach_translations(
     the field name), so order differences do not matter. Only non-empty comments
     are stored; a message/field with no translation anywhere keeps ``tr=None``.
     Mutates and returns ``defs``."""
-    index: dict[str, dict] = {}  # the first of conditional variants, as the catalog keeps it
+    # conditional variants share a key: each takes its own variant's texts
+    # (same conditions), else the first one's
+    index: dict[str, dict] = {}
     for lang, msgs in by_lang.items():
         for m in msgs:
-            index.setdefault(lang, {}).setdefault(_msg_key(m), m)
+            idx = index.setdefault(lang, {})
+            idx.setdefault(_msg_key(m), m)
+            idx.setdefault((*_msg_key(m), tuple(m.conditions or ())), m)
     for m in defs:
-        key = _msg_key(m)
+        key = (*_msg_key(m), tuple(m.conditions or ()))
         m_tr = {lang: o.comment for lang, idx in index.items()
                 if (o := idx.get(key)) is not None and o.comment}
         m.tr = m_tr or None

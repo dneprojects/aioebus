@@ -9,7 +9,7 @@
 - EXP/EXR infinity decodes to no value; a 4-byte date ignores its weekday byte
 - `EbusEngine.write()` refuses passive writes (`uw`); `read_raw()` reads only slaves; messages need a valid destination
 - Discovery ignores stored extra addresses that are no slave and stored identifications of wrong types
-- `decode_raw()` returns None for a malformed frame; translations of conditional variants come from the first variant
+- `decode_raw()` returns None for a malformed frame; each conditional variant keeps its own translations
 
 ## 0.7.3
 

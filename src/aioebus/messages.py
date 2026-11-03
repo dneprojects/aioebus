@@ -22,6 +22,7 @@ import re
 from dataclasses import dataclass, replace
 
 from .codecs import _Bit, _Numeric, make_codec
+from .codecs import decode as _decode_field
 from .codecs import encode as _encode_field
 from .frame import BROADCAST, is_master
 
@@ -265,15 +266,18 @@ def _const_bytes(f: FieldDef) -> bytes:
             raise ValueError(f"{f.name}: constant {f.const} does not fit {f.type}")
         return raw
     if isinstance(codec, _Numeric) and not f.divisor and codec.base_div == 1:
-        return codec.encode_raw(int(f.const))  # e.g. 65535 for U2L: no replacement check
+        value = int(f.const)
+        if value >= 0:  # e.g. 65535 for U2L: no replacement check
+            return codec.encode_raw(value)
     return _encode_field(f.type, float(f.const), f.divisor)
 
 
 def _is_const(f: FieldDef, chunk: bytes) -> bool:
     try:
         return chunk == _const_bytes(f)
-    except ValueError:
-        return False
+    except (ValueError, NotImplementedError):  # e.g. a time: compare as ebusd shows it
+        value = _decode_field(f.type, chunk, f.divisor)
+        return value is not None and str(value) == f.const
 
 
 def _split_divisor_values(text: str):

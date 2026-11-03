@@ -63,4 +63,4 @@ def test_texts_of_conditional_variants_come_from_the_first():
     defs = parse_csv(hdr + rows)
     attach_translations(defs, {"de": parse_csv(hdr + rows.replace("first", "erste").replace(
         "second", "zweite"))})
-    assert defs[0].tr == {"de": "erste"}
+    assert [d.tr for d in defs] == [{"de": "erste"}, {"de": "zweite"}]
