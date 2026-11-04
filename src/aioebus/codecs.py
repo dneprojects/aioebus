@@ -340,8 +340,20 @@ class FloatCodec(Codec):
         value = struct.unpack(self.fmt, data[:4])[0]
         if not math.isfinite(value):  # NaN (replacement) or infinity: no value, as ebusd
             return None
+        value = self._shortest(value, data[:4])
         if self.extra_div:  # ebusd: positive divides, negative multiplies
             value = value / self.extra_div if self.extra_div > 0 else value * -self.extra_div
+        return value
+
+    def _shortest(self, value: float, raw: bytes) -> float:
+        """The shortest decimal that is the same binary32 (0.45, not 0.4499999881)."""
+        for digits in range(1, 10):
+            short = float(f"{value:.{digits}g}")
+            try:
+                if struct.pack(self.fmt, short) == raw:
+                    return short
+            except OverflowError:  # rounded past the binary32 maximum
+                continue
         return value
 
     def encode(self, value) -> bytes:

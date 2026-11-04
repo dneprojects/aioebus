@@ -55,6 +55,16 @@ def test_float_divisor_column():
     assert decode("EXR", "4b9f2f37", divisor=1000) == 20864.622
 
 
+def test_float_is_the_shortest_decimal_of_its_binary32():
+    # live 15.ctlv3 Hc2HeatCurve 0.45 reads 0.4499999881 as a plain double
+    for value in (0.45, 0.8, 1.2, 0.1, -12.3, 20864622.0, 3.4028235e38, 1e-45):
+        raw = struct.pack("<f", value)
+        assert decode("EXP", raw.hex()) == value
+        assert decode("EXR", raw[::-1].hex()) == value
+    third = struct.pack("<f", 1 / 3)
+    assert struct.pack("<f", decode("EXP", third.hex())) == third  # nothing lost
+
+
 def test_signed_and_remainder():
     assert decode("SCH", "fe") == -2
     assert decode("STR:*", "466268") == "Fbh"  # variable-length zone short name

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- EXP/EXR floats read as the shortest decimal of their binary32 value (heat curve 0.45, not 0.4499999881)
+
 ## 0.7.6
 
 - sensoCOMFORT heating zones: the operating mode reads off, auto, manual as the controller names them (was VRC700's day/night)
