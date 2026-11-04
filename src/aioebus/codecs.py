@@ -244,6 +244,22 @@ class _Date(Codec):
             return None
         return f"{day:02d}.{month:02d}.{2000 + year:04d}"
 
+    def encode(self, value) -> bytes:
+        """Inverse of decode: a date or "dd.mm.yyyy" (2000-2099); the 4-byte form
+        also carries the weekday (ebusd: BDA Monday 0, HDA Monday 1)."""
+        if isinstance(value, str):
+            when = datetime.strptime(value.strip(), "%d.%m.%Y").date()
+        elif isinstance(value, date):
+            when = value
+        else:
+            raise ValueError(f"{self.name}: {value!r} is no date")
+        if not 2000 <= when.year <= 2099:
+            raise ValueError(f"{self.name}: year {when.year} out of range")
+        parts = [when.day, when.month, when.year - 2000]
+        if self.length == 4:
+            parts.insert(2, when.weekday() + (0 if self.bcd else 1))
+        return bytes(((p // 10) << 4 | p % 10) if self.bcd else p for p in parts)
+
 
 class _Weekday(Codec):
     def __init__(self, name, first, repl):
@@ -490,8 +506,8 @@ def value_range(spec: str, divisor: float | None = None) -> tuple[float, float, 
 
 
 def encode(spec: str, value, divisor: float | None = None) -> bytes:
-    """Encode a value to raw field bytes (numeric and float types, for writes)."""
+    """Encode a value to raw field bytes (numeric, float and date types, for writes)."""
     codec = make_codec(spec, divisor)
-    if not isinstance(codec, NumericCodec | FloatCodec):
+    if not isinstance(codec, NumericCodec | FloatCodec | _Date):
         raise NotImplementedError(f"encode not supported for type {spec!r}")
     return codec.encode(value)

@@ -81,9 +81,9 @@ class ClimateZone:
     override, which ``special_read`` (the special-function register) shows as
     its ``special_values["veto"]`` (``["none"]``: no special function, others
     e.g. ``["ventilation"]``). What applies now can be told from
-    ``holiday_start``/``holiday_end`` (dates; ``holiday_temp`` its own
-    setpoint), the time program (``timer_frames``: slot counts per weekday; ``timer_days``: the
-    first slot of Monday..Sunday) and ``setback_mode``, whose
+    ``holiday_start``/``holiday_end`` (dates, set by the ``_write`` ones;
+    ``holiday_temp`` its own setpoint), the time program (``timer_frames``:
+    slot counts per weekday; ``timer_days``: the first slot of Monday..Sunday) and ``setback_mode``, whose
     ``setback_values`` name "eco" (off outside the slots) and "normal"
     (setback temperature). Missing roles are None.
     ``modes`` names the mode values for the roles "off", "auto" and "heat"."""
@@ -106,6 +106,8 @@ class ClimateZone:
     holiday_start: MessageDef | None = None
     holiday_end: MessageDef | None = None
     holiday_temp: MessageDef | None = None
+    holiday_start_write: MessageDef | None = None
+    holiday_end_write: MessageDef | None = None
     timer_frames: MessageDef | None = None
     timer_days: tuple[MessageDef | None, ...] = ()
     setback_mode: MessageDef | None = None
@@ -551,6 +553,8 @@ class Catalog:
                     holiday_start=_zone_read(msgs, prefix, n, holiday.get("start")),
                     holiday_end=_zone_read(msgs, prefix, n, holiday.get("end")),
                     holiday_temp=_zone_read(msgs, prefix, n, holiday.get("temp")),
+                    holiday_start_write=_zone_write(msgs, prefix, n, holiday.get("start")),
+                    holiday_end_write=_zone_write(msgs, prefix, n, holiday.get("end")),
                     timer_frames=_zone_read(msgs, prefix, n, timer.get("frames")),
                     timer_days=(tuple(_zone_read(msgs, prefix, n, d) for d in days)
                                 if isinstance(days, list) and len(days) == 7 else ()),
@@ -570,6 +574,12 @@ def _find(msgs: list[MessageDef], name: str, *, write: bool) -> MessageDef | Non
 def _zone_read(msgs: list[MessageDef], prefix: str, n: int, role: object) -> MessageDef | None:
     """The read of zone n's register for a declared role name, if declared."""
     return (_find(msgs, f"{prefix}{n}{role}", write=False)
+            if isinstance(role, str) and role else None)
+
+
+def _zone_write(msgs: list[MessageDef], prefix: str, n: int, role: object) -> MessageDef | None:
+    """The write of zone n's register for a declared role name, if declared."""
+    return (_find(msgs, f"{prefix}{n}{role}", write=True)
             if isinstance(role, str) and role else None)
 
 

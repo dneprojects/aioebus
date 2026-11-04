@@ -63,17 +63,21 @@ def closes_period(msg: MessageDef) -> bool:
     return msg.name.endswith(_PERIOD_SUFFIXES)
 
 
-def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Value] | None:
-    """The control an active write message allows: a select for a value table, a
-    number for a numeric type; only writes sending a single value get one (a
-    field of the answer is not sent)."""
+def sent_value(msg: MessageDef) -> Value | None:
+    """The one value an active write message sends (a field of the answer is
+    not sent); None for any other message."""
     if msg.direction != "w":
         return None
     sent = msg.request_fields()
     values = [v for v in values_of(msg) if v.field in sent]
-    if len(values) != 1:
+    return values[0] if len(values) == 1 else None
+
+
+def control_of(msg: MessageDef) -> tuple[Literal["number", "select"], Value] | None:
+    """The control an active write message allows: a select for a value table, a
+    number for a numeric type; only writes sending a single value get one."""
+    if (value := sent_value(msg)) is None:
         return None
-    value = values[0]
     if value.field.values:
         return "select", value
     if is_number(value.field.type):

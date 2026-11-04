@@ -188,6 +188,10 @@ def test_zones_and_bounds_from_the_bundled_catalog():
         f"Z1Timer_{d}0" for d in ("Monday", "Tuesday", "Wednesday", "Thursday",
                                   "Friday", "Saturday", "Sunday")]
     assert all(m.is_read for m in (z1.holiday_start, z1.timer_frames, *z1.timer_days))
+    assert (z1.holiday_start_write.name, z1.holiday_end_write.name) == (
+        "Z1HolidayStartPeriod", "Z1HolidayEndPeriod")
+    assert z1.holiday_start_write.is_write and z1.holiday_end_write.is_write
+    assert z1.holiday_start_write.encode({"value": "04.11.2026"}).hex() == "020103000300040b1a"
     assert z1.setback_mode.name == "Hc1AutoOffMode" and z1.setback_mode.is_read
     assert zones[2].setback_mode.name == "Hc2AutoOffMode"  # zone N on circuit N
     assert z1.setback_values == {"eco": "eco", "normal": "normal"}  # Eco/Normal (manual)

@@ -215,7 +215,7 @@ class MessageDef:
 
         `values` is keyed by field name; a message with a single value field also
         accepts the message name (as its decoded label is). Enum labels are mapped
-        back to their numbers. Numeric and float types only -- bit-field and
+        back to their numbers. Numeric, float and date types only -- bit-field and
         string writes are not supported yet and raise. A constant field is
         written by itself; a value for a field of the answer is refused (the
         request could not carry it)."""

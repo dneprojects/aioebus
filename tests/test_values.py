@@ -31,6 +31,15 @@ def test_the_control_a_write_allows():
     assert control_of(msg("w", NUM, NUM)) is None      # only single-value writes
 
 
+def test_the_value_a_write_sends():
+    from aioebus.values import sent_value
+    date = FieldDef("value", "", "HDA:3", None, None, "", "")
+    assert sent_value(msg("w", date)).field is date    # a date: no control, but sent
+    assert control_of(msg("w", date)) is None
+    assert sent_value(msg("w", NUM, NUM)) is None
+    assert sent_value(msg("r", NUM)) is None and sent_value(msg("uw", NUM)) is None
+
+
 def test_numeric_types():
     assert has_numeric_value("BCD") and not is_number("BCD")
     assert is_number("EXP") and is_number("UIN") and not has_numeric_value("HEX:2")

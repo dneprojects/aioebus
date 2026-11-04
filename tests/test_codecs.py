@@ -140,6 +140,21 @@ def test_a_date_ignores_its_weekday_byte():
     assert decode("BDA", "ff010326") is None  # the day itself missing
 
 
+def test_date_encode_is_the_inverse_of_decode():
+    from datetime import date
+    assert encode("HDA:3", "04.11.2026").hex() == "040b1a"
+    assert encode("BDA:3", "31.12.2099").hex() == "311299"
+    assert encode("HDA:3", date(2026, 11, 4)) == encode("HDA:3", "04.11.2026")
+    # the 4-byte form carries the weekday (Wednesday): BDA from 0, HDA from 1
+    assert encode("BDA", "04.11.2026").hex() == "04110226"
+    assert encode("HDA", "04.11.2026").hex() == "040b031a"
+    for spec in ("HDA:3", "BDA:3", "HDA", "BDA"):
+        assert decode(spec, encode(spec, "29.02.2028").hex()) == "29.02.2028"
+    for bad in ("31.12.1999", "01.01.2100", "32.01.2026", "tomorrow", 5):
+        with pytest.raises(ValueError):
+            encode("HDA:3", bad)
+
+
 def test_codec_takes_the_divisor_column():
     from aioebus.codecs import make_codec
     assert make_codec("UIN", 10).decode(bytes.fromhex("e803")) == 100.0
