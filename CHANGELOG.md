@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.7
 
 - Dates (BDA, HDA) can be written; `ClimateZone.holiday_start_write`/`holiday_end_write` set an away period
 - EXP/EXR floats read as the shortest decimal of their binary32 value (heat curve 0.45, not 0.4499999881)
