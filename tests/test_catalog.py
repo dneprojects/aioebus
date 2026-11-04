@@ -168,8 +168,29 @@ def test_zones_and_bounds_from_the_bundled_catalog():
     assert (z1.zz, z1.target_write.name, z1.current.name, z1.mode_read.name) == (
         "15", "Z1DayTemp", "Z1RoomTemp", "Z1OpMode")
     assert z1.mode_write.direction == "w"
-    assert z1.modes == {"off": "off", "auto": "auto", "heat": "day"}
+    assert z1.modes == {"off": "off", "auto": "auto", "heat": "manual"}  # as the controller
     assert z1.target_bounds == (5.0, 30.0, 0.5)
+    assert z1.setpoint.name == "Z1ActualRoomTempDesired" and z1.setpoint.is_polled_read
+    assert (z1.veto_temp.name, z1.veto_duration.name) == ("Z1QuickVetoTemp", "Z1QuickVetoDuration")
+    assert z1.veto_temp.direction == z1.veto_duration.direction == "w"
+    # what the thermostat shows is polled every base interval
+    assert {z1.mode_read.poll_priority, z1.target_read.poll_priority,
+            z1.setpoint.poll_priority, z1.current.poll_priority,
+            z1.special_read.poll_priority} == {1}
+    assert z1.veto_temp is not None and c.read_twin(z1.veto_temp).poll_priority != 1  # plain r
+    # what applies now: special function, away period, time program, setback mode
+    assert (z1.special_read.name, z1.special_write.direction) == ("Z1SFMode", "w")
+    assert z1.special_values == {"veto": "veto", "none": "auto", "ventilation": "ventilation"}
+    assert (z1.holiday_start.name, z1.holiday_end.name, z1.holiday_temp.name) == (
+        "Z1HolidayStartPeriod", "Z1HolidayEndPeriod", "Z1HolidayTemp")
+    assert z1.timer_frames.name == "Z1Timer_Timeframes"
+    assert [m.name for m in z1.timer_days] == [
+        f"Z1Timer_{d}0" for d in ("Monday", "Tuesday", "Wednesday", "Thursday",
+                                  "Friday", "Saturday", "Sunday")]
+    assert all(m.is_read for m in (z1.holiday_start, z1.timer_frames, *z1.timer_days))
+    assert z1.setback_mode.name == "Hc1AutoOffMode" and z1.setback_mode.is_read
+    assert zones[2].setback_mode.name == "Hc2AutoOffMode"  # zone N on circuit N
+    assert z1.setback_values == {"eco": "eco", "normal": "normal"}  # Eco/Normal (manual)
     assert c.bounds(0x15, "HwcLockTime") == (0.0, 120.0, 10.0)
     assert c.bounds(0x08, "Z1DayTemp") is None
 

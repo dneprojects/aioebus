@@ -47,13 +47,21 @@
     ]
   },
   "climate": {
-    "_comment": "Per-zone registers of a heating zone. For each zone N, '<prefix>N<target>' is the writable comfort setpoint, '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode; 'modes' names the mode values that mean off, automatic (time program) and heating at the comfort setpoint.",
+    "_comment": "Per-zone registers of a heating zone. For each zone N, '<prefix>N<target>' is the writable setpoint of manual heating, '<prefix>N<current>' the room temperature, '<prefix>N<mode>' the operating mode, '<prefix>N<setpoint>' the setpoint in effect now (time program, setback, quick veto) and 'veto' the temporary override (setpoint, duration, and the special-function value that marks it); 'modes' names the mode values that mean off, automatic (time program) and manual heating. 'special' is the special-function register with its values for no special function ('none') and others (e.g. 'ventilation': heating off for 30 min, the app's Stosslueften), 'holiday' the away period (dates) and its own temperature, 'timer' the time program (slot counts per weekday, the first slot of Monday..Sunday), 'setback_mode' the register ({n} = zone number: zone N is served by circuit N) that says what applies outside the time slots, with its values for 'eco' (heating off) and 'normal' (setback temperature). VRC 720/3 manual 0020334315_04, ch. 2.9/2.14.1.",
     "ctlv3.json": {
       "zone_prefix": "Z",
       "target": "DayTemp",
       "current": "RoomTemp",
       "mode": "OpMode",
-      "modes": {"off": "off", "auto": "auto", "heat": "day"}
+      "setpoint": "ActualRoomTempDesired",
+      "veto": {"temp": "QuickVetoTemp", "duration": "QuickVetoDuration", "special": "veto"},
+      "modes": {"off": "off", "auto": "auto", "heat": "manual"},
+      "special": {"register": "SFMode", "none": "auto", "ventilation": "ventilation"},
+      "holiday": {"start": "HolidayStartPeriod", "end": "HolidayEndPeriod", "temp": "HolidayTemp"},
+      "timer": {"frames": "Timer_Timeframes",
+                "days": ["Timer_Monday0", "Timer_Tuesday0", "Timer_Wednesday0", "Timer_Thursday0",
+                         "Timer_Friday0", "Timer_Saturday0", "Timer_Sunday0"]},
+      "setback_mode": {"register": "Hc{n}AutoOffMode", "values": {"eco": "eco", "normal": "normal"}}
     }
   },
   "number_bounds": {

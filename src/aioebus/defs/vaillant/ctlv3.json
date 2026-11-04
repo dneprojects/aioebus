@@ -1525,7 +1525,7 @@
         "type": "UIN",
         "values": {
           "0": "eco",
-          "1": "night"
+          "1": "normal"
         }
       }
     ]
@@ -1543,7 +1543,7 @@
         "type": "UIN",
         "values": {
           "0": "eco",
-          "1": "night"
+          "1": "normal"
         }
       }
     ]
@@ -1977,7 +1977,7 @@
         "type": "UIN",
         "values": {
           "0": "eco",
-          "1": "night"
+          "1": "normal"
         }
       }
     ]
@@ -1995,7 +1995,7 @@
         "type": "UIN",
         "values": {
           "0": "eco",
-          "1": "night"
+          "1": "normal"
         }
       }
     ]
@@ -2410,7 +2410,7 @@
         "type": "UIN",
         "values": {
           "0": "eco",
-          "1": "night"
+          "1": "normal"
         }
       }
     ]
@@ -2428,7 +2428,7 @@
         "type": "UIN",
         "values": {
           "0": "eco",
-          "1": "night"
+          "1": "normal"
         }
       }
     ]
@@ -2876,7 +2876,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z1OpMode",
     "pbsb": "b524",
@@ -2893,8 +2893,7 @@
         "values": {
           "0": "off",
           "1": "auto",
-          "2": "day",
-          "3": "night"
+          "2": "manual"
         }
       }
     ]
@@ -2913,8 +2912,7 @@
         "values": {
           "0": "off",
           "1": "auto",
-          "2": "day",
-          "3": "night"
+          "2": "manual"
         }
       }
     ]
@@ -3058,7 +3056,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z1SFMode",
     "pbsb": "b524",
@@ -3108,7 +3106,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z1RoomTemp",
     "pbsb": "b524",
@@ -3205,7 +3203,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z1ActualRoomTempDesired",
     "pbsb": "b524",
@@ -3335,7 +3333,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z1DayTemp",
     "pbsb": "b524",
@@ -3501,7 +3499,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z2OpMode",
     "pbsb": "b524",
@@ -3518,8 +3516,7 @@
         "values": {
           "0": "off",
           "1": "auto",
-          "2": "day",
-          "3": "night"
+          "2": "manual"
         }
       }
     ]
@@ -3538,8 +3535,7 @@
         "values": {
           "0": "off",
           "1": "auto",
-          "2": "day",
-          "3": "night"
+          "2": "manual"
         }
       }
     ]
@@ -3683,7 +3679,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z2SFMode",
     "pbsb": "b524",
@@ -3733,7 +3729,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z2RoomTemp",
     "pbsb": "b524",
@@ -3830,7 +3826,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z2ActualRoomTempDesired",
     "pbsb": "b524",
@@ -3960,7 +3956,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z2DayTemp",
     "pbsb": "b524",
@@ -4092,7 +4088,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z3OpMode",
     "pbsb": "b524",
@@ -4109,8 +4105,7 @@
         "values": {
           "0": "off",
           "1": "auto",
-          "2": "day",
-          "3": "night"
+          "2": "manual"
         }
       }
     ]
@@ -4129,8 +4124,7 @@
         "values": {
           "0": "off",
           "1": "auto",
-          "2": "day",
-          "3": "night"
+          "2": "manual"
         }
       }
     ]
@@ -4274,7 +4268,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z3SFMode",
     "pbsb": "b524",
@@ -4402,7 +4396,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z3ActualRoomTempDesired",
     "pbsb": "b524",
@@ -4532,7 +4526,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "",
     "name": "Z3DayTemp",
     "pbsb": "b524",

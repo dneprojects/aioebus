@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.6
+
+- sensoCOMFORT heating zones: the operating mode reads off, auto, manual as the controller names them (was VRC700's day/night)
+- `ClimateZone.setpoint` (the setpoint in effect now) and `veto_temp`/`veto_duration` (quick veto) from the catalog's climate declaration
+- The zone registers a thermostat shows are polled every base interval (r1): mode, manual and current setpoint, room temperature, special function
+- `ClimateZone` also names the special function (quick veto), away period, time program and the circuit's setback mode, to tell what applies now
+- The circuits' setback mode reads eco/normal (sensoCOMFORT manual; was night)
+
 ## 0.7.5
 
 - `EbusEngine.write_confirmed()`: write, read the register back, cache what the device took (`WriteOutcome`)

@@ -74,9 +74,18 @@ class Texts:
 
 @dataclass
 class ClimateZone:
-    """A heating zone: the addressed messages for its target setpoint
-    (read/write), room temperature and operating mode (read/write), its
-    user-given short name, and the setpoint range. Missing roles are None.
+    """A heating zone: the addressed messages for the setpoint of manual
+    heating (read/write), room temperature and operating mode (read/write), its
+    user-given short name, and the setpoint range; ``setpoint`` reads the
+    setpoint in effect now, ``veto_temp``/``veto_duration`` write a temporary
+    override, which ``special_read`` (the special-function register) shows as
+    its ``special_values["veto"]`` (``["none"]``: no special function, others
+    e.g. ``["ventilation"]``). What applies now can be told from
+    ``holiday_start``/``holiday_end`` (dates; ``holiday_temp`` its own
+    setpoint), the time program (``timer_frames``: slot counts per weekday; ``timer_days``: the
+    first slot of Monday..Sunday) and ``setback_mode``, whose
+    ``setback_values`` name "eco" (off outside the slots) and "normal"
+    (setback temperature). Missing roles are None.
     ``modes`` names the mode values for the roles "off", "auto" and "heat"."""
     zz: str
     n: int
@@ -88,6 +97,19 @@ class ClimateZone:
     shortname: MessageDef | None
     target_bounds: tuple[float, float, float] | None = None
     modes: dict[str, str] = field(default_factory=dict)
+    setpoint: MessageDef | None = None
+    veto_temp: MessageDef | None = None
+    veto_duration: MessageDef | None = None
+    special_read: MessageDef | None = None
+    special_write: MessageDef | None = None
+    special_values: dict[str, str] = field(default_factory=dict)
+    holiday_start: MessageDef | None = None
+    holiday_end: MessageDef | None = None
+    holiday_temp: MessageDef | None = None
+    timer_frames: MessageDef | None = None
+    timer_days: tuple[MessageDef | None, ...] = ()
+    setback_mode: MessageDef | None = None
+    setback_values: dict[str, str] = field(default_factory=dict)
 
 
 @cache
@@ -484,6 +506,12 @@ class Catalog:
             prefix = str(decl.get("zone_prefix", ""))
             target, current, mode = decl["target"], decl["current"], decl["mode"]
             roles = decl.get("modes", {})
+            setpoint = decl.get("setpoint")
+            veto = _dict(decl.get("veto"))
+            special = _dict(decl.get("special"))
+            holiday = _dict(decl.get("holiday"))
+            timer = _dict(decl.get("timer"))
+            setback = _dict(decl.get("setback_mode"))
             msgs = self._messages.get(address, [])
             rx = re.compile(rf"^{re.escape(prefix)}(\d+){re.escape(target)}$")
             for n in sorted({int(mt.group(1)) for m in msgs
@@ -491,6 +519,12 @@ class Catalog:
                 tw = _find(msgs, f"{prefix}{n}{target}", write=True)
                 mode_read = _find(msgs, f"{prefix}{n}{mode}", write=False)
                 mode_write = _find(msgs, f"{prefix}{n}{mode}", write=True)
+
+                special_read = _zone_read(msgs, prefix, n, special.get("register"))
+                setback_reg = setback.get("register")
+                setback_read = (_find(msgs, setback_reg.format(n=n), write=False)
+                                if isinstance(setback_reg, str) else None)
+                days = timer.get("days")
                 out.append(ClimateZone(
                     zz=f"{address:02x}", n=n,
                     target_read=_find(msgs, f"{prefix}{n}{target}", write=False),
@@ -501,6 +535,27 @@ class Catalog:
                     shortname=_find(msgs, f"{prefix}{n}Shortname", write=False),
                     target_bounds=self.bounds(address, tw.name) if tw else None,
                     modes=_mode_roles(roles, mode_read or mode_write),
+                    setpoint=(_find(msgs, f"{prefix}{n}{setpoint}", write=False)
+                              if setpoint else None),
+                    veto_temp=(_find(msgs, f"{prefix}{n}{veto['temp']}", write=True)
+                               if veto.get("temp") else None),
+                    veto_duration=(_find(msgs, f"{prefix}{n}{veto['duration']}", write=True)
+                                   if veto.get("duration") else None),
+                    special_read=special_read,
+                    special_write=(_find(msgs, f"{prefix}{n}{special['register']}", write=True)
+                                   if special_read is not None else None),
+                    special_values=_mode_roles(
+                        {**{k: v for k, v in special.items() if k != "register"},
+                         "veto": veto.get("special")},
+                        special_read),
+                    holiday_start=_zone_read(msgs, prefix, n, holiday.get("start")),
+                    holiday_end=_zone_read(msgs, prefix, n, holiday.get("end")),
+                    holiday_temp=_zone_read(msgs, prefix, n, holiday.get("temp")),
+                    timer_frames=_zone_read(msgs, prefix, n, timer.get("frames")),
+                    timer_days=(tuple(_zone_read(msgs, prefix, n, d) for d in days)
+                                if isinstance(days, list) and len(days) == 7 else ()),
+                    setback_mode=setback_read,
+                    setback_values=_mode_roles(setback.get("values"), setback_read),
                 ))
         return out
 
@@ -510,6 +565,16 @@ def _find(msgs: list[MessageDef], name: str, *, write: bool) -> MessageDef | Non
     one (it can be sent)."""
     hits = [m for m in msgs if m.name == name and (m.is_write if write else m.is_read)]
     return next((m for m in hits if not m.is_passive), hits[0] if hits else None)
+
+
+def _zone_read(msgs: list[MessageDef], prefix: str, n: int, role: object) -> MessageDef | None:
+    """The read of zone n's register for a declared role name, if declared."""
+    return (_find(msgs, f"{prefix}{n}{role}", write=False)
+            if isinstance(role, str) and role else None)
+
+
+def _dict(value: object) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
 
 
 def _mode_roles(roles: object, msg: MessageDef | None) -> dict[str, str]:

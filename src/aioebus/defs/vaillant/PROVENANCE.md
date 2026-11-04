@@ -19,6 +19,14 @@ Two kinds live here:
   datatypes, divisors, units, value tables, and the short functional field
   names. The source CSVs are **not** redistributed here.
 
+Hand-corrected after re-engineering: in `ctlv3.json` the zones' operating mode
+reads `0=off;1=auto;2=manual`, as the sensoCOMFORT itself names its modes
+(time-controlled, manual, off; observed on the reference installation), a
+circuit's setback mode `Hc<n>AutoOffMode` reads `0=eco;1=normal` (Eco/Normal in
+the VRC 720/3 manual 0020334315_04), and the zone registers a thermostat shows
+are polled (`r1`: OpMode, DayTemp, ActualRoomTempDesired, RoomTemp, SFMode).
+Keep this when the file is generated again.
+
 What is a fact vs. an expression:
 
 - Facts (free to use): a register's id, byte layout, datatype, divisor, unit and
