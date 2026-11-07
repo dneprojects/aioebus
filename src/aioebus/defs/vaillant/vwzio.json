@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Currenterror",
+    "pbsb": "b503",
+    "id": "0001",
+    "zz": "76",
+    "fields": [
+      {
+        "name": "error",
+        "type": "UIN"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:8"
+      }
+    ]
+  }
+]

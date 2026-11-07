@@ -16,7 +16,10 @@
     "PMW01": "pmw.json",
     "VR_71": "vr_71.json",
     "VWZIO": "vwzio.json",
-    "Broadcast": "broadcast.json"
+    "Broadcast": "broadcast.json",
+    "HMUX0": "hmu.json",
+    "BASV3": "ctlv3.json",
+    "BASS3": "ctlv3.json"
   },
   "models": {
     "_comment": "Model shown in HA, keyed by definition file. For devices behind a bus coupler the scan ident is the coupler (both the heat pump and the eloBlock scan as 'V32'); this shows the actual appliance instead.",
@@ -62,6 +65,14 @@
                 "days": ["Timer_Monday0", "Timer_Tuesday0", "Timer_Wednesday0", "Timer_Thursday0",
                          "Timer_Friday0", "Timer_Saturday0", "Timer_Sunday0"]},
       "setback_mode": {"register": "Hc{n}AutoOffMode", "values": {"eco": "eco", "normal": "normal"}}
+    }
+  },
+  "hot_water": {
+    "_comment": "The hot water of a controller: 'mode' its operating mode with the values for the roles off, auto (time program) and manual, 'target'/'current' the setpoint and the cylinder temperature, 'special' the special-function register with its values for no special function ('none') and a one-time charge ('boost').",
+    "ctlv3.json": {
+      "mode": "HwcOpMode", "target": "HwcTempDesired", "current": "HwcStorageTemp",
+      "modes": {"off": "off", "auto": "auto", "manual": "day"},
+      "special": {"register": "HwcSFMode", "none": "auto", "boost": "load"}
     }
   },
   "number_bounds": {

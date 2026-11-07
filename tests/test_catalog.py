@@ -531,3 +531,61 @@ def test_bundled_file_of_reads_the_folder_once(monkeypatch):
     monkeypatch.setattr(type(cat.BUNDLED_DIR), "glob", no_scan)
     assert cat.bundled_file_of("hmu.json") == "hmu.json"
     assert cat.bundled_file_of("nope.json") is None
+
+
+def test_hot_water_from_the_bundled_catalog():
+    c = Catalog()
+    run(c.load({0x15: _scan("CTLV3", "8004", "808"), 0x08: _scan("HMU00", "5103")}))
+    [water] = c.hot_water()
+    assert water.zz == "15"
+    assert (water.target_read.name, water.current.name, water.mode_read.name) == (
+        "HwcTempDesired", "HwcStorageTemp", "HwcOpMode")
+    assert water.target_write.is_write and water.mode_write.is_write
+    assert water.special_write.is_write and water.special_read.is_read
+    assert water.modes == {"off": "off", "auto": "auto", "manual": "day"}
+    assert water.special_values == {"none": "auto", "boost": "load"}
+    assert water.target_bounds == c.bounds(0x15, "HwcTempDesired")
+    assert water.target_bounds is not None
+
+
+def test_no_hot_water_without_a_declaration(tmp_path):
+    c = Catalog()
+    run(c.load({0x08: _scan("HMU00", "5103")}))
+    assert c.hot_water() == []
+
+
+@pytest.mark.parametrize(("ident", "same_as"), [
+    ("HMUX0", "HMU00"), ("BASV3", "CTLV3"), ("BASS3", "CTLV3")])
+def test_other_generations_share_the_definition(ident, same_as):
+    assert resolve_bundled(_scan(ident)).file == resolve_bundled(_scan(same_as)).file
+
+
+# answers on the reference bus (telegram log 21.-23.10.2026)
+@pytest.mark.parametrize(("file", "name", "request_id", "answer", "value"), [
+    ("hmu.json", "RunDataHeatOutput", "5402005e0d", "02015e0d1dbea545", 5.303764),
+    ("hmu.json", "RunDataCondenserOutTemp", "540200b608", "0201b608ebd0e341", 28.477),
+    ("hmu.json", "RunStatsDeiceHours", "540200e30b", "0201e30b6d000000", 109),
+    ("hmu.json", "RunStatsDeiceStarts", "540200e40b", "0201e40b5c020000", 604),
+    ("hmu.json", "RunStatsCompressorStarts", "540200c30b", "0201c30b69150100", 71017),  # no wrap
+    ("hmu.json", "Currenterror", "0001", "1e01ffffffffffffffff", 286),
+    ("hmu.json", "Currenterror", "0001", "ffffffffffffffffffff", None),
+    ("vwzio.json", "Currenterror", "0001", "ffffffffffffffffffff", None),
+    ("ctlv3.json", "SystemOperatingState", "020000004800", "010048000300", "hwc"),
+    ("ctlv3.json", "GlobalSystemOff", "020000000700", "0300070000", "no"),
+    ("ctlv3.json", "BivalencePointHc", "020000002300", "03002300000000c1", -8.0),
+    ("ctlv3.json", "BivalencePointHwc", "020000000100", "03000100000020c1", -10.0),
+    ("ctlv3.json", "AlternativePoint", "020000002200", "030022000000a8c1", -21.0),
+    ("ctlv3.json", "BufferChargeOffset", "02000000a200", "0300a20000002041", 10.0),
+])
+def test_registers_decode_as_on_the_reference_bus(file, name, request_id, answer, value):
+    msg = next(m for m in bundled_file(file) if m.name == name and m.is_read)
+    assert msg.msgid == request_id
+    decoded = [v for k, v in msg.decode(b"", answer).items()]
+    assert len(decoded) == 1
+    assert decoded[0] == (pytest.approx(value, abs=0.001) if isinstance(value, float) else value)
+
+
+def test_a_heat_pump_reads_heat_and_power_together():
+    defs = {m.name: m for m in bundled_file("hmu.json") if m.is_read}
+    assert defs["RunDataHeatOutput"].poll_priority == defs["PowerConsumptionHmu"].poll_priority == 1
+    assert defs["RunDataHeatOutput"].fields[-1].unit == defs["PowerConsumptionHmu"].fields[-1].unit

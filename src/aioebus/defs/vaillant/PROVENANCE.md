@@ -35,7 +35,51 @@ What is a fact vs. an expression:
   selection and arrangement of the whole database. We do not reproduce it; each
   device's def is the subset observed on our own bus, chosen by our own capture.
 
-`vwzio.json` (0x76) is empty on purpose: the device is recognised and named, but
-its upstream CSV defines only service-test registers, and its operational data
-travels over an undocumented low-level memory protocol that neither ebusd nor
-this library decodes into named values.
+`vwzio.json` (0x76) holds only the current error: the device is recognised and
+named, but its upstream CSV defines only service-test registers, and its
+operational data travels over an undocumented low-level memory protocol that
+neither ebusd nor this library decodes into named values.
+
+## Registers taken from arotherm-genia-ebusd
+
+The ids and meanings of these registers come from
+[R91g/arotherm-genia-ebusd](https://github.com/R91g/arotherm-genia-ebusd), MIT
+License, Copyright (c) 2026 R91g (full notice below). Each was checked against
+the telegram log of the reference bus before it was added (values, and heat
+output against flow x temperature difference x 1.163), and is kept as facts only:
+
+- `hmu.json`: `RunDataHeatOutput`, `RunDataCondenserOutTemp`, `RunStatsDeiceHours`,
+  `RunStatsDeiceStarts`; the `RunStats*` counters as four bytes
+- `hmu.json`, `ctlv3.json`, `vwzio.json`: `Currenterror` (the first error)
+- `ctlv3.json`: `SystemOperatingState`, `GlobalSystemOff`, `BivalencePointHc`,
+  `BivalencePointHwc`, `AlternativePoint`, `BufferChargeOffset`
+- `index.json`: the idents `HMUX0`, `BASV3` and `BASS3` (same registers per that
+  project; not seen on the reference bus)
+
+Not taken, as the reference bus contradicts it: `StateCompressor.modulation` as a
+percentage (it reaches 200 at 110 rps) and `RunStatsImmersionHeaterHours` (13891 h
+on a heat pump whose electric heater hardly ever ran).
+
+```text
+MIT License
+
+Copyright (c) 2026 R91g
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

@@ -885,7 +885,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -904,7 +904,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -923,7 +923,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -942,7 +942,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -961,7 +961,7 @@
       },
       {
         "name": "value",
-        "type": "UIN"
+        "type": "ULG"
       }
     ]
   },
@@ -979,7 +979,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -1017,7 +1017,7 @@
       },
       {
         "name": "value",
-        "type": "UIN"
+        "type": "ULG"
       }
     ]
   },
@@ -1035,7 +1035,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -1054,7 +1054,7 @@
       },
       {
         "name": "value",
-        "type": "UIN"
+        "type": "ULG"
       }
     ]
   },
@@ -1072,7 +1072,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -1091,7 +1091,7 @@
       },
       {
         "name": "value",
-        "type": "UIN"
+        "type": "ULG"
       }
     ]
   },
@@ -1109,7 +1109,7 @@
       },
       {
         "name": "value",
-        "type": "UIN",
+        "type": "ULG",
         "unit": "h"
       }
     ]
@@ -1128,7 +1128,7 @@
       },
       {
         "name": "value",
-        "type": "UIN"
+        "type": "ULG"
       }
     ]
   },
@@ -1558,7 +1558,7 @@
     ]
   },
   {
-    "direction": "r",
+    "direction": "r1",
     "circuit": "wp0",
     "name": "PowerConsumptionHmu",
     "pbsb": "b516",
@@ -1754,6 +1754,100 @@
         "type": "EXP",
         "divisor": 1000,
         "unit": "kWh"
+      }
+    ]
+  },
+  {
+    "direction": "r1",
+    "circuit": "",
+    "name": "RunDataHeatOutput",
+    "pbsb": "b509",
+    "id": "5402005e0d",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "divisor": 1000,
+        "unit": "kW"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunDataCondenserOutTemp",
+    "pbsb": "b509",
+    "id": "540200b608",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsDeiceHours",
+    "pbsb": "b509",
+    "id": "540200e30b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG",
+        "unit": "h"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "RunStatsDeiceStarts",
+    "pbsb": "b509",
+    "id": "540200e40b",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "ULG"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Currenterror",
+    "pbsb": "b503",
+    "id": "0001",
+    "zz": "08",
+    "fields": [
+      {
+        "name": "error",
+        "type": "UIN"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:8"
       }
     ]
   }

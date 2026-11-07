@@ -114,6 +114,27 @@ class ClimateZone:
     setback_values: dict[str, str] = field(default_factory=dict)
 
 
+@dataclass
+class HotWater:
+    """A controller's hot water: the addressed messages for its setpoint
+    (read/write), the cylinder temperature, the operating mode (read/write,
+    ``modes`` names its values for the roles "off", "auto" and "manual") and the
+    special function (read/write, ``special_values`` names "none" and "boost",
+    a one-time charge). ``target_bounds`` is the setpoint's range. Missing roles
+    are None."""
+    zz: str
+    target_read: MessageDef | None
+    target_write: MessageDef | None
+    current: MessageDef | None
+    mode_read: MessageDef | None
+    mode_write: MessageDef | None
+    target_bounds: tuple[float, float, float] | None = None
+    modes: dict[str, str] = field(default_factory=dict)
+    special_read: MessageDef | None = None
+    special_write: MessageDef | None = None
+    special_values: dict[str, str] = field(default_factory=dict)
+
+
 @cache
 def bundled_index() -> dict[str, Any]:
     data: dict[str, Any] = json.loads((BUNDLED_DIR / "index.json").read_text(encoding="utf-8"))
@@ -561,6 +582,37 @@ class Catalog:
                     setback_mode=setback_read,
                     setback_values=_mode_roles(setback.get("values"), setback_read),
                 ))
+        return out
+
+    def hot_water(self) -> list[HotWater]:
+        """The hot water of each controller the catalog's 'hot_water' section
+        declares for a device's file."""
+        out: list[HotWater] = []
+        for address, definition in self._defs.items():
+            decl = (bundled_index()["hot_water"].get(definition.file)
+                    if definition.source == "bundled" else None)
+            if not isinstance(decl, dict):
+                continue
+            msgs = self._messages.get(address, [])
+            special = _dict(decl.get("special"))
+            register = special.get("register", "")
+            mode_read = _find(msgs, decl["mode"], write=False)
+            special_read = _find(msgs, register, write=False)
+            target_write = _find(msgs, decl["target"], write=True)
+            out.append(HotWater(
+                zz=f"{address:02x}",
+                target_read=_find(msgs, decl["target"], write=False),
+                target_write=target_write,
+                current=_find(msgs, decl["current"], write=False),
+                mode_read=mode_read,
+                mode_write=_find(msgs, decl["mode"], write=True),
+                target_bounds=self.bounds(address, target_write.name) if target_write else None,
+                modes=_mode_roles(decl.get("modes"), mode_read),
+                special_read=special_read,
+                special_write=_find(msgs, register, write=True),
+                special_values=_mode_roles(
+                    {k: v for k, v in special.items() if k != "register"}, special_read),
+            ))
         return out
 
 

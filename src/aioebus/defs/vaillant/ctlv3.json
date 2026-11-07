@@ -5559,5 +5559,145 @@
         }
       }
     ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "SystemOperatingState",
+    "pbsb": "b524",
+    "id": "020000004800",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UIN",
+        "values": {
+          "0": "standby",
+          "1": "heating",
+          "2": "cooling",
+          "3": "hwc"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "GlobalSystemOff",
+    "pbsb": "b524",
+    "id": "020000000700",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "UCH",
+        "values": {
+          "0": "no",
+          "1": "yes"
+        }
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "BivalencePointHc",
+    "pbsb": "b524",
+    "id": "020000002300",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "BivalencePointHwc",
+    "pbsb": "b524",
+    "id": "020000000100",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "AlternativePoint",
+    "pbsb": "b524",
+    "id": "020000002200",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "°C"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "BufferChargeOffset",
+    "pbsb": "b524",
+    "id": "02000000a200",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "ign",
+        "type": "IGN:4"
+      },
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K"
+      }
+    ]
+  },
+  {
+    "direction": "r",
+    "circuit": "",
+    "name": "Currenterror",
+    "pbsb": "b503",
+    "id": "0001",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "error",
+        "type": "UIN"
+      },
+      {
+        "name": "ign",
+        "type": "IGN:8"
+      }
+    ]
   }
 ]

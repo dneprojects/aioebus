@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Heat pump: heat output (`RunDataHeatOutput`, read each minute with the power), condenser outlet temperature, defrost hours and starts, current error
+- Run-time counters read as four bytes, no wrap at 65535
+- sensoCOMFORT: system state, system off, bivalence and alternative points, buffer charge offset, current error
+- VWZ (VWZIO): current error
+- Scan idents HMUX0, BASV3 and BASS3 use the heat pump and controller definitions
+- `Catalog.hot_water()` bundles a controller's hot water registers (`HotWater`)
+
 ## 0.7.7
 
 - Dates (BDA, HDA) can be written; `ClimateZone.holiday_start_write`/`holiday_end_write` set an away period
