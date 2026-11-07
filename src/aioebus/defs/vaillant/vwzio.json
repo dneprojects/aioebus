@@ -8,7 +8,7 @@
     "zz": "76",
     "fields": [
       {
-        "name": "error",
+        "name": "value",
         "type": "UIN"
       },
       {

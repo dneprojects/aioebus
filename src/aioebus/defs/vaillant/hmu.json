@@ -1842,7 +1842,7 @@
     "zz": "08",
     "fields": [
       {
-        "name": "error",
+        "name": "value",
         "type": "UIN"
       },
       {
