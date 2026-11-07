@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.9
 
 - Heat pump: heat output (`RunDataHeatOutput`, read each minute with the power), condenser outlet temperature, defrost hours and starts, current error
 - Run-time counters read as four bytes, no wrap at 65535
