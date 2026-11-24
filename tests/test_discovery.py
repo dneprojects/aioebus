@@ -10,6 +10,7 @@ from aioebus.discovery import (
     BusSilent,
     Device,
     discover,
+    find_later,
     identify_later,
 )
 from aioebus.scan import Identification, ScanResult
@@ -197,3 +198,43 @@ def test_a_hand_edited_identification_of_wrong_types_is_dropped():
     found = run(discover(FakeEngine({0x08: HMU}), remembered={"08": record}))
     ident = found.devices[0x08].ident
     assert ident is not None and ident.article == "" and ident.year is None
+
+
+VR71 = ScanResult(0xB5, "Vaillant", "VR_71", "0203", "5904", 203, 5904)
+VR71_RECORD = {"ident": "VR_71", "hw": "5904", "sw": "0203", "article": "0020184846",
+               "serial": SERIAL, "year": 2023, "week": 14}
+
+
+class FlakyEngine(FakeEngine):
+    """The VR71 misses its first scans (a busy bus), then answers."""
+
+    def __init__(self, scans, misses):
+        super().__init__(scans)
+        self.misses = dict(misses)
+
+    async def scan(self, zz, timeout=6.0):
+        if self.misses.get(zz, 0) > 0:
+            self.misses[zz] -= 1
+            self.probed.append(zz)
+            raise TimeoutError("no answer in time")
+        return await super().scan(zz, timeout)
+
+
+def test_a_known_device_that_misses_one_scan_gets_a_second_try():
+    eng = FlakyEngine({0x08: HMU, 0x26: VR71}, {0x26: 1})
+    found = run(discover(eng, remembered={"26": VR71_RECORD}))
+    assert 0x26 in found.devices and found.missing == []
+    assert eng.probed.count(0x26) == 2
+    assert eng.probed.count(0x15) == 1  # unknown and absent: no second try
+
+
+def test_a_known_device_missing_twice_is_reported_and_found_later():
+    eng = FlakyEngine({0x08: HMU, 0x26: VR71}, {0x26: 3})
+    found = run(discover(eng, remembered={"26": VR71_RECORD}))
+    assert 0x26 not in found.devices and found.missing == [0x26]
+
+    async def collect():
+        return [d async for d in find_later(eng, found.missing, (0, 0, 0))]
+
+    later = run(collect())
+    assert [(d.address, d.scan) for d in later] == [(0x26, VR71)]

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Discovery: a device known from an earlier start gets a second scan try; one still missing is listed in `Discovery.missing`, and `find_later` keeps scanning for it
+
 ## 0.7.12
 
 - VR71: a mixer circuit's `mixer` has no unit; it is the movement the controller asks for (signed: below 0 closing), not a position

@@ -58,6 +58,7 @@ from .discovery import (
     Device,
     Discovery,
     discover,
+    find_later,
     identify_later,
     remember,
 )
@@ -137,6 +138,7 @@ __all__ = [
     "escape",
     "evaluate",
     "evaluate_all",
+    "find_later",
     "has_numeric_value",
     "identify_later",
     "is_float",

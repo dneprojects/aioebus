@@ -55,6 +55,9 @@ class Discovery:
     extra_addresses: list[int]
     remembered: dict[str, Any] = field(default_factory=dict)
     dropped: set[int] = field(default_factory=set)  # duplicate addresses removed
+    # devices known from an earlier start that answered neither try now (a busy
+    # bus, a device still booting): :func:`find_later` keeps looking for them
+    missing: list[int] = field(default_factory=list)
 
 
 def remember(device: Device) -> dict[str, Any]:
@@ -108,13 +111,19 @@ async def discover(
               if isinstance(a, int) and not isinstance(a, bool) and is_slave(a)}
     targets = sorted(set(ALL_ADDRESSES) | extras) if deep else sorted(set(BASE_ADDRESSES) | extras)
     devices: dict[int, Device] = {}
-    for zz in targets:
-        _check_running(engine)
-        try:
-            devices[zz] = Device(zz, await engine.scan(zz, ADDRESS_TIMEOUT))
-        except (ReadError, TimeoutError) as err:
-            _check_running(engine)  # a dropped link is no missing device
-            _LOGGER.debug("scan %#04x: %s", zz, err)
+    # a device known from an earlier start gets a second try: one missed answer
+    # (a collision on a busy bus) must not drop it until the next start
+    seen_before = {int(k, 16) for k in stored if _is_address_key(k)} | extras
+    for attempt in (1, 2):
+        for zz in targets:
+            if zz in devices or (attempt == 2 and zz not in seen_before):
+                continue
+            _check_running(engine)
+            try:
+                devices[zz] = Device(zz, await engine.scan(zz, ADDRESS_TIMEOUT))
+            except (ReadError, TimeoutError) as err:
+                _check_running(engine)  # a dropped link is no missing device
+                _LOGGER.debug("scan %#04x (try %d): %s", zz, attempt, err)
     out: dict[str, Any] = dict(stored)
     for zz, device in devices.items():
         if device.scan.mf != VAILLANT:
@@ -134,7 +143,15 @@ async def discover(
     # every address) keeps exactly what answered
     found = set(devices) - set(BASE_ADDRESSES)
     keep = sorted((found if deep else extras | found) - dropped)
-    return Discovery(devices, keep, out, dropped)
+    missing = sorted(a for a in seen_before if a not in devices and a in targets)
+    return Discovery(devices, keep, out, dropped, missing)
+
+
+def _is_address_key(key: object) -> bool:
+    try:
+        return isinstance(key, str) and is_slave(int(key, 16))
+    except ValueError:
+        return False
 
 
 def drop_duplicates(devices: dict[int, Device]) -> set[int]:
@@ -179,6 +196,26 @@ async def identify_later(
             if ident is not None:
                 device.ident = ident
                 yield device
+
+
+async def find_later(
+    engine: EbusEngine, addresses: Iterable[int], delays: Iterable[float]
+) -> AsyncIterator[Device]:
+    """Scan devices known from an earlier start that did not answer at
+    discovery, once after each pause in ``delays``; yields each as it answers."""
+    missing = list(addresses)
+    for delay in delays:
+        if not missing:
+            return
+        await asyncio.sleep(delay)
+        for zz in list(missing):
+            try:
+                scan = await engine.scan(zz)
+            except (TimeoutError, ReadError, OSError) as err:
+                _LOGGER.debug("scan %#04x later: %s", zz, err)
+                continue
+            missing.remove(zz)
+            yield Device(zz, scan)
 
 
 def _check_running(engine: EbusEngine) -> None:
