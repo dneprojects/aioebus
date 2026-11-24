@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.14
 
 - Discovery: no second scan try during the setup; a known device that missed it is only reported in `Discovery.missing` (for `find_later`)
 
