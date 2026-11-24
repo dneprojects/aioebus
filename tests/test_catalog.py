@@ -432,6 +432,24 @@ def test_a_read_and_a_write_of_one_register_are_both_kept():
     assert kinds == ["r", "u", "w"]
 
 
+def test_the_controllers_relay_command_to_the_vr71_is_read_off_the_bus():
+    # real frames from the reference bus: the controller (10) sets the VR71 relays;
+    # R6 (here the diverter valve) on, unused relays FF; the write stays a write
+    from aioebus.passive import MessageRegistry, decode_raw
+    c = Catalog()
+    run(c.load({0x26: _scan("VR_71", "5904", "0203")}))
+    kinds = sorted(m.direction for m in c.messages(0x26) if m.name == "SetActorState")
+    assert kinds == ["uw", "w"]
+    assert "SetActorState" in {m.name for m in c.device_messages("r")}
+    reg = MessageRegistry(c.messages(0x26))
+    on = decode_raw(reg, "1026b5230f05ffff00000014ffffffff00000000eb0001019a00")
+    off = decode_raw(reg, "1026b5230f05ffff00000000ffffffff00000000600001019a00")
+    assert on is not None and off is not None and on[0].direction == "uw"
+    assert on[1]["SetActorState r6"] == "on" and off[1]["SetActorState r6"] == "off"
+    assert on[1]["SetActorState r3"] == "off" and on[1]["SetActorState r1"] is None
+    assert "SetActorState rx" not in on[1]
+
+
 def test_a_row_with_its_own_destination_keeps_it(tmp_path):
     # an ebusd CSV row may address a module elsewhere (08.ehp: PowerCutPreloading
     # to 25): writing it to the device's own address would set another register

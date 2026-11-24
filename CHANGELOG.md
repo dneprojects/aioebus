@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.10
+
+- VR71: the controller's relay command (`SetActorState` R1–R12) is read off the bus as a passive message
+
 ## 0.7.9
 
 - Heat pump: heat output (`RunDataHeatOutput`, read each minute with the power), condenser outlet temperature, defrost hours and starts, current error

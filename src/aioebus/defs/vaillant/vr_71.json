@@ -1,5 +1,115 @@
 [
   {
+    "direction": "uw",
+    "circuit": "",
+    "name": "SetActorState",
+    "pbsb": "b523",
+    "id": "05",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "r1",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r2",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r3",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r4",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r5",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r6",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r7",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r8",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r9",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r10",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r11",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "r12",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "20": "on"
+        }
+      },
+      {
+        "name": "rx",
+        "type": "IGN:2"
+      }
+    ]
+  },
+  {
     "direction": "w",
     "circuit": "",
     "name": "SetActorState",

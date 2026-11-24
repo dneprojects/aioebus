@@ -25,7 +25,10 @@ reads `0=off;1=auto;2=manual`, as the sensoCOMFORT itself names its modes
 circuit's setback mode `Hc<n>AutoOffMode` reads `0=eco;1=normal` (Eco/Normal in
 the VRC 720/3 manual 0020334315_04), and the zone registers a thermostat shows
 are polled (`r1`: OpMode, DayTemp, ActualRoomTempDesired, RoomTemp, SFMode).
-Keep this when the file is generated again.
+In `vr_71.json` the controller's relay command `SetActorState` is also a
+passive message (`uw`), so the relay states the controller sends become values
+(observed on the reference installation: R6 switches the diverter valve with
+every hot water charge). Keep this when the file is generated again.
 
 What is a fact vs. an expression:
 
