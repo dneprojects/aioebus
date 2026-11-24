@@ -220,15 +220,17 @@ class FlakyEngine(FakeEngine):
         return await super().scan(zz, timeout)
 
 
-def test_a_known_device_that_misses_one_scan_gets_a_second_try():
+def test_a_known_device_that_misses_the_scan_is_reported_without_a_second_try():
+    # the setup must not wait for it: the caller looks for it in the background
     eng = FlakyEngine({0x08: HMU, 0x26: VR71}, {0x26: 1})
     found = run(discover(eng, remembered={"26": VR71_RECORD}))
-    assert 0x26 in found.devices and found.missing == []
-    assert eng.probed.count(0x26) == 2
-    assert eng.probed.count(0x15) == 1  # unknown and absent: no second try
+    assert 0x26 not in found.devices and found.missing == [0x26]
+    assert eng.probed.count(0x26) == 1
+    # an address nobody ever answered on is no missing device
+    assert 0x15 not in found.missing
 
 
-def test_a_known_device_missing_twice_is_reported_and_found_later():
+def test_a_missing_known_device_is_found_later():
     eng = FlakyEngine({0x08: HMU, 0x26: VR71}, {0x26: 3})
     found = run(discover(eng, remembered={"26": VR71_RECORD}))
     assert 0x26 not in found.devices and found.missing == [0x26]

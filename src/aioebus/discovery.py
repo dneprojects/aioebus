@@ -55,8 +55,8 @@ class Discovery:
     extra_addresses: list[int]
     remembered: dict[str, Any] = field(default_factory=dict)
     dropped: set[int] = field(default_factory=set)  # duplicate addresses removed
-    # devices known from an earlier start that answered neither try now (a busy
-    # bus, a device still booting): :func:`find_later` keeps looking for them
+    # devices known from an earlier start that did not answer now (a busy bus,
+    # a device still booting): :func:`find_later` keeps looking for them
     missing: list[int] = field(default_factory=list)
 
 
@@ -111,19 +111,17 @@ async def discover(
               if isinstance(a, int) and not isinstance(a, bool) and is_slave(a)}
     targets = sorted(set(ALL_ADDRESSES) | extras) if deep else sorted(set(BASE_ADDRESSES) | extras)
     devices: dict[int, Device] = {}
-    # a device known from an earlier start gets a second try: one missed answer
-    # (a collision on a busy bus) must not drop it until the next start
+    for zz in targets:
+        _check_running(engine)
+        try:
+            devices[zz] = Device(zz, await engine.scan(zz, ADDRESS_TIMEOUT))
+        except (ReadError, TimeoutError) as err:
+            _check_running(engine)  # a dropped link is no missing device
+            _LOGGER.debug("scan %#04x: %s", zz, err)
+    # a device known from an earlier start that missed its answer (a collision
+    # on a busy bus) is reported, so the caller looks for it in the background
+    # (find_later) instead of holding the setup up with a second try
     seen_before = {int(k, 16) for k in stored if _is_address_key(k)} | extras
-    for attempt in (1, 2):
-        for zz in targets:
-            if zz in devices or (attempt == 2 and zz not in seen_before):
-                continue
-            _check_running(engine)
-            try:
-                devices[zz] = Device(zz, await engine.scan(zz, ADDRESS_TIMEOUT))
-            except (ReadError, TimeoutError) as err:
-                _check_running(engine)  # a dropped link is no missing device
-                _LOGGER.debug("scan %#04x (try %d): %s", zz, attempt, err)
     out: dict[str, Any] = dict(stored)
     for zz, device in devices.items():
         if device.scan.mf != VAILLANT:
