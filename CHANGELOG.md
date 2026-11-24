@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.11
+
+- VR71: the controller's mixer circuit commands (`Mc1Operation`, `Mc2Operation`: status, flow setpoint) and the VR71's answer (pump, mixer) are read off the bus as passive messages
+
 ## 0.7.10
 
 - VR71: the controller's relay command (`SetActorState` R1–R12) is read off the bus as a passive message

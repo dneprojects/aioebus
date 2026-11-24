@@ -220,11 +220,87 @@
     ]
   },
   {
+    "direction": "uw",
+    "circuit": "",
+    "name": "Mc1Operation",
+    "pbsb": "b523",
+    "id": "0200",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "status",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "flowtempdesired",
+        "type": "D1C",
+        "unit": "°C"
+      },
+      {
+        "name": "pump",
+        "type": "UCH",
+        "part": "s",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "mixer",
+        "type": "SCH",
+        "part": "s",
+        "unit": "%"
+      }
+    ]
+  },
+  {
     "direction": "w",
     "circuit": "",
     "name": "Mc1Operation",
     "pbsb": "b523",
     "id": "0200",
+    "zz": "26",
+    "fields": [
+      {
+        "name": "status",
+        "type": "UCH",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "flowtempdesired",
+        "type": "D1C",
+        "unit": "°C"
+      },
+      {
+        "name": "pump",
+        "type": "UCH",
+        "part": "s",
+        "values": {
+          "0": "off",
+          "1": "on"
+        }
+      },
+      {
+        "name": "mixer",
+        "type": "SCH",
+        "part": "s",
+        "unit": "%"
+      }
+    ]
+  },
+  {
+    "direction": "uw",
+    "circuit": "",
+    "name": "Mc2Operation",
+    "pbsb": "b523",
+    "id": "0201",
     "zz": "26",
     "fields": [
       {

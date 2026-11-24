@@ -450,6 +450,24 @@ def test_the_controllers_relay_command_to_the_vr71_is_read_off_the_bus():
     assert "SetActorState rx" not in on[1]
 
 
+def test_the_controllers_mixer_circuit_command_and_the_vr71_answer_are_read():
+    # real frames: the controller sends status and flow setpoint, the VR71 answers
+    # with its pump and mixer
+    from aioebus.passive import MessageRegistry, decode_raw
+    c = Catalog()
+    run(c.load({0x26: _scan("VR_71", "5904", "0203")}))
+    for name in ("Mc1Operation", "Mc2Operation"):
+        assert sorted(m.direction for m in c.messages(0x26) if m.name == name) == ["uw", "w"]
+    reg = MessageRegistry(c.messages(0x26))
+    mc1 = decode_raw(reg, "1026b5230402000145560002011ea90000")
+    mc2 = decode_raw(reg, "1026b523040201013d3800020100b700")
+    assert mc1 is not None and mc1[0].direction == "uw"
+    assert mc1[1] == {"Mc1Operation status": "on", "Mc1Operation flowtempdesired": 34.5,
+                      "Mc1Operation pump": "on", "Mc1Operation mixer": 30}
+    assert mc2 is not None and mc2[1]["Mc2Operation mixer"] == 0
+    assert mc2[1]["Mc2Operation flowtempdesired"] == 30.5
+
+
 def test_a_row_with_its_own_destination_keeps_it(tmp_path):
     # an ebusd CSV row may address a module elsewhere (08.ehp: PowerCutPreloading
     # to 25): writing it to the device's own address would set another register
