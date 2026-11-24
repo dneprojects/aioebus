@@ -252,8 +252,7 @@
       {
         "name": "mixer",
         "type": "SCH",
-        "part": "s",
-        "unit": "%"
+        "part": "s"
       }
     ]
   },
@@ -290,8 +289,7 @@
       {
         "name": "mixer",
         "type": "SCH",
-        "part": "s",
-        "unit": "%"
+        "part": "s"
       }
     ]
   },
@@ -328,8 +326,7 @@
       {
         "name": "mixer",
         "type": "SCH",
-        "part": "s",
-        "unit": "%"
+        "part": "s"
       }
     ]
   },
@@ -366,8 +363,7 @@
       {
         "name": "mixer",
         "type": "SCH",
-        "part": "s",
-        "unit": "%"
+        "part": "s"
       }
     ]
   },

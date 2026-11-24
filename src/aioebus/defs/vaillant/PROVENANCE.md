@@ -27,7 +27,8 @@ the VRC 720/3 manual 0020334315_04), and the zone registers a thermostat shows
 are polled (`r1`: OpMode, DayTemp, ActualRoomTempDesired, RoomTemp, SFMode).
 In `vr_71.json` the controller's relay command `SetActorState` and its mixer
 circuit commands `Mc1Operation`/`Mc2Operation` (answered with pump and mixer)
-are also passive messages (`uw`), so what the controller sends and the VR71
+are also passive messages (`uw`); the circuits' `mixer` carries no unit, as it
+is a signed movement (below 0 closing), not a position, so what the controller sends and the VR71
 answers become values (observed on the reference installation: R6 switches the
 diverter valve with every hot water charge). Keep this when the file is generated again.
 

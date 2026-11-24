@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.12
+
+- VR71: a mixer circuit's `mixer` has no unit; it is the movement the controller asks for (signed: below 0 closing), not a position
+
 ## 0.7.11
 
 - VR71: the controller's mixer circuit commands (`Mc1Operation`, `Mc2Operation`: status, flow setpoint) and the VR71's answer (pump, mixer) are read off the bus as passive messages

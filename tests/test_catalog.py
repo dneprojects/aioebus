@@ -466,6 +466,9 @@ def test_the_controllers_mixer_circuit_command_and_the_vr71_answer_are_read():
                       "Mc1Operation pump": "on", "Mc1Operation mixer": 30}
     assert mc2 is not None and mc2[1]["Mc2Operation mixer"] == 0
     assert mc2[1]["Mc2Operation flowtempdesired"] == 30.5
+    # the mixer value is a signed movement (closing below 0), no position in %
+    mixer = next(f for f in mc1[0].fields if f.name == "mixer")
+    assert not mixer.unit and mixer.type == "SCH"
 
 
 def test_a_row_with_its_own_destination_keeps_it(tmp_path):
