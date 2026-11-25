@@ -456,7 +456,7 @@ class EbusEngine:
         self.stats.last_telegram = time.monotonic()
         if tg.kind != "BC" and is_slave(tg.zz) and tg.slave_crc is None:
             # another master's read of a device went unanswered (NAK or silence)
-            self.meter.foreign_unanswered(self.stats.last_telegram)
+            self.meter.foreign_unanswered(tg.zz, self.stats.last_telegram)
         try:
             decoded = self.registry.decode(tg)
         except Exception:  # one undecodable telegram, not the bus loop

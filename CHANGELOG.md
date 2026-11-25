@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.16
+
+- `BusMeter`: the load is the data against the bus's capacity (240 symbols a second), as an adapter need not pass every idle SYN on; unanswered reads are kept per device
+
 ## 0.7.15
 
 - `EbusEngine.meter` (`BusMeter`): bus load, our polls per minute (per device) and other masters' unanswered reads over the last minute

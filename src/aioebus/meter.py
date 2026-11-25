@@ -9,11 +9,16 @@ Pure and clock-injected (``now`` is passed in), like the poll scheduler.
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Collection
 from typing import Final
 
 from .frame import SYN
 
 WINDOW: Final = 60.0  # seconds the rates and the load are taken over
+# symbols the bus carries at most: 2400 baud, 10 bits a symbol (start, 8, stop).
+# The load is measured against this, not against the SYN seen: an adapter need
+# not pass every idle SYN on.
+SYMBOLS_PER_SECOND: Final = 240.0
 
 
 class BusMeter:
@@ -22,7 +27,7 @@ class BusMeter:
         # per whole second: [data symbols, SYN symbols]
         self._symbols: deque[tuple[int, list[int]]] = deque()
         self._polls: deque[tuple[float, int]] = deque()  # our polls: time, address
-        self._unanswered: deque[float] = deque()  # other masters' unanswered reads
+        self._unanswered: deque[tuple[float, int]] = deque()  # others' unanswered reads
         self._start: float | None = None
 
     def symbol(self, byte: int, now: float) -> None:
@@ -40,20 +45,21 @@ class BusMeter:
         self._polls.append((now, zz))
         self._trim(now)
 
-    def foreign_unanswered(self, now: float) -> None:
-        """Another master's read stayed unanswered (NAK or no answer)."""
-        self._unanswered.append(now)
+    def foreign_unanswered(self, zz: int, now: float) -> None:
+        """Another master's read of the device at ``zz`` stayed unanswered (NAK
+        or no answer)."""
+        self._unanswered.append((now, zz))
         self._trim(now)
 
     def utilization(self, now: float) -> float | None:
-        """Share of the last minute's symbols that carried data, in percent;
-        None before any symbol arrived."""
+        """The share of the bus's capacity the last minute's data used, in
+        percent; None before any symbol arrived."""
         self._trim(now)
-        data = sum(c[0] for _, c in self._symbols)
-        idle = sum(c[1] for _, c in self._symbols)
-        if data + idle == 0:
+        if self._start is None:
             return None
-        return round(100.0 * data / (data + idle), 1)
+        data = sum(c[0] for _, c in self._symbols)
+        span = min(self.window, max(now - self._start, 1.0))
+        return round(min(100.0, 100.0 * data / (span * SYMBOLS_PER_SECOND)), 1)
 
     def polls_per_minute(self, now: float, zz: int | None = None) -> float | None:
         """Our polls in the last minute (only those to ``zz`` if given)."""
@@ -61,10 +67,14 @@ class BusMeter:
         count = sum(1 for _, a in self._polls if zz is None or a == zz)
         return self._per_minute(count, now)
 
-    def unanswered_per_minute(self, now: float) -> float | None:
-        """Other masters' reads that stayed unanswered in the last minute."""
+    def unanswered_per_minute(self, now: float,
+                              addresses: Collection[int] | None = None) -> float | None:
+        """Other masters' reads that stayed unanswered in the last minute; only
+        those to ``addresses`` if given (devices that are there: a controller
+        probing an empty address is no sign of trouble)."""
         self._trim(now)
-        return self._per_minute(len(self._unanswered), now)
+        count = sum(1 for _, zz in self._unanswered if addresses is None or zz in addresses)
+        return self._per_minute(count, now)
 
     def _per_minute(self, count: int, now: float) -> float | None:
         if self._start is None:
@@ -79,5 +89,5 @@ class BusMeter:
             self._symbols.popleft()
         while self._polls and self._polls[0][0] < edge:
             self._polls.popleft()
-        while self._unanswered and self._unanswered[0] < edge:
+        while self._unanswered and self._unanswered[0][0] < edge:
             self._unanswered.popleft()

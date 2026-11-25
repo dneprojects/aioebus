@@ -163,4 +163,4 @@ __all__ = [
     "value_range",
     "values_of",
 ]
-__version__ = "0.7.15"
+__version__ = "0.7.16"
