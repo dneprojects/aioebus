@@ -17,6 +17,9 @@ per second. The scheduler follows three rules, the same shape ebusd uses:
    the otherwise-silent registers (e.g. a controller's own) are actually read.
 3. One request at a time: the bus is a single shared line, so the scheduler only
    ever hands back the single most-overdue message; the caller paces the reads.
+4. A device other masters depend on (a system controller its gateway reads all
+   the time) can get a minimum gap between our polls (``address_gaps``) and its
+   own polling rates (``priority_for``), so our reads never crowd theirs out.
 
 Registers are keyed per device by ``(zz, name)``, so the same register name on
 two devices is scheduled -- and suppressed passively -- independently.
@@ -26,6 +29,7 @@ unit-testable without a bus or wall-clock.
 """
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
 from .messages import MessageDef
@@ -45,13 +49,22 @@ class PollScheduler:
     MAX_BACKOFF: int = 5  # a dead register backs off up to 2**5 = 32x its interval
 
     def __init__(self, messages: list[MessageDef], base_interval: float = 60.0,
-                 default_priority: int = 0):
+                 default_priority: int = 0, *,
+                 address_gaps: Mapping[str, float] | None = None,
+                 priority_for: Callable[[MessageDef, int], int] | None = None):
         """``default_priority`` is the priority given to plain ``r`` reads (0 =
         do not poll them, ebusd's read-on-demand default; a positive value polls
         every ``default_priority * base_interval``). ``r1``..``r9`` keep their
-        own digit regardless."""
+        own digit regardless.
+
+        ``address_gaps`` maps a device address (two hex digits) to the least
+        seconds between two of our polls there. ``priority_for`` may change a
+        message's priority (it gets the message and the priority it would have;
+        0 = not polled)."""
         self.base_interval = base_interval
         self.default_priority = default_priority
+        self._gaps = {zz.lower(): gap for zz, gap in (address_gaps or {}).items() if gap > 0}
+        self._last_poll: dict[str, float] = {}  # per gapped address: our last poll
         self._items: dict[tuple[str, str], PollItem] = {}
         for m in messages:
             if not m.is_polled_read or m.needs_args:  # true reads without arguments
@@ -59,6 +72,8 @@ class PollScheduler:
             if m.address is None:  # no address to read from
                 continue
             priority = m.poll_priority or default_priority
+            if priority_for is not None:
+                priority = priority_for(m, priority)
             if priority > 0:
                 self._items[(m.zz, m.name)] = PollItem(m, priority)
 
@@ -71,6 +86,7 @@ class PollScheduler:
             if prev is not None:
                 item.last_update = prev.last_update
                 item.fails = prev.fails
+        self._last_poll.update(old._last_poll)
 
     def interval(self, item: PollItem) -> float:
         # a register the device keeps not answering is polled exponentially less
@@ -107,7 +123,18 @@ class PollScheduler:
             score = (now - item.last_update) / self.interval(item)
             if score < 1.0:  # interval not yet elapsed -> not due
                 continue
+            if self._resting(item.msg.zz.lower(), now):
+                continue
             key = (score, -item.priority)  # most overdue, then highest priority
             if best_key is None or key > best_key:
                 best, best_key = item, key
+        if best is not None:
+            zz = best.msg.zz.lower()
+            if zz in self._gaps:  # the caller starts this poll now
+                self._last_poll[zz] = now
         return best
+
+    def _resting(self, zz: str, now: float) -> bool:
+        """Whether a gapped device was polled by us too recently."""
+        gap = self._gaps.get(zz)
+        return gap is not None and now - self._last_poll.get(zz, float("-inf")) < gap

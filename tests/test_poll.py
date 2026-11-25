@@ -114,3 +114,46 @@ def test_read_without_a_device_address_is_not_polled():
                      "r1,elo,,Good,,,38,b509,0d2000,value,,UCH,,,\n")
     sched = PollScheduler(msgs)
     assert [k[1] for k in sched._items] == ["Good"]
+
+
+TWO = parse_csv("""\
+type,circuit,level,name,comment,qq,zz,pbsb,id,*name,part,type,divisor/values,unit,comment
+r1,ctl,,RoomA,,,15,b524,020003000f00,value,,UCH,,,
+r1,ctl,,RoomB,,,15,b524,020003010f00,value,,UCH,,,
+r,ctl,,Curve,,,15,b524,020002000f00,value,,UCH,,,
+r1,hp,,Flow,,,08,b509,0d0100,value,,UCH,,,
+""")
+
+
+def test_a_gapped_device_is_polled_at_most_once_per_gap():
+    # a controller its gateway reads all the time: our polls keep their distance
+    sch = PollScheduler(TWO, base_interval=10.0, default_priority=5, address_gaps={"15": 30.0})
+    first = sch.next_due(0.0)
+    assert first is not None and first.msg.zz == "15"
+    sch.mark(first.msg.zz, first.msg.name, 0.0)
+    # the other controller register is due but rests; the heat pump is not gapped
+    nxt = sch.next_due(1.0)
+    assert nxt is not None and nxt.msg.name == "Flow"
+    sch.mark("08", "Flow", 1.0)
+    assert sch.next_due(2.0) is None
+    later = sch.next_due(30.0)
+    assert later is not None and later.msg.zz == "15" and later.msg.name != first.msg.name
+
+
+def test_priority_for_slows_or_drops_registers():
+    def slower(msg, priority):
+        return 0 if msg.name == "RoomB" else (60 if priority == 5 else priority)
+
+    sch = PollScheduler(TWO, base_interval=10.0, default_priority=5, priority_for=slower)
+    assert ("15", "RoomB") not in sch._items  # 0: not polled
+    assert sch._items[("15", "Curve")].priority == 60
+    assert sch._items[("15", "RoomA")].priority == 1
+
+
+def test_the_gap_survives_a_rebuilt_poll_set():
+    old = PollScheduler(TWO, base_interval=10.0, address_gaps={"15": 30.0})
+    assert old.next_due(0.0).msg.zz == "15"
+    new = PollScheduler(TWO, base_interval=10.0, address_gaps={"15": 30.0})
+    new.carry_from(old)
+    due = new.next_due(5.0)
+    assert due is None or due.msg.zz != "15"

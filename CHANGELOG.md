@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.15
+
+- Poll scheduler: `address_gaps` keeps a least gap between our polls on a device, `priority_for` changes a message's polling rate (for a controller its gateway reads all the time)
+
 ## 0.7.14
 
 - Discovery: no second scan try during the setup; a known device that missed it is only reported in `Discovery.missing` (for `find_later`)
