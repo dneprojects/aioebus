@@ -31,6 +31,7 @@ from .active import (
 )
 from .frame import BROADCAST, SYN, FrameError, is_master, is_slave, parse_telegram
 from .messages import MessageDef, label_of
+from .meter import BusMeter
 from .passive import MessageRegistry, expects_slave
 from .poll import PollScheduler
 from .scan import (
@@ -138,6 +139,7 @@ class EbusEngine:
         self._queue: deque[_Active] = deque()
         self.cache: dict[CacheKey, object] = {}
         self.stats = EngineStats()
+        self.meter = BusMeter()  # bus load and poll rates over the last minute
         self._stop = False
         self.running = False  # run() is pumping the stream
         self._traffic = asyncio.Event()  # set by the first bus symbol
@@ -400,6 +402,8 @@ class EbusEngine:
                 self._queue.remove(act)
 
     async def _on_event(self, code: int, data: int) -> None:
+        if code == RECEIVED:
+            self.meter.symbol(data, time.monotonic())
         if self._active is not None:
             drv = self._active.driver
             assert drv is not None  # set before it became the active one
@@ -450,6 +454,9 @@ class EbusEngine:
             return
         self.stats.telegrams += 1
         self.stats.last_telegram = time.monotonic()
+        if tg.kind != "BC" and is_slave(tg.zz) and tg.slave_crc is None:
+            # another master's read of a device went unanswered (NAK or silence)
+            self.meter.foreign_unanswered(self.stats.last_telegram)
         try:
             decoded = self.registry.decode(tg)
         except Exception:  # one undecodable telegram, not the bus loop
@@ -539,6 +546,7 @@ class EbusEngine:
                 self._store(act.msg, values)
                 if act.future is None:  # a scheduled poll, not an explicit read
                     self.stats.polls_ok += 1
+                    self._meter_poll(act.msg)
             elif isinstance(drv, WriteDriver):
                 self.stats.writes += 1
             if act.future is not None and not act.future.done():
@@ -574,6 +582,11 @@ class EbusEngine:
             # persistently unanswered register out of the rotation entirely.
             self.scheduler.mark_failure(act.msg, time.monotonic())
             self.stats.polls_failed += 1
+            self._meter_poll(act.msg)
+
+    def _meter_poll(self, msg: MessageDef) -> None:
+        if msg.address is not None:
+            self.meter.poll(msg.address, time.monotonic())
 
 
 def _decode_answer(msg: MessageDef, request: bytes, answer: bytes) -> dict:

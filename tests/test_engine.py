@@ -1125,3 +1125,27 @@ def test_decoding_survives_fragmentation():
     stream = b"".join(encode_received_frame(bytes.fromhex(r)) for r, _ in _FRAMES)
     assert _engine_decodes([stream[i:i + 1] for i in range(len(stream))]) == [
         exp for _, exp in _FRAMES]
+
+
+def test_another_masters_unanswered_read_is_counted():
+    # the gateway (f1) reads the controller (15), which ACKs but never answers;
+    # an answered read is not counted
+    from aioebus.frame import crc8
+    head = bytes.fromhex("f115b52406020000003600")
+    lost = head + bytes([crc8(head), 0x00])
+
+    async def inner():
+        link = _Link()
+        eng = EbusEngine(link.send, link.recv, REG)
+        task = asyncio.create_task(eng.run())
+        link.inject(encode_received_frame(lost))
+        link.inject(encode_received_frame(bytes.fromhex("3138b509030d1800740003910100bb00")))
+        await asyncio.sleep(0.05)
+        assert eng.meter.unanswered_per_minute(eng.stats.last_telegram) is not None
+        assert len(eng.meter._unanswered) == 1
+        assert eng.meter.utilization(eng.stats.last_telegram) > 0
+        eng.stop()
+        link.inject(b"")
+        await asyncio.wait_for(task, 1)
+
+    asyncio.run(inner())

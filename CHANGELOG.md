@@ -2,6 +2,7 @@
 
 ## 0.7.15
 
+- `EbusEngine.meter` (`BusMeter`): bus load, our polls per minute (per device) and other masters' unanswered reads over the last minute
 - Poll scheduler: `address_gaps` keeps a least gap between our polls on a device, `priority_for` changes a message's polling rate (for a controller its gateway reads all the time)
 
 ## 0.7.14

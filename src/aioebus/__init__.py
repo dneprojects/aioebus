@@ -66,6 +66,7 @@ from .engine import EbusEngine, EngineStats, WriteOutcome
 from .frame import BROADCAST, Telegram, crc8, escape, is_master, is_slave, parse_telegram, unescape
 from .link import Link, connect, probe
 from .messages import FieldDef, MessageDef, label_of, parse_csv
+from .meter import BusMeter
 from .passive import MessageRegistry, decode_raw
 from .poll import PollScheduler
 from .runner import EngineRunner
@@ -88,6 +89,7 @@ __all__ = [
     "BROADCAST_SCAN",
     "DEFAULT_SOURCE",
     "MANUFACTURERS",
+    "BusMeter",
     "BusSilent",
     "CacheKey",
     "Catalog",
