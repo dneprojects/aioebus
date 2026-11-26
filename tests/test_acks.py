@@ -266,3 +266,50 @@ def test_our_own_lost_read_starts_a_streak_that_ends_when_it_arrives():
     assert [(f.fault, f.streak, f.own) for f in seen] == [(NO_ACK, 1, True)]
     assert streaks == {(0x31, 0x38, "b509", "FlowTemp"): 1}
     assert eng.lost_streaks == {}  # it arrived: the run ended
+
+
+# -- a read that arrived but got no answer, or an empty one -------------------
+
+EMPTY = "00" + "0000" + "00"  # ACK, an answer of no bytes (CRC 00), our ACK
+
+
+def test_an_acknowledged_read_without_an_answer_is_unanswered():
+    from aioebus.acks import UNANSWERED
+    tg = parse_telegram(HEAD + "00")  # ACKed, then the bus went idle
+    assert fault_of(tg) == UNANSWERED
+    assert not AckFault(0.0, 0x31, 0x38, "b509", b"", UNANSWERED).ack
+    assert _drive(b"\x00\xaa").ack_fault == UNANSWERED  # ours: ACK, then silence
+
+
+def test_engine_records_unanswered_and_empty_answers_but_does_not_count_them_as_ack():
+    from aioebus.acks import EMPTY_ANSWER, UNANSWERED
+    seen: list[AckFault] = []
+    eng, got = _run([HEAD + "00",          # acknowledged, no answer
+                     HEAD + EMPTY,         # an empty answer to a read expecting data
+                     HEAD + "00" + ANSWER + "00"], seen.append)
+    assert [(f.fault, f.lost, f.message) for f in seen] == [
+        (UNANSWERED, False, "FlowTemp"), (EMPTY_ANSWER, False, "FlowTemp")]
+    assert eng.meter.ack_faults_per_minute(eng.stats.last_telegram) == 0.0
+    assert got == [("FlowTemp", 25.0625)]
+
+
+def test_our_own_empty_answer_is_recorded():
+    from aioebus.acks import EMPTY_ANSWER
+    seen: list[AckFault] = []
+    msg = parse_csv(CSV)[0]
+
+    async def inner():
+        link = _OwnAdapter(bytes.fromhex("000000"))  # ACK, an empty answer, CRC
+        eng = EbusEngine(link.send, link.recv, REG, qq=0x31, on_ack_fault=seen.append)
+        task = asyncio.create_task(eng.run())
+        read = asyncio.create_task(eng.read(msg))
+        await asyncio.sleep(0.01)
+        link.queue.put_nowait(encode_symbol(RECEIVED, 0xAA))
+        with pytest.raises(ReadError):
+            await read
+        eng.stop()
+        link.queue.put_nowait(b"")
+        await asyncio.wait_for(task, 2)
+
+    asyncio.run(inner())
+    assert [(f.fault, f.own) for f in seen][:1] == [(EMPTY_ANSWER, True)]

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.19
+
+- `AckFault` also records a read that arrived but got no answer (`unanswered`) or an empty one although it expects data (`empty_answer`) -- other masters' and our own -- with sender, receiver and message; these are no acknowledgment faults (`AckFault.ack` is False) and do not count in `ack_faults_per_minute`
+
 ## 0.7.18
 
 - `AckFault.streak`: how often in a row the same command (sender, receiver, message) was lost; `EbusEngine.lost_streaks` holds the commands in such a run until they arrive again (a single loss is bus noise the sender repeats)

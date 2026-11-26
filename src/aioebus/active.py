@@ -18,7 +18,7 @@ and the adapter and owns the retry policy.
 """
 from __future__ import annotations
 
-from .acks import ANSWER_REFUSED, NO_ACK, REFUSED, REPEATED
+from .acks import ANSWER_REFUSED, NO_ACK, REFUSED, REPEATED, UNANSWERED
 from .frame import BROADCAST, ESC, SYN, crc8, escape, is_master
 from .transport import FAILED, RECEIVED, SEND, START, STARTED, EnhDecoder, encode_command
 
@@ -120,6 +120,8 @@ class _CommandDriver:
             return REFUSED
         if self._state == "ack" and not self.accepted and self.may_have_landed:
             return NO_ACK  # the bus went idle, or the deadline passed, without one
+        if self.error == NO_ANSWER:
+            return UNANSWERED
         if self._cmd_repeated and self.accepted:
             return REPEATED
         if self._answer_nakd:

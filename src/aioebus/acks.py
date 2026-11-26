@@ -16,27 +16,35 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, TypeAlias
 
-from .frame import BROADCAST, Telegram
+from .frame import BROADCAST, Telegram, is_slave
 
 NO_ACK: Final = "no_ack"  # the receiver did not acknowledge at all
 REFUSED: Final = "refused"  # NAKed, and the resend NAKed too (or none followed)
 REPEATED: Final = "repeated"  # NAKed once, taken on the resend
 ANSWER_REFUSED: Final = "answer_refused"  # the master NAKed the receiver's answer
-FAULTS: Final = (NO_ACK, REFUSED, REPEATED, ANSWER_REFUSED)
+ACK_FAULTS: Final = (NO_ACK, REFUSED, REPEATED, ANSWER_REFUSED)
+# the read arrived (acknowledged), but its answer is missing, or empty although
+# the read expects data (e.g. a controller too busy to answer its gateway)
+UNANSWERED: Final = "unanswered"
+EMPTY_ANSWER: Final = "empty_answer"
+FAULTS: Final = (*ACK_FAULTS, UNANSWERED, EMPTY_ANSWER)
 # a command: sender, receiver, command bytes, message name ("" when unknown)
 CommandKey: TypeAlias = tuple[int, int, str, str]
 LOST: Final = frozenset((NO_ACK, REFUSED))  # the command did not arrive
 
 
 def fault_of(tg: Telegram) -> str | None:
-    """What went wrong with a telegram's acknowledgments; None when nothing did
-    (or for a broadcast, which nobody acknowledges)."""
+    """What went wrong with a telegram's acknowledgments or its answer; None
+    when nothing did (or for a broadcast, which nobody acknowledges). An empty
+    answer needs the message definition: the engine tells it."""
     if tg.zz == BROADCAST:
         return None
     if tg.master_ack is None:
         return NO_ACK
     if tg.master_ack == 0xFF:
         return REFUSED
+    if is_slave(tg.zz) and tg.slave_crc is None:
+        return UNANSWERED  # a device always answers a master's telegram
     if tg.master_naks:
         return REPEATED
     if tg.slave_naks:
@@ -61,6 +69,11 @@ class AckFault:
     # one included; 0 when it arrived. A single loss is bus noise the sender
     # repeats; a command lost again and again does not get through
     streak: int = 0
+
+    @property
+    def ack(self) -> bool:
+        """An acknowledgment failed (else the answer is missing or empty)."""
+        return self.fault in ACK_FAULTS
 
     @property
     def lost(self) -> bool:

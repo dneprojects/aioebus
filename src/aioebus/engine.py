@@ -18,7 +18,7 @@ from collections import deque
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, replace
 
-from .acks import REFUSED, AckFault, CommandKey, fault_of
+from .acks import EMPTY_ANSWER, REFUSED, AckFault, CommandKey, fault_of
 from .active import (
     CANCEL_ARBITRATION,
     DEFAULT_SOURCE,
@@ -483,6 +483,12 @@ class EbusEngine:
         if tg.kind != "BC" and is_slave(tg.zz) and tg.slave_crc is None:
             # another master's read of a device went unanswered (NAK or silence)
             self.meter.foreign_unanswered(tg.zz, now)
+        elif fault is None and tg.slave_crc is not None and not tg.slave_data:
+            # an empty answer: a fault only when the read expects data
+            msg = self._match(tg)
+            if msg is not None and expects_slave(msg):
+                self._record_fault(AckFault(time.time(), tg.qq, tg.zz, tg.pbsb, tg.data,
+                                            EMPTY_ANSWER, msg.name))
         if fault == REFUSED:
             return  # the receiver did not take it: no value to show
         try:
@@ -493,11 +499,14 @@ class EbusEngine:
         if decoded is not None:
             self._store(*decoded)
 
-    def _match_name(self, tg: Telegram) -> str | None:
+    def _match(self, tg: Telegram) -> MessageDef | None:
         try:
-            msg = self.registry.match(tg)
-        except Exception:  # a broken definition: no name
+            return self.registry.match(tg)
+        except Exception:  # a broken definition: unknown
             return None
+
+    def _match_name(self, tg: Telegram) -> str | None:
+        msg = self._match(tg)
         return msg.name if msg is not None else None
 
     def _ack_fault(self, tg: Telegram, fault: str) -> None:
@@ -522,7 +531,8 @@ class EbusEngine:
             self.lost_streaks.pop(key, None)
             streak = 0
         record = replace(record, streak=streak)
-        self.meter.ack_fault(record.zz, record.lost, time.monotonic())
+        if record.ack:  # a missing or empty answer is no acknowledgment fault
+            self.meter.ack_fault(record.zz, record.lost, time.monotonic())
         self.ack_faults.append(record)
         _LOGGER.debug("eBUS engine: %s %02x->%02x %s %s (%s)", record.fault, record.qq,
                       record.zz, record.pbsb, record.data.hex(), record.message)
@@ -592,6 +602,12 @@ class EbusEngine:
         assert act is not None and act.driver is not None
         drv = act.driver
         own_fault = drv.ack_fault
+        if (drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None
+                and not drv.result and expects_slave(act.msg)):
+            # an empty answer to a read that expects data carries no value; treat it
+            # like no answer instead of storing None and resetting the backoff
+            drv.error = "empty answer"
+            own_fault = EMPTY_ANSWER
         if own_fault is not None and act.msg is not None:
             # one of our reads or writes of a known register (a scan probing an
             # empty address is no fault)
@@ -600,11 +616,6 @@ class EbusEngine:
         elif self.lost_streaks and act.msg is not None and drv.accepted:
             name = act.msg.name
             self._delivered(drv.qq, drv.zz, drv.pbsb, lambda: name)
-        if (drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None
-                and not drv.result and expects_slave(act.msg)):
-            # an empty answer to a read that expects data carries no value; treat it
-            # like no answer instead of storing None and resetting the backoff
-            drv.error = "empty answer"
         if isinstance(drv, WriteDriver) and drv.error is not None and drv.accepted:
             # the destination ACKed the write, so it is applied; only the tail of
             # the telegram (its answer) failed -- report success, never resend
