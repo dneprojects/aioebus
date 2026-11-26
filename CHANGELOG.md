@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.21
+
+- `discover(untouched=...)`: devices that are not asked at all (no scan, no identification) and taken as found, e.g. a known gateway best left alone
+
 ## 0.7.20
 
 - `BusMeter`: the telegrams each other master sends (`sent_per_minute`, `senders`), counted passively

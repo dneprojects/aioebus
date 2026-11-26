@@ -91,6 +91,7 @@ async def discover(
     extra_addresses: Iterable[int] = (),
     deep: bool = False,
     remembered: Mapping[str, object] | None = None,
+    untouched: Mapping[int, Device] | None = None,
 ) -> Discovery:
     """Scan the bus and identify its devices.
 
@@ -98,7 +99,9 @@ async def discover(
     whole address space once), reads the Vaillant identification, and drops
     phantom addresses (one unit answering on several, recognised by its serial).
     An identification a device does not give now is taken from ``remembered``
-    when it belongs to the same unit.
+    when it belongs to the same unit. Devices in ``untouched`` are not asked at
+    all (no scan, no identification): they are taken as found, e.g. a gateway
+    that is best left alone once it is known.
 
     Raises :class:`BusSilent` when the bus stays silent, ConnectionError when
     the engine stops (the link dropped) -- both mean: try again later."""
@@ -111,7 +114,10 @@ async def discover(
               if isinstance(a, int) and not isinstance(a, bool) and is_slave(a)}
     targets = sorted(set(ALL_ADDRESSES) | extras) if deep else sorted(set(BASE_ADDRESSES) | extras)
     devices: dict[int, Device] = {}
+    spared = dict(untouched or {})
     for zz in targets:
+        if zz in spared:
+            continue
         _check_running(engine)
         try:
             devices[zz] = Device(zz, await engine.scan(zz, ADDRESS_TIMEOUT))
@@ -135,6 +141,7 @@ async def discover(
             device.ident = known
             _LOGGER.debug("ident %#04x: using the remembered identification", zz)
     _check_running(engine)  # an identification lost to a dropped link: try again later
+    devices.update(spared)
     dropped = drop_duplicates(devices)
     # remember devices found beyond the base, so later setups keep scanning them; a
     # normal scan keeps one that missed this start, a deep scan (which probed

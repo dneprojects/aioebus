@@ -240,3 +240,22 @@ def test_a_missing_known_device_is_found_later():
 
     later = run(collect())
     assert [(d.address, d.scan) for d in later] == [(0x26, VR71)]
+
+
+def test_an_untouched_device_is_neither_scanned_nor_identified():
+    # a known gateway (e.g. VR 940f at f6) is best left alone: taken as found
+    gateway = Device(0xF6, ScanResult(0xB5, "Vaillant", "NETX3", "0128", "1803", 128, 1803),
+                     _ident("21231800201234560000000000N1"))
+    eng = FakeEngine({0x08: HMU, 0xF6: gateway.scan}, {0x08: _ident()})
+    asked: list[int] = []
+    orig = eng.read_identification
+
+    async def ident(zz, timeout=6.0):
+        asked.append(zz)
+        return await orig(zz, timeout)
+
+    eng.read_identification = ident
+    found = run(discover(eng, extra_addresses=[0xF6], untouched={0xF6: gateway}))
+    assert 0xF6 not in eng.probed and 0xF6 not in asked
+    assert found.devices[0xF6] is gateway and found.devices[0x08].scan == HMU
+    assert found.missing == [] and 0xF6 in found.extra_addresses
