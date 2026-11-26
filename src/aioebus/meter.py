@@ -1,5 +1,6 @@
 """Bus load over the last minute: how full the line is, how often we poll (per
-device), and how often other masters' reads stay unanswered.
+device), how often other masters' reads stay unanswered, and how often their
+telegrams are not acknowledged (see acks.py).
 
 The last is the best sign that we crowd a device out: a controller its gateway
 reads all the time answers the gateway less when we poll it too much.
@@ -28,6 +29,8 @@ class BusMeter:
         self._symbols: deque[tuple[int, list[int]]] = deque()
         self._polls: deque[tuple[float, int]] = deque()  # our polls: time, address
         self._unanswered: deque[tuple[float, int]] = deque()  # others' unanswered reads
+        # others' telegrams with a failed acknowledgment: time, address, lost
+        self._ack_faults: deque[tuple[float, int, bool]] = deque()
         self._start: float | None = None
 
     def symbol(self, byte: int, now: float) -> None:
@@ -49,6 +52,12 @@ class BusMeter:
         """Another master's read of the device at ``zz`` stayed unanswered (NAK
         or no answer)."""
         self._unanswered.append((now, zz))
+        self._trim(now)
+
+    def ack_fault(self, zz: int, lost: bool, now: float) -> None:
+        """Another master's telegram to ``zz`` was not acknowledged cleanly;
+        ``lost`` when it did not arrive at all."""
+        self._ack_faults.append((now, zz, lost))
         self._trim(now)
 
     def utilization(self, now: float) -> float | None:
@@ -76,6 +85,15 @@ class BusMeter:
         count = sum(1 for _, zz in self._unanswered if addresses is None or zz in addresses)
         return self._per_minute(count, now)
 
+    def ack_faults_per_minute(self, now: float, addresses: Collection[int] | None = None,
+                              *, lost_only: bool = False) -> float | None:
+        """Other masters' telegrams with a failed acknowledgment in the last
+        minute; only those to ``addresses`` if given, only lost ones if asked."""
+        self._trim(now)
+        count = sum(1 for _, zz, lost in self._ack_faults
+                    if (addresses is None or zz in addresses) and (lost or not lost_only))
+        return self._per_minute(count, now)
+
     def _per_minute(self, count: int, now: float) -> float | None:
         if self._start is None:
             return None
@@ -91,3 +109,5 @@ class BusMeter:
             self._polls.popleft()
         while self._unanswered and self._unanswered[0][0] < edge:
             self._unanswered.popleft()
+        while self._ack_faults and self._ack_faults[0][0] < edge:
+            self._ack_faults.popleft()

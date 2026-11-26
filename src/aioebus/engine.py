@@ -18,6 +18,7 @@ from collections import deque
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 
+from .acks import REFUSED, AckFault, fault_of
 from .active import (
     CANCEL_ARBITRATION,
     DEFAULT_SOURCE,
@@ -29,7 +30,15 @@ from .active import (
     WriteDriver,
     WriteUncertain,
 )
-from .frame import BROADCAST, SYN, FrameError, is_master, is_slave, parse_telegram
+from .frame import (
+    BROADCAST,
+    SYN,
+    FrameError,
+    Telegram,
+    is_master,
+    is_slave,
+    parse_telegram,
+)
 from .messages import MessageDef, label_of
 from .meter import BusMeter
 from .passive import MessageRegistry, expects_slave
@@ -49,6 +58,7 @@ from .values import CacheKey, message_key, value_key
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 6.0  # s a caller waits for one read or write
+ACK_FAULTS_KEPT = 200  # the latest failed acknowledgments kept for a diagnostic dump
 
 _Driver = ReadDriver | WriteDriver
 Send = Callable[[bytes], Awaitable[None]]
@@ -123,6 +133,7 @@ class EbusEngine:
         qq: int = DEFAULT_SOURCE,
         on_value: Callable[[MessageDef, dict], None] | None = None,
         allow_write: bool = False,
+        on_ack_fault: Callable[[AckFault], None] | None = None,
     ):
         # the link; attach() binds a new one (an EngineRunner does it on reconnect)
         self._attached = send is not None and recv is not None
@@ -140,6 +151,10 @@ class EbusEngine:
         self.cache: dict[CacheKey, object] = {}
         self.stats = EngineStats()
         self.meter = BusMeter()  # bus load and poll rates over the last minute
+        # other masters' telegrams whose acknowledgment failed: the latest ones,
+        # and a callback for each (e.g. to log it); settable after construction
+        self.ack_faults: deque[AckFault] = deque(maxlen=ACK_FAULTS_KEPT)
+        self.on_ack_fault = on_ack_fault
         self._stop = False
         self.running = False  # run() is pumping the stream
         self._traffic = asyncio.Event()  # set by the first bus symbol
@@ -450,13 +465,21 @@ class EbusEngine:
             tg = parse_telegram(raw)
         except FrameError:
             return
+        if not tg.master_crc_ok:
+            return
+        now = time.monotonic()
+        fault = fault_of(tg)
+        if fault is not None:
+            self._ack_fault(tg, fault, now)
         if not tg.crc_ok:
             return
         self.stats.telegrams += 1
-        self.stats.last_telegram = time.monotonic()
+        self.stats.last_telegram = now
         if tg.kind != "BC" and is_slave(tg.zz) and tg.slave_crc is None:
             # another master's read of a device went unanswered (NAK or silence)
-            self.meter.foreign_unanswered(tg.zz, self.stats.last_telegram)
+            self.meter.foreign_unanswered(tg.zz, now)
+        if fault == REFUSED:
+            return  # the receiver did not take it: no value to show
         try:
             decoded = self.registry.decode(tg)
         except Exception:  # one undecodable telegram, not the bus loop
@@ -464,6 +487,24 @@ class EbusEngine:
             return
         if decoded is not None:
             self._store(*decoded)
+
+    def _ack_fault(self, tg: Telegram, fault: str, now: float) -> None:
+        """Record another master's telegram whose acknowledgment failed."""
+        try:
+            msg = self.registry.match(tg)
+        except Exception:  # a broken definition: log the fault without a name
+            msg = None
+        record = AckFault(time.time(), tg.qq, tg.zz, tg.pbsb, tg.data, fault,
+                          msg.name if msg is not None else None)
+        self.meter.ack_fault(tg.zz, record.lost, now)
+        self.ack_faults.append(record)
+        _LOGGER.debug("eBUS engine: %s %02x->%02x %s %s (%s)", fault, tg.qq, tg.zz,
+                      tg.pbsb, tg.data.hex(), record.message)
+        if self.on_ack_fault is not None:
+            try:
+                self.on_ack_fault(record)
+            except Exception:  # a consumer's bug must not stop the bus
+                _LOGGER.exception("eBUS engine: on_ack_fault callback failed")
 
     def _store(self, msg: MessageDef, values: dict) -> None:
         for field, value in values.items():

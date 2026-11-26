@@ -18,6 +18,7 @@
 Everything listed in ``__all__`` is the public API; the submodule paths it comes
 from are public as well.
 """
+from .acks import AckFault, fault_of
 from .active import (
     DEFAULT_SOURCE,
     ReadDriver,
@@ -89,6 +90,7 @@ __all__ = [
     "BROADCAST_SCAN",
     "DEFAULT_SOURCE",
     "MANUFACTURERS",
+    "AckFault",
     "BusMeter",
     "BusSilent",
     "CacheKey",
@@ -140,6 +142,7 @@ __all__ = [
     "escape",
     "evaluate",
     "evaluate_all",
+    "fault_of",
     "find_later",
     "has_numeric_value",
     "identify_later",
@@ -163,4 +166,4 @@ __all__ = [
     "value_range",
     "values_of",
 ]
-__version__ = "0.7.16"
+__version__ = "0.7.17"

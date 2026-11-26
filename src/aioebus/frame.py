@@ -90,6 +90,8 @@ class Telegram:
     slave_data: bytes = b""  # slave payload (MS only)
     slave_crc: int | None = None
     slave_ack: int | None = None  # master's ACK of the slave part
+    master_naks: int = 0  # master-part attempts the receiver refused (NAK)
+    slave_naks: int = 0  # answers the master refused (NAK)
 
     @property
     def nn(self) -> int:
@@ -105,10 +107,15 @@ class Telegram:
         return bytes((self.qq, self.zz, self.pb, self.sb, self.nn)) + self.data
 
     @property
-    def crc_ok(self) -> bool:
+    def master_crc_ok(self) -> bool:
+        """The master part arrived intact here (its addresses can be trusted)."""
         # The eBUS CRC is computed over the escaped (on-wire) byte stream, so a
         # frame carrying an AA/A9 in its data is only verified against escape().
-        if crc8(escape(self.master_frame)) != self.crc:
+        return crc8(escape(self.master_frame)) == self.crc
+
+    @property
+    def crc_ok(self) -> bool:
+        if not self.master_crc_ok:
             return False
         if self.kind == "MS" and self.slave_crc is not None:
             slave_frame = bytes((len(self.slave_data),)) + self.slave_data
@@ -135,8 +142,11 @@ def parse_telegram(raw: bytes | str) -> Telegram:
     # Master part, possibly repeated: if the slave NAKs it (ACK 0xFF) the master
     # resends the whole frame from QQ, so loop until it is ACKed or the capture
     # ends. A garbled first attempt (e.g. a flipped command byte) is discarded.
+    # A part refused for good (no resend follows the NAK) is returned with
+    # master_ack 0xFF: the receiver did not take it.
     pos = 0
     master_ack = None
+    master_naks = 0
     while True:
         if pos + 5 > len(buf):
             raise FrameError(f"master header truncated: {buf.hex()}")
@@ -151,20 +161,27 @@ def parse_telegram(raw: bytes | str) -> Telegram:
         if zz == BROADCAST:
             return Telegram(qq, zz, pb, sb, data, crc, "BC")
         if pos >= len(buf):  # master part only, ACK not captured
-            return Telegram(qq, zz, pb, sb, data, crc, "MM", master_ack=None)
+            return Telegram(qq, zz, pb, sb, data, crc, "MM", master_ack=None,
+                            master_naks=master_naks)
         master_ack = buf[pos]
         pos += 1
         if master_ack != 0xFF:
             break
+        master_naks += 1
+        if pos >= len(buf):  # refused, and no resend followed
+            return Telegram(qq, zz, pb, sb, data, crc, "MM", master_ack=master_ack,
+                            master_naks=master_naks)
 
     if pos >= len(buf):  # master/master: ACK, no slave payload
-        return Telegram(qq, zz, pb, sb, data, crc, "MM", master_ack=master_ack)
+        return Telegram(qq, zz, pb, sb, data, crc, "MM", master_ack=master_ack,
+                        master_naks=master_naks)
 
     # Slave response, possibly repeated: the master NAKs a bad answer (ACK 0xFF)
     # and the slave resends. Keep reading until an answer is ACKed (0x00) or the
     # buffer ends, so we return the copy ebusd accepted, not a NAKed one.
     slave_data = b""
     slave_crc = slave_ack = None
+    slave_naks = 0
     while pos < len(buf):
         s_nn = buf[pos]
         pos += 1
@@ -177,10 +194,13 @@ def parse_telegram(raw: bytes | str) -> Telegram:
         pos = s_end + 2
         if slave_ack != 0xFF:  # 0x00 = ACK (accepted), None = end of capture
             break
+        slave_naks += 1
     return Telegram(
         qq, zz, pb, sb, data, crc, "MS",
         master_ack=master_ack,
         slave_data=slave_data,
         slave_crc=slave_crc,
         slave_ack=slave_ack,
+        master_naks=master_naks,
+        slave_naks=slave_naks,
     )
