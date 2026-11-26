@@ -59,6 +59,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 6.0  # s a caller waits for one read or write
 ACK_FAULTS_KEPT = 200  # the latest failed acknowledgments kept for a diagnostic dump
+# yielding to a busy master (EbusEngine.yield_to): our scheduled polls wait while
+# it sent at least YIELD_COUNT telegrams in the last YIELD_WINDOW seconds (e.g. a
+# gateway reading the whole system), but never longer than YIELD_MAX at a stretch
+YIELD_WINDOW = 10.0
+YIELD_COUNT = 5
+YIELD_MAX = 60.0
 
 _Driver = ReadDriver | WriteDriver
 Send = Callable[[bytes], Awaitable[None]]
@@ -98,6 +104,7 @@ class EngineStats:
     polls_ok: int = 0  # scheduled polls that got an answer
     polls_failed: int = 0  # scheduled polls that stayed unanswered (backed off)
     writes: int = 0  # active writes performed
+    yields: int = 0  # times our polls gave way to a busy master (yield_to)
     last_telegram: float | None = None  # monotonic time of the last bus telegram
 
 
@@ -157,6 +164,10 @@ class EbusEngine:
         # commands lost in a row and not delivered since: how often (a command
         # that arrives again leaves; see AckFault.streak)
         self.lost_streaks: dict[CommandKey, int] = {}
+        # masters our scheduled polls give way to while they are busy (YIELD_*);
+        # explicit reads and writes are never held
+        self.yield_to: set[int] = set()
+        self._yield_since: float | None = None
         self.on_ack_fault = on_ack_fault
         self._stop = False
         self.running = False  # run() is pumping the stream
@@ -500,6 +511,23 @@ class EbusEngine:
         if decoded is not None:
             self._store(*decoded)
 
+    def _yielding(self, now: float) -> bool:
+        """Hold our scheduled polls while a master in ``yield_to`` is busy; after
+        YIELD_MAX of holding one poll goes through (a master that is busy all
+        the time must not silence us)."""
+        busy = any(self.meter.sent_within(now, qq, YIELD_WINDOW) >= YIELD_COUNT
+                   for qq in self.yield_to)
+        if not busy:
+            self._yield_since = None
+            return False
+        if self._yield_since is None:
+            self._yield_since = now
+            self.stats.yields += 1
+        if now - self._yield_since > YIELD_MAX:
+            self._yield_since = now  # let this one through, then hold again
+            return False
+        return True
+
     def _match(self, tg: Telegram) -> MessageDef | None:
         try:
             return self.registry.match(tg)
@@ -559,7 +587,7 @@ class EbusEngine:
             return
         act = self._next_request()
         if act is None:
-            if self.scheduler is None:
+            if self.scheduler is None or self._yielding(time.monotonic()):
                 return
             item = self.scheduler.next_due(time.monotonic())
             if item is None:

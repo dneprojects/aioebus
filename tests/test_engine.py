@@ -1153,3 +1153,22 @@ def test_another_masters_unanswered_read_is_counted():
         await asyncio.wait_for(task, 1)
 
     asyncio.run(inner())
+
+
+def test_scheduled_polls_give_way_to_a_busy_master():
+    from aioebus.engine import YIELD_COUNT, YIELD_MAX, YIELD_WINDOW
+    eng = EbusEngine()
+    assert not eng._yielding(100.0)  # nobody to yield to
+    eng.yield_to = {0xF1}
+    for i in range(YIELD_COUNT):  # the gateway reads the system: a burst
+        eng.meter.sent(0xF1, 100.0 + i)
+    assert eng._yielding(100.0 + YIELD_COUNT)
+    assert eng.stats.yields == 1
+    # held at most YIELD_MAX: then one poll goes through, and it holds again
+    busy_until = 100.0 + YIELD_COUNT + YIELD_MAX + 1
+    for t in range(int(100 + YIELD_COUNT), int(busy_until) + 1):
+        eng.meter.sent(0xF1, float(t))
+    assert not eng._yielding(busy_until)
+    assert eng._yielding(busy_until + 0.5)
+    # quiet again: polls go on
+    assert not eng._yielding(busy_until + YIELD_WINDOW + 1)

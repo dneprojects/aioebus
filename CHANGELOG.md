@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.22
+
+- `EbusEngine.yield_to`: masters our scheduled polls give way to while they are busy (5 telegrams in 10 s; at most 60 s at a stretch), e.g. a gateway reading the whole system; explicit reads and writes are never held; `EngineStats.yields` counts it
+- `BusMeter.sent_within`: a master's telegrams in the last few seconds
+
 ## 0.7.21
 
 - `discover(untouched=...)`: devices that are not asked at all (no scan, no identification) and taken as found, e.g. a known gateway best left alone

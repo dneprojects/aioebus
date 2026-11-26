@@ -49,3 +49,13 @@ def test_telegrams_per_sender():
     assert m.sent_per_minute(60.0, 0x71) == 0.0
     assert m.senders == {0xF1, 0x10}
     assert m.sent_per_minute(200.0, 0xF1) == 0.0  # all older than a minute
+
+
+def test_telegrams_within_a_few_seconds():
+    m = BusMeter()
+    for t in (1.0, 2.0, 8.0, 9.0, 9.5):
+        m.sent(0xF1, t)
+    m.sent(0x10, 9.0)
+    assert m.sent_within(10.0, 0xF1, 5.0) == 3
+    assert m.sent_within(10.0, 0xF1, 10.0) == 5
+    assert m.sent_within(10.0, 0x71, 10.0) == 0

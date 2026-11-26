@@ -62,6 +62,12 @@ class BusMeter:
         self.senders.add(qq)
         self._trim(now)
 
+    def sent_within(self, now: float, qq: int, seconds: float) -> int:
+        """The telegrams the master at ``qq`` sent in the last ``seconds``
+        (at most the meter's window)."""
+        edge = now - seconds
+        return sum(1 for t, a in reversed(self._sent) if a == qq and t >= edge)
+
     def sent_per_minute(self, now: float, qq: int) -> float | None:
         """The telegrams the master at ``qq`` sent in the last minute."""
         self._trim(now)
