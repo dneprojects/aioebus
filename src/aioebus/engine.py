@@ -471,6 +471,7 @@ class EbusEngine:
         if not tg.master_crc_ok:
             return
         now = time.monotonic()
+        self.meter.sent(tg.qq, now)
         fault = fault_of(tg)
         if fault is not None:
             self._ack_fault(tg, fault)

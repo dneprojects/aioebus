@@ -36,3 +36,16 @@ def test_rates_right_after_the_start_are_scaled_to_a_minute():
     assert m.unanswered_per_minute(10.0) == 12.0  # 2 in 10 s
     assert m.unanswered_per_minute(10.0, {0x15, 0x08}) == 6.0  # devices that are there
     assert BusMeter().unanswered_per_minute(0.0) is None  # nothing seen yet
+
+
+def test_telegrams_per_sender():
+    m = BusMeter()
+    m.symbol(SYN, 0.0)
+    for t in range(0, 60, 6):  # the gateway every 6 s
+        m.sent(0xF1, float(t))
+    m.sent(0x10, 30.0)
+    assert m.sent_per_minute(60.0, 0xF1) == 10.0
+    assert m.sent_per_minute(60.0, 0x10) == 1.0
+    assert m.sent_per_minute(60.0, 0x71) == 0.0
+    assert m.senders == {0xF1, 0x10}
+    assert m.sent_per_minute(200.0, 0xF1) == 0.0  # all older than a minute

@@ -1,6 +1,6 @@
 """Bus load over the last minute: how full the line is, how often we poll (per
-device), how often other masters' reads stay unanswered, and how often their
-telegrams are not acknowledged (see acks.py).
+device), how much each other master sends, how often other masters' reads stay
+unanswered, and how often telegrams are not acknowledged (see acks.py).
 
 The last is the best sign that we crowd a device out: a controller its gateway
 reads all the time answers the gateway less when we poll it too much.
@@ -29,6 +29,8 @@ class BusMeter:
         self._symbols: deque[tuple[int, list[int]]] = deque()
         self._polls: deque[tuple[float, int]] = deque()  # our polls: time, address
         self._unanswered: deque[tuple[float, int]] = deque()  # others' unanswered reads
+        self._sent: deque[tuple[float, int]] = deque()  # others' telegrams: time, sender
+        self.senders: set[int] = set()  # every other master seen sending (ever)
         # others' telegrams with a failed acknowledgment: time, address, lost
         self._ack_faults: deque[tuple[float, int, bool]] = deque()
         self._start: float | None = None
@@ -53,6 +55,17 @@ class BusMeter:
         or no answer)."""
         self._unanswered.append((now, zz))
         self._trim(now)
+
+    def sent(self, qq: int, now: float) -> None:
+        """Another master at ``qq`` sent a telegram (any kind, broadcasts too)."""
+        self._sent.append((now, qq))
+        self.senders.add(qq)
+        self._trim(now)
+
+    def sent_per_minute(self, now: float, qq: int) -> float | None:
+        """The telegrams the master at ``qq`` sent in the last minute."""
+        self._trim(now)
+        return self._per_minute(sum(1 for _, a in self._sent if a == qq), now)
 
     def ack_fault(self, zz: int, lost: bool, now: float) -> None:
         """Another master's telegram to ``zz`` was not acknowledged cleanly;
@@ -109,5 +122,7 @@ class BusMeter:
             self._polls.popleft()
         while self._unanswered and self._unanswered[0][0] < edge:
             self._unanswered.popleft()
+        while self._sent and self._sent[0][0] < edge:
+            self._sent.popleft()
         while self._ack_faults and self._ack_faults[0][0] < edge:
             self._ack_faults.popleft()

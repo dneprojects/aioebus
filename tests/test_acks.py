@@ -313,3 +313,11 @@ def test_our_own_empty_answer_is_recorded():
 
     asyncio.run(inner())
     assert [(f.fault, f.own) for f in seen][:1] == [(EMPTY_ANSWER, True)]
+
+
+def test_engine_counts_what_each_other_master_sends():
+    eng, _got = _run([HEAD + "00" + ANSWER + "00", "31fe07fe0035",
+                      "3138b509030d180075ff"])  # a garbled master part: unknown sender
+    assert eng.meter.senders == {0x31}
+    assert eng.meter.sent_per_minute(eng.stats.last_telegram, 0x31) is not None
+    assert len(eng.meter._sent) == 2
