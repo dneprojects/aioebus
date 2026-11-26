@@ -140,6 +140,7 @@ def test_stats_track_connection_and_bus_activity():
             error = "timeout waiting for slave"
             lost_to = None
             retryable = False
+            ack_fault = None
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
         act.driver = _FailedDriver()
@@ -193,6 +194,7 @@ def test_failed_poll_is_recorded_not_restuck():
             error = "timeout waiting for slave"
             lost_to = None
             retryable = False
+            ack_fault = None
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
         act.driver = _FailedDriver()

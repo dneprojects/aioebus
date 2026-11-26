@@ -18,6 +18,7 @@ and the adapter and owns the retry policy.
 """
 from __future__ import annotations
 
+from .acks import ANSWER_REFUSED, NO_ACK, REFUSED, REPEATED
 from .frame import BROADCAST, ESC, SYN, crc8, escape, is_master
 from .transport import FAILED, RECEIVED, SEND, START, STARTED, EnhDecoder, encode_command
 
@@ -25,6 +26,7 @@ DEFAULT_SOURCE = 0x31  # ebusd's own master address on the reference bus (free w
 ACK = 0x00
 NAK = 0xFF
 NO_ANSWER = "no answer from slave"
+NAKED = "command NAKed by slave"  # refused, the repeat too
 NO_ANSWER_TRIES = 3  # attempts for a read the slave ACKs but leaves unanswered
 
 
@@ -84,6 +86,8 @@ class _CommandDriver:
         self._cmd = build_master_frame(zz, pbsb, data, qq)
         self.qq = qq
         self.zz = zz
+        self.pbsb = pbsb
+        self.data = data  # the master data (message id first)
         self._dec = EnhDecoder()
         self._state = "arb"
         self._sendpos = len(escape(bytes((qq,))))  # QQ went out with START
@@ -104,6 +108,23 @@ class _CommandDriver:
         # over -- for a write only while it cannot have landed (the engine checks)
         self.retryable = False
         self.lost_to: int | None = None  # winning master address when arbitration is lost
+
+    @property
+    def ack_fault(self) -> str | None:
+        """What went wrong with the acknowledgments of this telegram (see
+        acks.py); None when nothing did, or when it never fully went out
+        (arbitration lost, a collision: no acknowledgment was due)."""
+        if self.zz == BROADCAST:
+            return None
+        if self.error == NAKED:
+            return REFUSED
+        if self._state == "ack" and not self.accepted and self.may_have_landed:
+            return NO_ACK  # the bus went idle, or the deadline passed, without one
+        if self._cmd_repeated and self.accepted:
+            return REPEATED
+        if self._answer_nakd:
+            return ANSWER_REFUSED
+        return None
 
     def start(self) -> list[bytes]:
         """Initial symbols to send: the arbitration START with QQ."""
@@ -170,7 +191,7 @@ class _CommandDriver:
                 self._state = "cmd"
                 return self._send_next_cmd()
             if code == RECEIVED and data == NAK:
-                self._fail("command NAKed by slave")
+                self._fail(NAKED)
                 return [encode_command(SEND, SYN)]  # the bus is ours: release it
             return self._fail("unexpected symbol waiting for command ACK")
 

@@ -3,6 +3,7 @@
 ## 0.7.17
 
 - Acknowledgments read passively (`acks.py`): another master's telegram that was not acknowledged, refused, taken only on the resend, or whose answer was refused is an `AckFault`; `EbusEngine.ack_faults` keeps the latest, `on_ack_fault` gets each one, and `BusMeter.ack_faults_per_minute` counts them (per device, lost ones only if asked)
+- Our own reads and writes of known registers are checked the same way (`ReadDriver`/`WriteDriver.ack_fault`, `AckFault.own`); a raw read such as a scan probing an empty address is left out
 - Frame: a master part refused for good is returned (`master_ack` 0xFF) instead of being dropped as truncated; `master_naks`, `slave_naks` and `master_crc_ok` tell what happened on the wire
 
 ## 0.7.16

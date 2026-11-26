@@ -470,7 +470,7 @@ class EbusEngine:
         now = time.monotonic()
         fault = fault_of(tg)
         if fault is not None:
-            self._ack_fault(tg, fault, now)
+            self._ack_fault(tg, fault)
         if not tg.crc_ok:
             return
         self.stats.telegrams += 1
@@ -488,18 +488,21 @@ class EbusEngine:
         if decoded is not None:
             self._store(*decoded)
 
-    def _ack_fault(self, tg: Telegram, fault: str, now: float) -> None:
+    def _ack_fault(self, tg: Telegram, fault: str) -> None:
         """Record another master's telegram whose acknowledgment failed."""
         try:
             msg = self.registry.match(tg)
         except Exception:  # a broken definition: log the fault without a name
             msg = None
-        record = AckFault(time.time(), tg.qq, tg.zz, tg.pbsb, tg.data, fault,
-                          msg.name if msg is not None else None)
-        self.meter.ack_fault(tg.zz, record.lost, now)
+        self._record_fault(AckFault(time.time(), tg.qq, tg.zz, tg.pbsb, tg.data, fault,
+                                    msg.name if msg is not None else None))
+
+    def _record_fault(self, record: AckFault) -> None:
+        """Count, keep and report one telegram whose acknowledgment failed."""
+        self.meter.ack_fault(record.zz, record.lost, time.monotonic())
         self.ack_faults.append(record)
-        _LOGGER.debug("eBUS engine: %s %02x->%02x %s %s (%s)", fault, tg.qq, tg.zz,
-                      tg.pbsb, tg.data.hex(), record.message)
+        _LOGGER.debug("eBUS engine: %s %02x->%02x %s %s (%s)", record.fault, record.qq,
+                      record.zz, record.pbsb, record.data.hex(), record.message)
         if self.on_ack_fault is not None:
             try:
                 self.on_ack_fault(record)
@@ -565,6 +568,12 @@ class EbusEngine:
         self._active = None
         assert act is not None and act.driver is not None
         drv = act.driver
+        own_fault = drv.ack_fault
+        if own_fault is not None and act.msg is not None:
+            # one of our reads or writes of a known register (a scan probing an
+            # empty address is no fault)
+            self._record_fault(AckFault(time.time(), drv.qq, drv.zz, drv.pbsb, drv.data,
+                                        own_fault, act.msg.name, own=True))
         if (drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None
                 and not drv.result and expects_slave(act.msg)):
             # an empty answer to a read that expects data carries no value; treat it
