@@ -141,6 +141,7 @@ def test_stats_track_connection_and_bus_activity():
             lost_to = None
             retryable = False
             ack_fault = None
+            accepted = False
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
         act.driver = _FailedDriver()
@@ -195,6 +196,7 @@ def test_failed_poll_is_recorded_not_restuck():
             lost_to = None
             retryable = False
             ack_fault = None
+            accepted = False
 
         act = _Active(lambda: _FailedDriver(), msg, None)  # future None -> a poll
         act.driver = _FailedDriver()

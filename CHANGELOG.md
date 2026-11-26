@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.18
+
+- `AckFault.streak`: how often in a row the same command (sender, receiver, message) was lost; `EbusEngine.lost_streaks` holds the commands in such a run until they arrive again (a single loss is bus noise the sender repeats)
+
 ## 0.7.17
 
 - Acknowledgments read passively (`acks.py`): another master's telegram that was not acknowledged, refused, taken only on the resend, or whose answer was refused is an `AckFault`; `EbusEngine.ack_faults` keeps the latest, `on_ack_fault` gets each one, and `BusMeter.ack_faults_per_minute` counts them (per device, lost ones only if asked)

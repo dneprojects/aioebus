@@ -16,9 +16,9 @@ import logging
 import time
 from collections import deque
 from collections.abc import Awaitable, Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from .acks import REFUSED, AckFault, fault_of
+from .acks import REFUSED, AckFault, CommandKey, fault_of
 from .active import (
     CANCEL_ARBITRATION,
     DEFAULT_SOURCE,
@@ -154,6 +154,9 @@ class EbusEngine:
         # other masters' telegrams whose acknowledgment failed: the latest ones,
         # and a callback for each (e.g. to log it); settable after construction
         self.ack_faults: deque[AckFault] = deque(maxlen=ACK_FAULTS_KEPT)
+        # commands lost in a row and not delivered since: how often (a command
+        # that arrives again leaves; see AckFault.streak)
+        self.lost_streaks: dict[CommandKey, int] = {}
         self.on_ack_fault = on_ack_fault
         self._stop = False
         self.running = False  # run() is pumping the stream
@@ -471,6 +474,8 @@ class EbusEngine:
         fault = fault_of(tg)
         if fault is not None:
             self._ack_fault(tg, fault)
+        elif tg.zz != BROADCAST and self.lost_streaks:
+            self._delivered(tg.qq, tg.zz, tg.pbsb, lambda: self._match_name(tg))
         if not tg.crc_ok:
             return
         self.stats.telegrams += 1
@@ -488,17 +493,35 @@ class EbusEngine:
         if decoded is not None:
             self._store(*decoded)
 
-    def _ack_fault(self, tg: Telegram, fault: str) -> None:
-        """Record another master's telegram whose acknowledgment failed."""
+    def _match_name(self, tg: Telegram) -> str | None:
         try:
             msg = self.registry.match(tg)
-        except Exception:  # a broken definition: log the fault without a name
-            msg = None
+        except Exception:  # a broken definition: no name
+            return None
+        return msg.name if msg is not None else None
+
+    def _ack_fault(self, tg: Telegram, fault: str) -> None:
+        """Record another master's telegram whose acknowledgment failed."""
         self._record_fault(AckFault(time.time(), tg.qq, tg.zz, tg.pbsb, tg.data, fault,
-                                    msg.name if msg is not None else None))
+                                    self._match_name(tg)))
+
+    def _delivered(self, qq: int, zz: int, pbsb: str, name: Callable[[], str | None]) -> None:
+        """A command arrived: its run of losses (if any) ends. The name is looked
+        up only when a command of this sender, receiver and command bytes is in
+        a run (most telegrams are not)."""
+        if any(k[:3] == (qq, zz, pbsb) for k in self.lost_streaks):
+            self.lost_streaks.pop((qq, zz, pbsb, name() or ""), None)
 
     def _record_fault(self, record: AckFault) -> None:
         """Count, keep and report one telegram whose acknowledgment failed."""
+        key = (record.qq, record.zz, record.pbsb, record.message or "")
+        if record.lost:
+            streak = self.lost_streaks.get(key, 0) + 1
+            self.lost_streaks[key] = streak
+        else:  # it arrived after all
+            self.lost_streaks.pop(key, None)
+            streak = 0
+        record = replace(record, streak=streak)
         self.meter.ack_fault(record.zz, record.lost, time.monotonic())
         self.ack_faults.append(record)
         _LOGGER.debug("eBUS engine: %s %02x->%02x %s %s (%s)", record.fault, record.qq,
@@ -574,6 +597,9 @@ class EbusEngine:
             # empty address is no fault)
             self._record_fault(AckFault(time.time(), drv.qq, drv.zz, drv.pbsb, drv.data,
                                         own_fault, act.msg.name, own=True))
+        elif self.lost_streaks and act.msg is not None and drv.accepted:
+            name = act.msg.name
+            self._delivered(drv.qq, drv.zz, drv.pbsb, lambda: name)
         if (drv.error is None and isinstance(drv, ReadDriver) and act.msg is not None
                 and not drv.result and expects_slave(act.msg)):
             # an empty answer to a read that expects data carries no value; treat it

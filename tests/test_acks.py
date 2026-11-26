@@ -222,3 +222,47 @@ def test_engine_records_its_own_faults_of_known_registers_only():
     assert [(f.fault, f.own, f.message, f.qq) for f in seen] == [
         (REPEATED, True, "FlowTemp", 0x31)]
     assert len(eng.meter._ack_faults) == 1
+
+
+def test_a_command_lost_again_and_again_has_a_streak_until_it_arrives():
+    seen: list[AckFault] = []
+    clean = HEAD + "00" + ANSWER + "00"
+    other = "3138b509030d2e004e000271022b00"  # another command to 38 arrives
+    eng, _got = _run([HEAD, HEAD + "ff", other, HEAD,  # lost 3x in a row
+                      clean,                           # arrives: the run ends
+                      HEAD,                            # lost once more: 1
+                      HEAD + "ff" + clean],            # taken on the resend: 0
+                     seen.append)
+    assert [(f.fault, f.streak) for f in seen] == [
+        (NO_ACK, 1), (REFUSED, 2), (NO_ACK, 3), (NO_ACK, 1), (REPEATED, 0)]
+    assert eng.lost_streaks == {}  # the last one arrived on the resend
+
+
+def test_our_own_lost_read_starts_a_streak_that_ends_when_it_arrives():
+    seen: list[AckFault] = []
+    msg = parse_csv(CSV)[0]
+
+    async def inner():
+        link = _OwnAdapter(b"\xaa", GOOD)
+        eng = EbusEngine(link.send, link.recv, REG, qq=0x31, on_ack_fault=seen.append)
+        task = asyncio.create_task(eng.run())
+        syn = encode_symbol(RECEIVED, 0xAA)
+        first = asyncio.create_task(eng.read(msg))
+        await asyncio.sleep(0.01)
+        link.queue.put_nowait(syn)
+        with pytest.raises(ReadError):
+            await first  # not acknowledged
+        streaks = dict(eng.lost_streaks)
+        second = asyncio.create_task(eng.read(msg))
+        await asyncio.sleep(0.01)
+        link.queue.put_nowait(syn)
+        assert await second == {"FlowTemp": 25.0625}
+        eng.stop()
+        link.queue.put_nowait(b"")
+        await asyncio.wait_for(task, 2)
+        return eng, streaks
+
+    eng, streaks = asyncio.run(inner())
+    assert [(f.fault, f.streak, f.own) for f in seen] == [(NO_ACK, 1, True)]
+    assert streaks == {(0x31, 0x38, "b509", "FlowTemp"): 1}
+    assert eng.lost_streaks == {}  # it arrived: the run ended

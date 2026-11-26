@@ -14,7 +14,7 @@ Pure: ``fault_of`` reads a parsed telegram (an active driver has ``ack_fault``),
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TypeAlias
 
 from .frame import BROADCAST, Telegram
 
@@ -23,6 +23,8 @@ REFUSED: Final = "refused"  # NAKed, and the resend NAKed too (or none followed)
 REPEATED: Final = "repeated"  # NAKed once, taken on the resend
 ANSWER_REFUSED: Final = "answer_refused"  # the master NAKed the receiver's answer
 FAULTS: Final = (NO_ACK, REFUSED, REPEATED, ANSWER_REFUSED)
+# a command: sender, receiver, command bytes, message name ("" when unknown)
+CommandKey: TypeAlias = tuple[int, int, str, str]
 LOST: Final = frozenset((NO_ACK, REFUSED))  # the command did not arrive
 
 
@@ -55,6 +57,10 @@ class AckFault:
     fault: str  # one of FAULTS
     message: str | None = None  # the decoded message name, when known
     own: bool = False  # one of our telegrams (else another master's)
+    # how often in a row this command (sender, receiver, message) was lost, this
+    # one included; 0 when it arrived. A single loss is bus noise the sender
+    # repeats; a command lost again and again does not get through
+    streak: int = 0
 
     @property
     def lost(self) -> bool:
@@ -64,4 +70,5 @@ class AckFault:
     def as_dict(self) -> dict[str, object]:
         return {"at": self.at, "qq": f"{self.qq:02x}", "zz": f"{self.zz:02x}",
                 "pbsb": self.pbsb, "data": self.data.hex(), "fault": self.fault,
-                "message": self.message, "lost": self.lost, "own": self.own}
+                "message": self.message, "lost": self.lost, "own": self.own,
+                "streak": self.streak}
