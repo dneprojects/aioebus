@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.23
+
+- sensoCOMFORT (ctlv3): `BufferChargeOffset` (the buffer cylinder's charge offset) is writable, as `02 01 … a2 00` like the controller's other b524 settings; bounds 0–15 K, step 1
+
 ## 0.7.22
 
 - `EbusEngine.yield_to`: masters our scheduled polls give way to while they are busy (5 telegrams in 10 s; at most 60 s at a stretch), e.g. a gateway reading the whole system; explicit reads and writes are never held; `EngineStats.yields` counts it

@@ -628,3 +628,21 @@ def test_a_heat_pump_reads_heat_and_power_together():
     defs = {m.name: m for m in bundled_file("hmu.json") if m.is_read}
     assert defs["RunDataHeatOutput"].poll_priority == defs["PowerConsumptionHmu"].poll_priority == 1
     assert defs["RunDataHeatOutput"].fields[-1].unit == defs["PowerConsumptionHmu"].fields[-1].unit
+
+
+def test_the_buffer_charge_offset_is_written_like_the_other_b524_settings():
+    # every b524 setting of the controller reads with 02 00 and writes with
+    # 02 01 before the same register (the cylinder's offset, the zones' day
+    # temperature, ...): the buffer's offset follows that, value as EXP
+    msgs = [m for m in bundled_file("ctlv3.json") if m.name == "BufferChargeOffset"]
+    read = next(m for m in msgs if m.is_read)
+    write = next(m for m in msgs if not m.is_read)
+    assert (read.msgid, write.msgid) == ("02000000a200", "02010000a200")
+    assert write.encode({"value": 5.0}).hex() == "02010000a2000000a040"
+    pairs = {}
+    for m in bundled_file("ctlv3.json"):
+        if m.pbsb == "b524":
+            pairs.setdefault(m.name, {})["r" if m.is_read else "w"] = m.msgid
+    for name, ids in pairs.items():
+        if "w" in ids and "r" in ids:
+            assert ids["w"] == "0201" + ids["r"][4:], name

@@ -5683,6 +5683,21 @@
     ]
   },
   {
+    "direction": "w",
+    "circuit": "",
+    "name": "BufferChargeOffset",
+    "pbsb": "b524",
+    "id": "02010000a200",
+    "zz": "15",
+    "fields": [
+      {
+        "name": "value",
+        "type": "EXP",
+        "unit": "K"
+      }
+    ]
+  },
+  {
     "direction": "r",
     "circuit": "",
     "name": "Currenterror",
